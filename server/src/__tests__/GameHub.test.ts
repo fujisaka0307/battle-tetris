@@ -1,10 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   ServerEvents,
   ErrorCodes,
-  RoomStatus,
   COUNTDOWN_SECONDS,
-  DISCONNECT_TIMEOUT_MS,
 } from '@battle-tetris/shared';
 import { GameHub, HubConnection } from '../hubs/GameHub';
 
@@ -236,7 +234,7 @@ describe('GameHub', () => {
       const room = hub.getRoomManager().getRoom(roomId)!;
       room.player1 = null;
 
-      const callsBefore = (mock.sendToClient as any).mock.calls.length;
+      const _callsBefore = (mock.sendToClient as any).mock.calls.length;
       hub.handlePlayerReady('conn-1');
       // conn-1 はインデックスに登録されているが room.getPlayer が null を返す
       // → sendError(NOT_IN_ROOM) ではなく、 room は見つかるが player が null のケース
@@ -508,7 +506,7 @@ describe('GameHub', () => {
       const { hub, mock } = createHub();
       hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
 
-      const callsBefore = (mock.sendToClient as any).mock.calls.length;
+      const _callsBefore = (mock.sendToClient as any).mock.calls.length;
       hub.handleDisconnected('conn-1');
       // OpponentDisconnected は送信されない (相手がいない)
       const sent = getSentEvent(mock, 'conn-1', ServerEvents.OpponentDisconnected);

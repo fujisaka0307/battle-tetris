@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { COUNTDOWN_SECONDS } from '@battle-tetris/shared';
 import { signalRClient } from '../network/SignalRClient';
 import { usePlayerStore } from '../stores/usePlayerStore';
 import { useGameStore } from '../stores/useGameStore';

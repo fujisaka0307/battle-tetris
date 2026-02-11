@@ -13,7 +13,7 @@ import {
   FIELD_ROWS_BUFFER,
 } from '@battle-tetris/shared';
 import { GameEngine } from '../GameEngine';
-import { getSpawnPosition, SHAPES } from '../Tetromino';
+import { SHAPES } from '../Tetromino';
 
 // Fixed seed that produces a known piece sequence for deterministic tests.
 const TEST_SEED = 42;
@@ -109,7 +109,7 @@ describe('GameEngine', () => {
     });
 
     it('反時計回り回転でテトリミノの回転状態が変わること (CCW)', () => {
-      const initial = engine.currentPiece!;
+      const _initial = engine.currentPiece!;
       simulateAction(engine, GameAction.RotateCCW);
       const after = engine.currentPiece!;
       // CCW rotation: rotation 0 -> 3
@@ -259,7 +259,7 @@ describe('GameEngine', () => {
     });
 
     it('ハードドロップでテトリミノが即座にロックされること', () => {
-      const pieceBefore = engine.currentPiece!;
+      const _pieceBefore = engine.currentPiece!;
       simulateAction(engine, GameAction.HardDrop);
       const pieceAfter = engine.currentPiece;
       // After hard drop, a new piece should spawn — different row at minimum
@@ -546,7 +546,7 @@ describe('GameEngine', () => {
 
     it('LOCK_DELAY_MS 経過後にロックされること', () => {
       engine.start(TEST_SEED);
-      const pieceBefore = engine.currentPiece!;
+      const _pieceBefore = engine.currentPiece!;
 
       dropUntilGrounded(engine);
 
@@ -563,7 +563,7 @@ describe('GameEngine', () => {
 
     it('ロックディレイリセットが上限回数に達するとリセットされなくなること', () => {
       engine.start(TEST_SEED);
-      const pieceBefore = engine.currentPiece!;
+      const _pieceBefore = engine.currentPiece!;
 
       // Drop until grounded
       dropUntilGrounded(engine);
@@ -796,7 +796,7 @@ describe('GameEngine', () => {
 
       // Use a fresh engine and hard-drop pieces until we can test wall kicks
       // Simpler approach: test directly on whatever piece we have
-      const piece = engine.currentPiece!;
+      const _piece = engine.currentPiece!;
       // Move to left wall
       for (let i = 0; i < FIELD_COLS; i++) {
         simulateAction(engine, GameAction.MoveLeft);
@@ -952,7 +952,7 @@ describe('GameEngine', () => {
       // Fill the bottom row almost completely, leaving space for the piece
       const piece = engine.currentPiece!;
       const shape = SHAPES[piece.type][piece.rotation];
-      const shapeWidth = shape[0].length;
+      const _shapeWidth = shape[0].length;
 
       // Fill bottom row completely
       for (let c = 0; c < FIELD_COLS; c++) {

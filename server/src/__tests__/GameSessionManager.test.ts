@@ -3,7 +3,6 @@ import { LoserReason, RoomStatus, DISCONNECT_TIMEOUT_MS } from '@battle-tetris/s
 import { GameSessionManager, SessionCallbacks } from '../services/GameSessionManager';
 import { RoomManager } from '../services/RoomManager';
 import { Player } from '../models/Player';
-import { Room } from '../models/Room';
 
 function setup() {
   const roomManager = new RoomManager();
@@ -393,7 +392,7 @@ describe('GameSessionManager', () => {
     });
 
     it('タイムアウトで winner が正しく設定されること', () => {
-      const { mgr, room, callbacks } = setup();
+      const { mgr, room, callbacks: _callbacks } = setup();
       mgr.startSession(room);
 
       mgr.handleDisconnect(room.roomId, 'conn-1');

@@ -9,10 +9,10 @@ import { useBattleStore } from '../../stores/useBattleStore';
 import { GameState } from '@battle-tetris/shared';
 
 // Mock SignalR client
-let signalRHandlers: Record<string, Function> = {};
+let signalRHandlers: Record<string, (...args: unknown[]) => unknown> = {};
 vi.mock('../../network/SignalRClient', () => ({
   signalRClient: {
-    setHandlers: vi.fn((handlers: Record<string, Function>) => {
+    setHandlers: vi.fn((handlers: Record<string, (...args: unknown[]) => unknown>) => {
       signalRHandlers = { ...signalRHandlers, ...handlers };
     }),
     sendLinesCleared: vi.fn(),
@@ -32,10 +32,10 @@ vi.mock('react-router-dom', async () => {
 });
 
 // Capture GameEngine callbacks
-let capturedCallbacks: Record<string, Function> = {};
+let capturedCallbacks: Record<string, (...args: unknown[]) => unknown> = {};
 const mockEngineInstance = {
   start: vi.fn(),
-  setCallbacks: vi.fn((cbs: Record<string, Function>) => {
+  setCallbacks: vi.fn((cbs: Record<string, (...args: unknown[]) => unknown>) => {
     capturedCallbacks = { ...cbs };
   }),
   update: vi.fn(),

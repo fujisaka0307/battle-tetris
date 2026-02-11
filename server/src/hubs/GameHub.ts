@@ -2,10 +2,6 @@ import {
   ServerEvents,
   ErrorCodes,
   COUNTDOWN_SECONDS,
-  LoserReason,
-} from '@battle-tetris/shared';
-import type {
-  FieldUpdatePayload,
 } from '@battle-tetris/shared';
 import { RoomManager } from '../services/RoomManager.js';
 import { MatchmakingService } from '../services/MatchmakingService.js';

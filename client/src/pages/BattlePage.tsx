@@ -1,6 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { GameState, FIELD_ROWS, FIELD_COLS, FIELD_ROWS_BUFFER } from '@battle-tetris/shared';
+import { GameState } from '@battle-tetris/shared';
 import { GameEngine } from '../game/GameEngine';
 import { Renderer } from '../game/Renderer';
 import { signalRClient } from '../network/SignalRClient';
@@ -10,7 +10,7 @@ import { useBattleStore } from '../stores/useBattleStore';
 
 export default function BattlePage() {
   const navigate = useNavigate();
-  const { roomId } = useParams<{ roomId: string }>();
+  const { roomId: _roomId } = useParams<{ roomId: string }>();
   const nickname = usePlayerStore((s) => s.nickname);
   const seed = useGameStore((s) => s.seed);
   const score = useGameStore((s) => s.score);

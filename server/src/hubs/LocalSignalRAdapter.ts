@@ -18,7 +18,7 @@ import type WS from 'ws';
 
 const require = createRequire(import.meta.url);
 // ws は CJS モジュールのため createRequire でロードする
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const wsModule = require('ws') as any;
 const WS_OPEN: number = wsModule.OPEN;
 

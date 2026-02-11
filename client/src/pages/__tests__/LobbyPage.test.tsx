@@ -8,10 +8,10 @@ import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useGameStore } from '../../stores/useGameStore';
 
 // Mock SignalR client
-let signalRHandlers: Record<string, Function> = {};
+let signalRHandlers: Record<string, (...args: unknown[]) => unknown> = {};
 vi.mock('../../network/SignalRClient', () => ({
   signalRClient: {
-    setHandlers: vi.fn((handlers: Record<string, Function>) => {
+    setHandlers: vi.fn((handlers: Record<string, (...args: unknown[]) => unknown>) => {
       signalRHandlers = { ...signalRHandlers, ...handlers };
     }),
     sendPlayerReady: vi.fn(),

@@ -7,11 +7,11 @@ import { useBattleStore } from '../stores/useBattleStore';
 
 export default function ResultPage() {
   const navigate = useNavigate();
-  const nickname = usePlayerStore((s) => s.nickname);
+  const _nickname = usePlayerStore((s) => s.nickname);
   const score = useGameStore((s) => s.score);
   const level = useGameStore((s) => s.level);
   const lines = useGameStore((s) => s.lines);
-  const result = useBattleStore((s) => s.result);
+  const _result = useBattleStore((s) => s.result);
   const opponentRematchRequested = useBattleStore((s) => s.opponentRematchRequested);
 
   // Determine win/lose based on connectionId not available client-side,

@@ -158,7 +158,7 @@ describe('RoomManager', () => {
   it('逆引きインデックスにルームIDがあるがルームが削除済みの場合に undefined が返ること', () => {
     const mgr = createManager();
     const p1 = new Player('conn-1', 'Alice');
-    const room = mgr.createRoom(p1);
+    const _room = mgr.createRoom(p1);
 
     // removeConnection せずにルームだけ削除すると、connectionToRoom にはまだエントリが残るが
     // rooms.get(roomId) が undefined を返す

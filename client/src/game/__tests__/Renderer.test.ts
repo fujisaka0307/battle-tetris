@@ -109,7 +109,7 @@ describe('Renderer', () => {
       };
       state.ghostRow = null;
 
-      const callsBefore = (ctx.fillRect as any).mock.calls.length;
+      const _callsBefore = (ctx.fillRect as any).mock.calls.length;
       renderer.drawField(state);
       const callsAfter = (ctx.fillRect as any).mock.calls.length;
 
@@ -266,7 +266,7 @@ describe('Renderer', () => {
       // The fillRect should have been called (background + the block)
       // and fillStyle should have been set to BG_COLOR (#000000) for the unknown value
       const fillStyleValues = (ctx.fillRect as any).mock.calls.map(
-        (_: any, idx: number) => {
+        (_: any, _idx: number) => {
           // We can't directly access what fillStyle was at each call,
           // but we can verify the draw happened without errors
           return true;

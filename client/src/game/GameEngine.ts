@@ -15,7 +15,6 @@ import { BagRandomizer } from './BagRandomizer';
 import { GarbageManager } from './GarbageManager';
 import { InputHandler } from './InputHandler';
 import {
-  SHAPES,
   getWallKickData,
   nextRotation,
   getSpawnPosition,

@@ -7,12 +7,12 @@ import { signalRClient } from '../../network/SignalRClient';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 
 // Mock SignalR client
-let capturedHandlers: Record<string, Function> = {};
+let capturedHandlers: Record<string, (...args: unknown[]) => unknown> = {};
 vi.mock('../../network/SignalRClient', () => ({
   signalRClient: {
     state: 'disconnected',
     connect: vi.fn().mockResolvedValue(undefined),
-    setHandlers: vi.fn((handlers: Record<string, Function>) => {
+    setHandlers: vi.fn((handlers: Record<string, (...args: unknown[]) => unknown>) => {
       capturedHandlers = { ...capturedHandlers, ...handlers };
     }),
     sendCreateRoom: vi.fn(),
