@@ -24,6 +24,9 @@ jobs:
       - name: Lint
         run: npx eslint . --max-warnings 0
 
+      - name: Build shared
+        run: npm run build -w shared
+
       - name: Typecheck shared
         run: npm run typecheck -w shared
 
