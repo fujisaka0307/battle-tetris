@@ -28,6 +28,7 @@ export const ServerEvents = {
   ReceiveGarbage: 'ReceiveGarbage',
   GameResult: 'GameResult',
   OpponentRematch: 'OpponentRematch',
+  RematchAccepted: 'RematchAccepted',
   OpponentDisconnected: 'OpponentDisconnected',
   OpponentReconnected: 'OpponentReconnected',
   Error: 'Error',
@@ -110,6 +111,10 @@ export interface GameResultPayload {
 }
 
 // OpponentRematch: no payload
+
+export interface RematchAcceptedPayload {
+  roomId: string;
+}
 
 export interface OpponentDisconnectedPayload {
   timeout: number;

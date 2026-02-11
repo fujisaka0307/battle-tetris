@@ -396,6 +396,43 @@ describe('GameHub', () => {
       // OpponentRematch は送信されない
       expect(callsAfter).toBe(callsBefore);
     });
+
+    it('片方のリマッチ要求で RematchAccepted が送られないこと', () => {
+      const { hub, mock } = createHub();
+      setupPlayingRoom(hub, mock);
+      hub.handleGameOver('conn-1');
+
+      hub.handleRequestRematch('conn-2');
+
+      const accepted = getAllSentEvents(mock, ServerEvents.RematchAccepted);
+      expect(accepted).toHaveLength(0);
+    });
+
+    it('両者のリマッチ要求で RematchAccepted が両者に送られること', () => {
+      const { hub, mock } = createHub();
+      const roomId = setupPlayingRoom(hub, mock);
+      hub.handleGameOver('conn-1');
+
+      hub.handleRequestRematch('conn-1');
+      hub.handleRequestRematch('conn-2');
+
+      const accepted = getAllSentEvents(mock, ServerEvents.RematchAccepted);
+      expect(accepted).toHaveLength(2);
+      expect(accepted[0][2]).toEqual({ roomId });
+      expect(accepted[1][2]).toEqual({ roomId });
+    });
+
+    it('両者のリマッチ要求でルームが Waiting 状態に戻ること', () => {
+      const { hub, mock } = createHub();
+      setupPlayingRoom(hub, mock);
+      hub.handleGameOver('conn-1');
+
+      hub.handleRequestRematch('conn-1');
+      hub.handleRequestRematch('conn-2');
+
+      const room = hub.getRoomManager().getRoomByConnectionId('conn-1');
+      expect(room?.status).toBe('waiting');
+    });
   });
 
   // ---------------------------------------------------------------------------

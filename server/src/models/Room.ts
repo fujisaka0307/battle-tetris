@@ -12,6 +12,7 @@ export class Room {
   player2: Player | null;
   status: RoomStatus;
   seed: number | null;
+  rematchRequestedBy: Set<string>;
 
   constructor(roomId: string, creator: Player) {
     this.roomId = roomId;
@@ -20,6 +21,7 @@ export class Room {
     this.player2 = null;
     this.status = RoomStatus.Waiting;
     this.seed = null;
+    this.rematchRequestedBy = new Set();
   }
 
   /**
@@ -67,6 +69,36 @@ export class Room {
    */
   areBothReady(): boolean {
     return (this.player1?.isReady ?? false) && (this.player2?.isReady ?? false);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Rematch
+  // ---------------------------------------------------------------------------
+
+  /**
+   * リマッチ要求を記録する。
+   */
+  requestRematch(connectionId: string): void {
+    this.rematchRequestedBy.add(connectionId);
+  }
+
+  /**
+   * 両プレイヤーがリマッチ要求したかどうか。
+   */
+  areBothRematchRequested(): boolean {
+    return this.rematchRequestedBy.size >= 2;
+  }
+
+  /**
+   * リマッチのためにルームをリセットする。
+   * Finished → Waiting に戻し、プレイヤーの Ready 状態もリセットする。
+   */
+  resetForRematch(): void {
+    this.status = RoomStatus.Waiting;
+    this.rematchRequestedBy.clear();
+    this.seed = null;
+    this.player1?.reset();
+    this.player2?.reset();
   }
 
   // ---------------------------------------------------------------------------

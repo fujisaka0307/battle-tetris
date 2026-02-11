@@ -19,6 +19,7 @@ import type {
   OpponentFieldUpdatePayload,
   ReceiveGarbagePayload,
   GameResultPayload,
+  RematchAcceptedPayload,
   OpponentDisconnectedPayload,
   ErrorPayload,
 } from '@battle-tetris/shared';
@@ -43,6 +44,7 @@ export interface SignalREventHandlers {
   onReceiveGarbage?: (payload: ReceiveGarbagePayload) => void;
   onGameResult?: (payload: GameResultPayload) => void;
   onOpponentRematch?: () => void;
+  onRematchAccepted?: (payload: RematchAcceptedPayload) => void;
   onOpponentDisconnected?: (payload: OpponentDisconnectedPayload) => void;
   onOpponentReconnected?: () => void;
   onError?: (payload: ErrorPayload) => void;
@@ -239,6 +241,10 @@ export class SignalRClient {
 
     this.connection.on(ServerEvents.OpponentRematch, () => {
       this.handlers.onOpponentRematch?.();
+    });
+
+    this.connection.on(ServerEvents.RematchAccepted, (payload: RematchAcceptedPayload) => {
+      this.handlers.onRematchAccepted?.(payload);
     });
 
     this.connection.on(ServerEvents.OpponentDisconnected, (payload: OpponentDisconnectedPayload) => {

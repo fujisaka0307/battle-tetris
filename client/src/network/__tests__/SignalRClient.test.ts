@@ -329,6 +329,18 @@ describe('SignalRClient', () => {
       expect(onOpponentRematch).toHaveBeenCalled();
     });
 
+    it('RematchAccepted イベントでハンドラが呼ばれること', async () => {
+      const onRematchAccepted = vi.fn();
+      const client = new SignalRClient();
+      client.setHandlers({ onRematchAccepted });
+
+      await client.connect('http://localhost/hub');
+
+      currentMockConn!._emit('RematchAccepted', { roomId: 'ABC123' });
+
+      expect(onRematchAccepted).toHaveBeenCalledWith({ roomId: 'ABC123' });
+    });
+
     // === C1 カバレッジ追加テスト ===
 
     it('OpponentJoined イベントでハンドラが呼ばれること', async () => {
@@ -447,6 +459,7 @@ describe('SignalRClient', () => {
         currentMockConn!._emit('ReceiveGarbage', { lines: 1 });
         currentMockConn!._emit('GameResult', { winner: 'x', loserReason: 'gameover' });
         currentMockConn!._emit('OpponentRematch');
+        currentMockConn!._emit('RematchAccepted', { roomId: 'ABC123' });
         currentMockConn!._emit('OpponentDisconnected', { timeout: 30000 });
         currentMockConn!._emit('OpponentReconnected');
         currentMockConn!._emit('Error', { code: 1, message: 'err' });

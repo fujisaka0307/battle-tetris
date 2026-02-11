@@ -30,13 +30,14 @@ describe('ServerEvents', () => {
     expect(ServerEvents.ReceiveGarbage).toBe('ReceiveGarbage');
     expect(ServerEvents.GameResult).toBe('GameResult');
     expect(ServerEvents.OpponentRematch).toBe('OpponentRematch');
+    expect(ServerEvents.RematchAccepted).toBe('RematchAccepted');
     expect(ServerEvents.OpponentDisconnected).toBe('OpponentDisconnected');
     expect(ServerEvents.OpponentReconnected).toBe('OpponentReconnected');
     expect(ServerEvents.Error).toBe('Error');
   });
 
-  it('has exactly 12 events', () => {
-    expect(Object.keys(ServerEvents)).toHaveLength(12);
+  it('has exactly 13 events', () => {
+    expect(Object.keys(ServerEvents)).toHaveLength(13);
   });
 });
 

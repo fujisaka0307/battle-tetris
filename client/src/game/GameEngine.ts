@@ -370,6 +370,8 @@ export class GameEngine {
     if (this.board.isGameOver(type, 0, row, col)) {
       this._state = GameState.GameOver;
       this.current = null;
+      // Notify field update before game over so final stats are synced to store
+      this.notifyFieldUpdate();
       this.callbacks.onGameOver?.();
       return;
     }

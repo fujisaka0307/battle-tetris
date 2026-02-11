@@ -34,14 +34,25 @@ export default function ResultPage() {
     navigate('/');
   }, [navigate]);
 
-  // Listen for opponent rematch
+  // Listen for opponent rematch, rematch accepted, and opponent disconnected
   useEffect(() => {
     signalRClient.setHandlers({
       onOpponentRematch: () => {
         useBattleStore.getState().setOpponentRematchRequested(true);
       },
+      onRematchAccepted: (payload) => {
+        useGameStore.getState().reset();
+        useBattleStore.getState().reset();
+        navigate(`/lobby/${payload.roomId}`);
+      },
+      onOpponentDisconnected: () => {
+        usePlayerStore.getState().reset();
+        useGameStore.getState().reset();
+        useBattleStore.getState().reset();
+        navigate('/');
+      },
     });
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">

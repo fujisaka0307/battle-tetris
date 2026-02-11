@@ -246,11 +246,36 @@ export class GameHub {
     const opponent = room.getOpponent(connectionId);
     if (!opponent) return;
 
+    room.requestRematch(connectionId);
+
+    // Notify opponent that rematch was requested
     this.hub.sendToClient(
       opponent.connectionId,
       ServerEvents.OpponentRematch,
       {},
     );
+
+    // If both players requested rematch, reset room and send both back to lobby
+    if (room.areBothRematchRequested()) {
+      this.sessionManager.endSession(room.roomId);
+      room.resetForRematch();
+
+      const payload = { roomId: room.roomId };
+      if (room.player1) {
+        this.hub.sendToClient(
+          room.player1.connectionId,
+          ServerEvents.RematchAccepted,
+          payload,
+        );
+      }
+      if (room.player2) {
+        this.hub.sendToClient(
+          room.player2.connectionId,
+          ServerEvents.RematchAccepted,
+          payload,
+        );
+      }
+    }
   }
 
   handleLeaveRoom(connectionId: string): void {

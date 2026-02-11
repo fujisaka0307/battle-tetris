@@ -86,4 +86,18 @@ export async function playToGameOver(page: Page): Promise<void> {
   await page.waitForURL(/\/result/, { timeout: 30000 });
 }
 
+/**
+ * 対戦→ゲームオーバー→両者Result画面まで進めるヘルパー。
+ * PlayerA が負ける（ハードドロップ連打）。
+ */
+export async function startBattleAndFinish(
+  playerAPage: Page,
+  playerBPage: Page,
+): Promise<void> {
+  await startBattle(playerAPage, playerBPage);
+  await playToGameOver(playerAPage);
+  await playerAPage.waitForURL(/\/result/, { timeout: 30000 });
+  await playerBPage.waitForURL(/\/result/, { timeout: 30000 });
+}
+
 export { expect };

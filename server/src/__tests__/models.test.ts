@@ -237,6 +237,78 @@ describe('Room', () => {
     room.transitionToFinished();
     expect(() => room.transitionToFinished()).toThrow('Cannot transition to Finished');
   });
+
+  // --- Rematch ---
+
+  it('requestRematch で rematchRequestedBy に connectionId が追加されること', () => {
+    const room = createRoom();
+    room.requestRematch('conn-1');
+    expect(room.rematchRequestedBy.has('conn-1')).toBe(true);
+  });
+
+  it('areBothRematchRequested で片方のみの場合 false を返すこと', () => {
+    const room = createRoom();
+    room.requestRematch('conn-1');
+    expect(room.areBothRematchRequested()).toBe(false);
+  });
+
+  it('areBothRematchRequested で両方の場合 true を返すこと', () => {
+    const room = createRoom();
+    room.join(new Player('conn-2', 'Bob'));
+    room.requestRematch('conn-1');
+    room.requestRematch('conn-2');
+    expect(room.areBothRematchRequested()).toBe(true);
+  });
+
+  it('resetForRematch で status が Waiting に戻ること', () => {
+    const room = createRoom();
+    room.join(new Player('conn-2', 'Bob'));
+    room.transitionToReady();
+    room.transitionToPlaying(12345);
+    room.transitionToFinished();
+    room.resetForRematch();
+    expect(room.status).toBe(RoomStatus.Waiting);
+  });
+
+  it('resetForRematch で rematchRequestedBy がクリアされること', () => {
+    const room = createRoom();
+    room.requestRematch('conn-1');
+    room.resetForRematch();
+    expect(room.rematchRequestedBy.size).toBe(0);
+  });
+
+  it('resetForRematch で seed が null になること', () => {
+    const room = createRoom();
+    room.transitionToReady();
+    room.transitionToPlaying(12345);
+    room.transitionToFinished();
+    room.resetForRematch();
+    expect(room.seed).toBeNull();
+  });
+
+  it('resetForRematch で両プレイヤーの isReady が false になること', () => {
+    const room = createRoom();
+    room.join(new Player('conn-2', 'Bob'));
+    room.player1!.setReady();
+    room.player2!.setReady();
+    room.transitionToReady();
+    room.transitionToPlaying(12345);
+    room.transitionToFinished();
+    room.resetForRematch();
+    expect(room.player1!.isReady).toBe(false);
+    expect(room.player2!.isReady).toBe(false);
+  });
+
+  it('resetForRematch 後に再度 transitionToReady が可能であること', () => {
+    const room = createRoom();
+    room.join(new Player('conn-2', 'Bob'));
+    room.transitionToReady();
+    room.transitionToPlaying(12345);
+    room.transitionToFinished();
+    room.resetForRematch();
+    expect(() => room.transitionToReady()).not.toThrow();
+    expect(room.status).toBe(RoomStatus.Ready);
+  });
 });
 
 // =============================================================================
