@@ -49,15 +49,6 @@ jobs:
           # Create zip
           zip -r ../server-deploy.zip .
 
-      - name: Configure App Service startup command
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            az webapp config set \
-              --name ${{ vars.AZURE_APP_SERVICE_NAME }} \
-              --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
-              --startup-file "node dist/index.js"
-
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
