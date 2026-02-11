@@ -132,6 +132,14 @@ export class Renderer {
    */
   drawNextQueue(pieces: TetrominoType[], x: number, y: number): void {
     const ctx = this.ctx;
+
+    // Clear the next queue area before drawing
+    // Max piece size is 4 (I-piece), 3 pieces with (size+1) spacing
+    const clearWidth = 4 * PREVIEW_CELL_SIZE;
+    const clearHeight = pieces.length * (4 + 1) * PREVIEW_CELL_SIZE;
+    ctx.fillStyle = BG_COLOR;
+    ctx.fillRect(x, y, clearWidth, clearHeight);
+
     for (let i = 0; i < pieces.length; i++) {
       const type = pieces[i];
       const shape = SHAPES[type][0];
@@ -160,8 +168,14 @@ export class Renderer {
    * @param y 描画開始Y座標
    */
   drawHold(piece: TetrominoType | null, x: number, y: number): void {
-    if (piece === null) return;
     const ctx = this.ctx;
+
+    // Clear the hold area before drawing
+    const clearSize = 4 * PREVIEW_CELL_SIZE;
+    ctx.fillStyle = BG_COLOR;
+    ctx.fillRect(x, y, clearSize, clearSize);
+
+    if (piece === null) return;
     const shape = SHAPES[piece][0];
     const size = shape.length;
 

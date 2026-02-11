@@ -175,9 +175,10 @@ describe('Renderer', () => {
       expect((ctx.fillRect as any)).toHaveBeenCalled();
     });
 
-    it('null の場合は描画されないこと', () => {
+    it('null の場合はクリアのみでピースが描画されないこと', () => {
       renderer.drawHold(null, 0, 0);
-      expect((ctx.fillRect as any)).not.toHaveBeenCalled();
+      // Only 1 fillRect call for clearing the area, no piece blocks drawn
+      expect((ctx.fillRect as any)).toHaveBeenCalledTimes(1);
     });
   });
 
