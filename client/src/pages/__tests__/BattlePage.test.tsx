@@ -1,0 +1,339 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, act } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import BattlePage from '../BattlePage';
+import { signalRClient } from '../../network/SignalRClient';
+import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useGameStore } from '../../stores/useGameStore';
+import { useBattleStore } from '../../stores/useBattleStore';
+import { GameState } from '@battle-tetris/shared';
+
+// Mock SignalR client
+let signalRHandlers: Record<string, Function> = {};
+vi.mock('../../network/SignalRClient', () => ({
+  signalRClient: {
+    setHandlers: vi.fn((handlers: Record<string, Function>) => {
+      signalRHandlers = { ...signalRHandlers, ...handlers };
+    }),
+    sendLinesCleared: vi.fn(),
+    sendGameOver: vi.fn(),
+    sendFieldUpdate: vi.fn(),
+  },
+}));
+
+// Mock navigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+// Capture GameEngine callbacks
+let capturedCallbacks: Record<string, Function> = {};
+const mockEngineInstance = {
+  start: vi.fn(),
+  setCallbacks: vi.fn((cbs: Record<string, Function>) => {
+    capturedCallbacks = { ...cbs };
+  }),
+  update: vi.fn(),
+  currentPiece: { type: 0, rotation: 0, row: 1, col: 4 },
+  bag: { peek: vi.fn().mockReturnValue([]) },
+  board: { grid: [], getVisibleGrid: vi.fn().mockReturnValue([]) },
+  getGhostRow: vi.fn().mockReturnValue(18),
+  holdPiece: null,
+  score: 0,
+  level: 0,
+  lines: 0,
+  state: GameState.Playing,
+  garbage: { add: vi.fn() },
+  input: { attach: vi.fn(), detach: vi.fn() },
+};
+
+vi.mock('../../game/GameEngine', () => {
+  return {
+    GameEngine: class {
+      constructor() {
+        return mockEngineInstance;
+      }
+    },
+  };
+});
+
+vi.mock('../../game/Renderer', () => {
+  class MockRenderer {
+    static fieldWidth = 300;
+    static fieldHeight = 600;
+    static miniFieldWidth = 150;
+    static miniFieldHeight = 300;
+    drawField = vi.fn();
+    drawNextQueue = vi.fn();
+    drawHold = vi.fn();
+    drawOpponentField = vi.fn();
+  }
+  return { Renderer: MockRenderer };
+});
+
+// Mock canvas getContext
+HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+  fillStyle: '',
+  strokeStyle: '',
+  lineWidth: 0,
+  globalAlpha: 1,
+  fillRect: vi.fn(),
+  strokeRect: vi.fn(),
+  beginPath: vi.fn(),
+  moveTo: vi.fn(),
+  lineTo: vi.fn(),
+  stroke: vi.fn(),
+  clearRect: vi.fn(),
+});
+
+// Capture requestAnimationFrame callbacks
+let rafCallbacks: ((time: number) => void)[] = [];
+vi.stubGlobal('requestAnimationFrame', vi.fn((cb: (time: number) => void) => {
+  rafCallbacks.push(cb);
+  return rafCallbacks.length;
+}));
+vi.stubGlobal('cancelAnimationFrame', vi.fn());
+
+function renderBattlePage(roomId = 'ABC123') {
+  return render(
+    <MemoryRouter initialEntries={[`/battle/${roomId}`]}>
+      <Routes>
+        <Route path="/battle/:roomId" element={<BattlePage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+describe('BattlePage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    signalRHandlers = {};
+    capturedCallbacks = {};
+    rafCallbacks = [];
+    usePlayerStore.getState().reset();
+    useGameStore.getState().reset();
+    useBattleStore.getState().reset();
+    usePlayerStore.getState().setNickname('Alice');
+    useGameStore.getState().setSeed(42);
+    mockEngineInstance.state = GameState.Playing;
+    mockEngineInstance.score = 0;
+    mockEngineInstance.level = 0;
+    mockEngineInstance.lines = 0;
+  });
+
+  it('Canvas 要素がマウントされること', () => {
+    renderBattlePage();
+    expect(screen.getByTestId('game-canvas')).toBeInTheDocument();
+    expect(screen.getByTestId('opponent-canvas')).toBeInTheDocument();
+  });
+
+  it('スコアボードに初期値が表示されること', () => {
+    renderBattlePage();
+    expect(screen.getByTestId('score')).toHaveTextContent('0');
+    expect(screen.getByTestId('level')).toHaveTextContent('0');
+    expect(screen.getByTestId('lines')).toHaveTextContent('0');
+  });
+
+  it('スコアボードが表示されること', () => {
+    renderBattlePage();
+    expect(screen.getByTestId('scoreboard')).toBeInTheDocument();
+  });
+
+  it('ニックネーム未設定でリダイレクトされること', () => {
+    usePlayerStore.getState().reset();
+    renderBattlePage();
+    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+  });
+
+  // === C1 カバレッジ追加テスト ===
+
+  it('onOpponentFieldUpdate ハンドラで相手フィールドが更新されること', () => {
+    renderBattlePage();
+
+    const field = [[1, 0], [0, 1]];
+    act(() => {
+      signalRHandlers.onOpponentFieldUpdate?.({
+        field,
+        score: 500,
+        lines: 5,
+        level: 2,
+      });
+    });
+
+    const store = useBattleStore.getState();
+    expect(store.opponentField).toEqual(field);
+    expect(store.opponentScore).toBe(500);
+    expect(store.opponentLines).toBe(5);
+    expect(store.opponentLevel).toBe(2);
+  });
+
+  it('onReceiveGarbage ハンドラで pendingGarbage が増加すること', () => {
+    renderBattlePage();
+
+    act(() => {
+      signalRHandlers.onReceiveGarbage?.({ lines: 3 });
+    });
+
+    expect(useBattleStore.getState().pendingGarbage).toBe(3);
+  });
+
+  it('onGameResult ハンドラで結果が保存され /result にナビゲートされること', () => {
+    renderBattlePage();
+
+    act(() => {
+      signalRHandlers.onGameResult?.({
+        winner: 'opponent-id',
+        loserReason: 'gameover',
+      });
+    });
+
+    expect(useBattleStore.getState().result).toEqual({
+      winner: 'opponent-id',
+      loserReason: 'gameover',
+    });
+    expect(mockNavigate).toHaveBeenCalledWith('/result');
+  });
+
+  it('onOpponentDisconnected ハンドラが呼び出し可能であること', () => {
+    renderBattlePage();
+    expect(() => signalRHandlers.onOpponentDisconnected?.()).not.toThrow();
+  });
+
+  it('onOpponentReconnected ハンドラが呼び出し可能であること', () => {
+    renderBattlePage();
+    expect(() => signalRHandlers.onOpponentReconnected?.()).not.toThrow();
+  });
+
+  it('pendingGarbage > 0 の場合にガーベジインジケータが表示されること', () => {
+    useBattleStore.getState().addPendingGarbage(2);
+    renderBattlePage();
+
+    expect(screen.getByText('Garbage: 2')).toBeInTheDocument();
+  });
+
+  it('pendingGarbage = 0 の場合にガーベジインジケータが表示されないこと', () => {
+    renderBattlePage();
+    expect(screen.queryByText(/Garbage:/)).not.toBeInTheDocument();
+  });
+
+  it('opponentNickname が null の場合に "Opponent" が表示されること', () => {
+    usePlayerStore.getState().setOpponentNickname(null);
+    renderBattlePage();
+
+    expect(screen.getByText('Opponent')).toBeInTheDocument();
+  });
+
+  it('opponentNickname が設定されている場合にその名前が表示されること', () => {
+    usePlayerStore.getState().setOpponentNickname('Bob');
+    renderBattlePage();
+
+    expect(screen.getByText('Bob')).toBeInTheDocument();
+  });
+
+  it('アンマウント時に cancelAnimationFrame が呼ばれること', () => {
+    const { unmount } = renderBattlePage();
+    unmount();
+
+    expect(cancelAnimationFrame).toHaveBeenCalled();
+  });
+
+  // === Engine callback tests (lines 87-91) ===
+
+  it('engine の onLinesCleared コールバックで sendLinesCleared が呼ばれること', () => {
+    renderBattlePage();
+
+    expect(mockEngineInstance.setCallbacks).toHaveBeenCalled();
+    expect(capturedCallbacks.onLinesCleared).toBeDefined();
+
+    act(() => {
+      capturedCallbacks.onLinesCleared(2);
+    });
+
+    expect(signalRClient.sendLinesCleared).toHaveBeenCalledWith(2);
+  });
+
+  it('engine の onGameOver コールバックで GameOver 状態になり sendGameOver が呼ばれること', () => {
+    renderBattlePage();
+
+    expect(capturedCallbacks.onGameOver).toBeDefined();
+
+    act(() => {
+      capturedCallbacks.onGameOver();
+    });
+
+    expect(useGameStore.getState().gameState).toBe(GameState.GameOver);
+    expect(signalRClient.sendGameOver).toHaveBeenCalled();
+  });
+
+  it('engine の onFieldUpdate コールバックでストアとSignalRが更新されること', () => {
+    mockEngineInstance.score = 500;
+    mockEngineInstance.level = 2;
+    mockEngineInstance.lines = 10;
+    renderBattlePage();
+
+    expect(capturedCallbacks.onFieldUpdate).toBeDefined();
+
+    act(() => {
+      capturedCallbacks.onFieldUpdate();
+    });
+
+    expect(signalRClient.sendFieldUpdate).toHaveBeenCalled();
+  });
+
+  // === Game loop test (lines 116-141) ===
+
+  it('requestAnimationFrame コールバックでエンジン更新と描画が行われること', () => {
+    renderBattlePage();
+
+    expect(rafCallbacks.length).toBeGreaterThan(0);
+
+    const loopFn = rafCallbacks[rafCallbacks.length - 1];
+    act(() => {
+      loopFn(100); // first frame
+    });
+
+    act(() => {
+      loopFn(116); // 16ms later
+    });
+
+    expect(mockEngineInstance.update).toHaveBeenCalled();
+  });
+
+  it('ゲームループでエンジン状態がPlaying以外の場合にrafが停止すること', () => {
+    renderBattlePage();
+
+    const loopFn = rafCallbacks[rafCallbacks.length - 1];
+    mockEngineInstance.state = GameState.GameOver;
+
+    const rafCountBefore = (requestAnimationFrame as any).mock.calls.length;
+    act(() => {
+      loopFn(100);
+    });
+    const rafCountAfter = (requestAnimationFrame as any).mock.calls.length;
+
+    // raf should NOT have been called again since state is GameOver
+    expect(rafCountAfter).toBe(rafCountBefore);
+  });
+
+  it('onReceiveGarbage で engineRef.current にもガーベジが追加されること', () => {
+    renderBattlePage();
+
+    act(() => {
+      signalRHandlers.onReceiveGarbage?.({ lines: 4 });
+    });
+
+    expect(mockEngineInstance.garbage.add).toHaveBeenCalledWith(4);
+  });
+
+  it('seed が null の場合でもエンジンが初期化されること', () => {
+    useGameStore.getState().reset(); // seed = null
+    renderBattlePage();
+
+    expect(mockEngineInstance.start).toHaveBeenCalled();
+  });
+});

@@ -1,0 +1,136 @@
+import type { Field, LoserReason } from './types.js';
+
+// =============================================================================
+// SignalR Event Names
+// =============================================================================
+
+/** クライアント → サーバー イベント名 */
+export const ClientEvents = {
+  CreateRoom: 'CreateRoom',
+  JoinRoom: 'JoinRoom',
+  JoinRandomMatch: 'JoinRandomMatch',
+  PlayerReady: 'PlayerReady',
+  FieldUpdate: 'FieldUpdate',
+  LinesCleared: 'LinesCleared',
+  GameOver: 'GameOver',
+  RequestRematch: 'RequestRematch',
+  LeaveRoom: 'LeaveRoom',
+} as const;
+
+/** サーバー → クライアント イベント名 */
+export const ServerEvents = {
+  RoomCreated: 'RoomCreated',
+  OpponentJoined: 'OpponentJoined',
+  MatchFound: 'MatchFound',
+  BothReady: 'BothReady',
+  GameStart: 'GameStart',
+  OpponentFieldUpdate: 'OpponentFieldUpdate',
+  ReceiveGarbage: 'ReceiveGarbage',
+  GameResult: 'GameResult',
+  OpponentRematch: 'OpponentRematch',
+  OpponentDisconnected: 'OpponentDisconnected',
+  OpponentReconnected: 'OpponentReconnected',
+  Error: 'Error',
+} as const;
+
+// =============================================================================
+// Client → Server Payloads
+// =============================================================================
+
+export interface CreateRoomPayload {
+  nickname: string;
+}
+
+export interface JoinRoomPayload {
+  nickname: string;
+  roomId: string;
+}
+
+export interface JoinRandomMatchPayload {
+  nickname: string;
+}
+
+// PlayerReady: no payload
+
+export interface FieldUpdatePayload {
+  field: Field;
+  score: number;
+  lines: number;
+  level: number;
+}
+
+export interface LinesClearedPayload {
+  count: number;
+}
+
+// GameOver: no payload
+// RequestRematch: no payload
+// LeaveRoom: no payload
+
+// =============================================================================
+// Server → Client Payloads
+// =============================================================================
+
+export interface RoomCreatedPayload {
+  roomId: string;
+}
+
+export interface OpponentJoinedPayload {
+  nickname: string;
+}
+
+export interface MatchFoundPayload {
+  roomId: string;
+  opponentNickname: string;
+}
+
+export interface BothReadyPayload {
+  seed: number;
+  countdown: number;
+}
+
+export interface GameStartPayload {
+  startTime: number;
+}
+
+export interface OpponentFieldUpdatePayload {
+  field: Field;
+  score: number;
+  lines: number;
+  level: number;
+}
+
+export interface ReceiveGarbagePayload {
+  lines: number;
+}
+
+export interface GameResultPayload {
+  winner: string;
+  loserReason: LoserReason;
+}
+
+// OpponentRematch: no payload
+
+export interface OpponentDisconnectedPayload {
+  timeout: number;
+}
+
+// OpponentReconnected: no payload
+
+export interface ErrorPayload {
+  code: number;
+  message: string;
+}
+
+// =============================================================================
+// Error Codes
+// =============================================================================
+
+export const ErrorCodes = {
+  ROOM_NOT_FOUND: 10021,
+  ROOM_FULL: 10030,
+  INVALID_NICKNAME: 10031,
+  ALREADY_IN_ROOM: 10032,
+  NOT_IN_ROOM: 10033,
+  GAME_NOT_STARTED: 10034,
+} as const;

@@ -1,0 +1,66 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'shared/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared
+        run: npm run build -w shared
+
+      - name: Build server
+        run: npm run build -w server
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+
+          # Copy server dist
+          cp -r server/dist deploy/dist
+          cp server/package.json deploy/
+
+          # Copy shared package (workspace dependency)
+          mkdir -p deploy/node_modules/@battle-tetris/shared
+          cp -r shared/dist deploy/node_modules/@battle-tetris/shared/dist
+          cp shared/package.json deploy/node_modules/@battle-tetris/shared/
+
+          # Install production dependencies (excluding workspace deps)
+          cd deploy
+          npm install --omit=dev --ignore-scripts 2>/dev/null || true
+
+          # Create zip
+          zip -r ../server-deploy.zip .
+
+      - name: Configure App Service startup command
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az webapp config set \
+              --name ${{ vars.AZURE_APP_SERVICE_NAME }} \
+              --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
+              --startup-file "node dist/index.js"
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
+          publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
+          package: server-deploy.zip

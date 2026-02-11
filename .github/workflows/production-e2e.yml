@@ -1,0 +1,52 @@
+name: Production E2E
+
+on:
+  # Run after both deploy workflows complete
+  workflow_run:
+    workflows: ['Deploy Frontend', 'Deploy Backend']
+    types: [completed]
+    branches: [main]
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Frontend base URL'
+        required: false
+        default: ''
+      api_base_url:
+        description: 'Backend API base URL'
+        required: false
+        default: ''
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    # Only run if the triggering workflow succeeded (or if manually dispatched)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run production smoke tests
+        run: npx playwright test --config playwright.production.config.ts e2e/production-smoke.spec.ts
+        env:
+          BASE_URL: ${{ inputs.base_url || vars.FRONTEND_URL }}
+          API_BASE_URL: ${{ inputs.api_base_url || vars.API_BASE_URL }}
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: production-e2e-report
+          path: playwright-report/
+          retention-days: 14
