@@ -133,6 +133,9 @@ jobs:
           gh_pages: gh-pages
           allure_history: allure-history
 
+      - name: Fix allure-history permissions
+        run: sudo chown -R $(whoami) allure-history || true
+
       - name: Publish Allure report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
