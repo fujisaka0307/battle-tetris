@@ -27,10 +27,10 @@ export interface SessionCallbacks {
 // =============================================================================
 
 export class GameSessionManager {
-  private sessions = new Map<string, GameSession>();
+  private readonly sessions = new Map<string, GameSession>();
   /** roomId → disconnect timer handle */
-  private disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
-  private roomManager: RoomManager;
+  private readonly disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private readonly roomManager: RoomManager;
   private callbacks: SessionCallbacks | null = null;
 
   constructor(roomManager: RoomManager) {

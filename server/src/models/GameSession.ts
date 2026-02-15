@@ -11,10 +11,10 @@ export class GameSession {
   loserReason: LoserReason | null;
 
   /** connectionId → score */
-  private scores: Map<string, number>;
+  private readonly scores: Map<string, number>;
 
   /** connectionId → linesCleared */
-  private linesCleared: Map<string, number>;
+  private readonly linesCleared: Map<string, number>;
 
   constructor(roomId: string, player1Id: string, player2Id: string) {
     this.roomId = roomId;

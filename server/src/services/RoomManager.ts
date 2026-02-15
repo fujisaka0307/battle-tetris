@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import { ROOM_ID_LENGTH } from '@battle-tetris/shared';
 import { Room } from '../models/Room.js';
 import { Player } from '../models/Player.js';
@@ -9,9 +10,9 @@ const ROOM_ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 曖昧な文字を�
  * ルームの作成・参加・検索・削除を担当する。
  */
 export class RoomManager {
-  private rooms = new Map<string, Room>();
+  private readonly rooms = new Map<string, Room>();
   /** connectionId → roomId の逆引きインデックス */
-  private connectionToRoom = new Map<string, string>();
+  private readonly connectionToRoom = new Map<string, string>();
 
   /**
    * 新しいルームを作成する。
@@ -117,7 +118,7 @@ export class RoomManager {
   private generateRandomId(): string {
     let id = '';
     for (let i = 0; i < ROOM_ID_LENGTH; i++) {
-      id += ROOM_ID_CHARS[Math.floor(Math.random() * ROOM_ID_CHARS.length)];
+      id += ROOM_ID_CHARS[randomInt(ROOM_ID_CHARS.length)];
     }
     return id;
   }

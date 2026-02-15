@@ -14,7 +14,7 @@ export interface MatchResult {
  */
 export class MatchmakingService {
   private queue: Player[] = [];
-  private roomManager: RoomManager;
+  private readonly roomManager: RoomManager;
 
   constructor(roomManager: RoomManager) {
     this.roomManager = roomManager;

@@ -234,14 +234,11 @@ describe('GameHub', () => {
       const room = hub.getRoomManager().getRoom(roomId)!;
       room.player1 = null;
 
-      const _callsBefore = (mock.sendToClient as any).mock.calls.length;
+      const callsBefore = (mock.sendToClient as any).mock.calls.length;
       hub.handlePlayerReady('conn-1');
       // conn-1 はインデックスに登録されているが room.getPlayer が null を返す
-      // → sendError(NOT_IN_ROOM) ではなく、 room は見つかるが player が null のケース
-      // 注意: getRoomByConnectionId は connectionToRoom インデックスを使うので room は見つかるが
-      //       getPlayer('conn-1') は player1=null, player2=null なので null を返す
-      //       この場合は早期リターンして何もイベントを送信しない
-      // ただし上のテストでは getRoomByConnectionId は room を返すので Error は送られない
+      // → 早期リターンして何もイベントを送信しない
+      expect((mock.sendToClient as any).mock.calls.length).toBe(callsBefore);
     });
   });
 

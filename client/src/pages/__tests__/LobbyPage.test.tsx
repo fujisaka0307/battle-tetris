@@ -174,7 +174,7 @@ describe('LobbyPage', () => {
     renderLobbyPage('XYZ789');
 
     await userEvent.click(screen.getByTestId('copy-btn'));
-    // Should not throw
+    expect(mockWriteText).toHaveBeenCalled();
   });
 
   it('Ready 後に "相手の準備を待っています" テキストが表示されること', async () => {
@@ -212,8 +212,8 @@ describe('LobbyPage', () => {
 
     unmount();
 
-    // Should not cause errors after unmount
-    act(() => { vi.advanceTimersByTime(5000); });
+    // アンマウント後のタイマー発火でエラーが出ないこと
+    expect(() => act(() => { vi.advanceTimersByTime(5000); })).not.toThrow();
   });
 
   it('OpponentDisconnected 時にカウントダウンが未開始でもクラッシュしないこと', () => {

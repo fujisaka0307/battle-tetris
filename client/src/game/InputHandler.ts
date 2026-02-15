@@ -40,14 +40,14 @@ const DAS_ACTIONS: ReadonlySet<GameAction> = new Set([
 
 export class InputHandler {
   /** Keys currently held down. */
-  private pressedKeys = new Set<string>();
+  private readonly pressedKeys = new Set<string>();
 
   /**
    * For one-shot actions (HardDrop, RotateCW, RotateCCW, Hold) and for the
    * initial DAS press, track whether the action has already been emitted for
    * the current press so we don't repeat it.
    */
-  private firedOnceActions = new Set<GameAction>();
+  private readonly firedOnceActions = new Set<GameAction>();
 
   /**
    * Queue for one-shot actions captured at keydown time so they fire even
@@ -60,23 +60,23 @@ export class InputHandler {
    * keys. This allows them to fire once immediately on keydown, then pause for
    * DAS_MS before auto-repeating.
    */
-  private dasInitialFired = new Set<GameAction>();
+  private readonly dasInitialFired = new Set<GameAction>();
 
   /**
    * For DAS-eligible keys, record when they were first pressed so we can
    * compute the initial delay and subsequent repeat timing.
    */
-  private dasStartTime = new Map<GameAction, number>();
+  private readonly dasStartTime = new Map<GameAction, number>();
 
   /**
    * The timestamp at which we last emitted an auto-repeat for a DAS action.
    * Used to pace repeats at ARR_MS intervals after the initial DAS_MS delay.
    */
-  private dasLastRepeatTime = new Map<GameAction, number>();
+  private readonly dasLastRepeatTime = new Map<GameAction, number>();
 
   /** Bound references so we can remove them in detach(). */
-  private handleKeyDown: (e: Event) => void;
-  private handleKeyUp: (e: Event) => void;
+  private readonly handleKeyDown: (e: Event) => void;
+  private readonly handleKeyUp: (e: Event) => void;
 
   /** The target we attached listeners to (null when detached). */
   private target: EventTarget | null = null;
@@ -129,75 +129,60 @@ export class InputHandler {
   poll(currentTime: number): GameAction[] {
     const actions: GameAction[] = [];
 
-    // Drain one-shot actions queued at keydown time (handles fast press+release)
-    while (this.pendingOnceActions.length > 0) {
-      const action = this.pendingOnceActions.shift()!;
-      if (!this.firedOnceActions.has(action)) {
-        this.firedOnceActions.add(action);
-        actions.push(action);
-      }
-    }
+    this.drainPendingOnceActions(actions);
 
     for (const key of this.pressedKeys) {
       const action = KEY_MAP.get(key);
       if (action === undefined) continue;
 
-      // --- One-shot actions (fire once per press) ---
       if (ONCE_PER_PRESS.has(action)) {
-        if (!this.firedOnceActions.has(action)) {
-          this.firedOnceActions.add(action);
-          actions.push(action);
-        }
-        continue;
-      }
-
-      // --- SoftDrop: fire every frame while held ---
-      if (action === GameAction.SoftDrop) {
+        this.tryFireOnce(action, actions);
+      } else if (action === GameAction.SoftDrop) {
         actions.push(action);
-        continue;
-      }
-
-      // --- DAS/ARR movement (MoveLeft / MoveRight) ---
-      if (DAS_ACTIONS.has(action)) {
-        // Emit one action immediately on first press.
-        if (!this.dasInitialFired.has(action)) {
-          this.dasInitialFired.add(action);
-          actions.push(action);
-          continue;
-        }
-
-        const startTime = this.dasStartTime.get(action);
-        if (startTime === undefined) continue;
-
-        const elapsed = currentTime - startTime;
-
-        if (elapsed < DAS_MS) {
-          // Still within the initial DAS delay; wait.
-          continue;
-        }
-
-        // DAS threshold passed. Check ARR pacing.
-        const lastRepeat = this.dasLastRepeatTime.get(action);
-        if (lastRepeat === undefined) {
-          // First repeat after DAS triggers.
-          this.dasLastRepeatTime.set(action, currentTime);
-          actions.push(action);
-        } else {
-          const sinceLast = currentTime - lastRepeat;
-          if (sinceLast >= ARR_MS) {
-            // Emit as many repeats as elapsed ARR intervals allow, but cap at
-            // a single action per poll call to keep behaviour predictable.
-            this.dasLastRepeatTime.set(action, currentTime);
-            actions.push(action);
-          }
-        }
-        continue;
+      } else if (DAS_ACTIONS.has(action)) {
+        this.pollDasAction(action, currentTime, actions);
       }
     }
 
     // Deduplicate: if the same action was contributed by multiple keys (e.g.
     // both 'a' and 'ArrowLeft' held), keep only the first occurrence.
     return [...new Set(actions)];
+  }
+
+  /** Drain one-shot actions queued at keydown time (handles fast press+release). */
+  private drainPendingOnceActions(actions: GameAction[]): void {
+    while (this.pendingOnceActions.length > 0) {
+      const action = this.pendingOnceActions.shift()!;
+      this.tryFireOnce(action, actions);
+    }
+  }
+
+  /** Fire an action once per press if not already fired. */
+  private tryFireOnce(action: GameAction, actions: GameAction[]): void {
+    if (!this.firedOnceActions.has(action)) {
+      this.firedOnceActions.add(action);
+      actions.push(action);
+    }
+  }
+
+  /** Handle DAS/ARR auto-repeat for movement keys. */
+  private pollDasAction(action: GameAction, currentTime: number, actions: GameAction[]): void {
+    // Emit one action immediately on first press.
+    if (!this.dasInitialFired.has(action)) {
+      this.dasInitialFired.add(action);
+      actions.push(action);
+      return;
+    }
+
+    const startTime = this.dasStartTime.get(action);
+    if (startTime === undefined || currentTime - startTime < DAS_MS) return;
+
+    // DAS threshold passed. Check ARR pacing.
+    const lastRepeat = this.dasLastRepeatTime.get(action);
+    if (lastRepeat === undefined || currentTime - lastRepeat >= ARR_MS) {
+      this.dasLastRepeatTime.set(action, currentTime);
+      actions.push(action);
+    }
   }
 
   // ---------------------------------------------------------------------------

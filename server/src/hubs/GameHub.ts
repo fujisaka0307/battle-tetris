@@ -2,7 +2,9 @@ import {
   ServerEvents,
   ErrorCodes,
   COUNTDOWN_SECONDS,
+  RoomStatus,
 } from '@battle-tetris/shared';
+import type { WaitingRoomInfo } from '@battle-tetris/shared';
 import { RoomManager } from '../services/RoomManager.js';
 import { MatchmakingService } from '../services/MatchmakingService.js';
 import { GameSessionManager } from '../services/GameSessionManager.js';
@@ -35,10 +37,11 @@ export interface HubConnection {
 // =============================================================================
 
 export class GameHub {
-  private roomManager: RoomManager;
-  private matchmaking: MatchmakingService;
-  private sessionManager: GameSessionManager;
-  private hub: HubConnection;
+  private readonly roomManager: RoomManager;
+  private readonly matchmaking: MatchmakingService;
+  private readonly sessionManager: GameSessionManager;
+  private readonly hub: HubConnection;
+  private readonly roomListSubscribers = new Set<string>();
 
   constructor(hub: HubConnection) {
     this.roomManager = new RoomManager();
@@ -97,6 +100,8 @@ export class GameHub {
     this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, {
       roomId: room.roomId,
     });
+
+    this.broadcastWaitingRoomList();
   }
 
   handleJoinRoom(connectionId: string, data: unknown): void {
@@ -136,6 +141,8 @@ export class GameHub {
         nickname: opponent.nickname,
       });
     }
+
+    this.broadcastWaitingRoomList();
   }
 
   handleJoinRandomMatch(connectionId: string, data: unknown): void {
@@ -295,6 +302,41 @@ export class GameHub {
         { timeout: 0 },
       );
     }
+
+    this.broadcastWaitingRoomList();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Room list subscription
+  // ---------------------------------------------------------------------------
+
+  handleSubscribeRoomList(connectionId: string): void {
+    this.roomListSubscribers.add(connectionId);
+    // Send current waiting room list immediately
+    const rooms = this.getWaitingRoomList();
+    this.hub.sendToClient(connectionId, ServerEvents.WaitingRoomListUpdated, { rooms });
+  }
+
+  handleUnsubscribeRoomList(connectionId: string): void {
+    this.roomListSubscribers.delete(connectionId);
+  }
+
+  private broadcastWaitingRoomList(): void {
+    const rooms = this.getWaitingRoomList();
+    const payload = { rooms };
+    for (const connId of this.roomListSubscribers) {
+      this.hub.sendToClient(connId, ServerEvents.WaitingRoomListUpdated, payload);
+    }
+  }
+
+  private getWaitingRoomList(): WaitingRoomInfo[] {
+    return this.roomManager
+      .getAllRooms()
+      .filter((r) => r.status === RoomStatus.Waiting && !r.isFull())
+      .map((r) => ({
+        roomId: r.roomId,
+        creatorNickname: r.player1?.nickname ?? '',
+      }));
   }
 
   // ---------------------------------------------------------------------------
@@ -302,6 +344,9 @@ export class GameHub {
   // ---------------------------------------------------------------------------
 
   handleDisconnected(connectionId: string): void {
+    // Remove from room list subscribers
+    this.roomListSubscribers.delete(connectionId);
+
     // Remove from matchmaking queue
     this.matchmaking.dequeue(connectionId);
 
@@ -328,6 +373,7 @@ export class GameHub {
         );
       }
       this.roomManager.removeConnection(connectionId);
+      this.broadcastWaitingRoomList();
     }
   }
 

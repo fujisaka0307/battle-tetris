@@ -12,7 +12,7 @@ export class GarbageManager {
   private queue: number = 0;
 
   /** PRNG — 穴の列を決めるために使う */
-  private rng: (() => number) | null = null;
+  private readonly rng: (() => number) | null = null;
 
   /**
    * @param rng オプション: 穴位置の決定に使う乱数関数 (0..1)。
@@ -75,7 +75,7 @@ export class GarbageManager {
    * ランダムな穴の列位置を返す。
    */
   private randomHoleCol(): number {
-    const r = this.rng ? this.rng() : Math.random();
+    const r = this.rng ? this.rng() : Math.random(); // NOSONAR — game logic, not security
     return Math.floor(r * FIELD_COLS);
   }
 }

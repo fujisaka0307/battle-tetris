@@ -49,7 +49,7 @@ interface SignalRMessage {
 export class LocalSignalRAdapter implements HubConnection {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private wss: any = null;
-  private connections = new Map<string, WebSocket>();
+  private readonly connections = new Map<string, WebSocket>();
   private gameHub: GameHub;
   private nextConnectionId = 1;
 
@@ -198,6 +198,12 @@ export class LocalSignalRAdapter implements HubConnection {
         break;
       case ClientEvents.LeaveRoom:
         this.gameHub.handleLeaveRoom(connectionId);
+        break;
+      case ClientEvents.SubscribeRoomList:
+        this.gameHub.handleSubscribeRoomList(connectionId);
+        break;
+      case ClientEvents.UnsubscribeRoomList:
+        this.gameHub.handleUnsubscribeRoomList(connectionId);
         break;
     }
   }

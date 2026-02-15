@@ -5,6 +5,9 @@ import rateLimit from 'express-rate-limit';
 
 const app = express();
 
+// Security: hide framework version info
+app.disable('x-powered-by');
+
 // Security headers
 app.use(helmet());
 
