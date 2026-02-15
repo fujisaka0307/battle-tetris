@@ -40,7 +40,7 @@ jobs:
           path: codeql-results/*.sarif
           retention-days: 5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         if: ${{ !cancelled() }}
         with:
           node-version: 22
