@@ -13,7 +13,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
-    baseURL: process.env.BASE_URL || 'https://stapp-battle-tetris-prod.azurestaticapps.net',
+    baseURL: process.env.BASE_URL || 'https://blue-field-034922500.4.azurestaticapps.net',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry',

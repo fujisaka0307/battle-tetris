@@ -18,7 +18,7 @@ test.describe('Production Smoke Tests', () => {
   });
 
   test('バックエンドAPIのヘルスチェック', async ({ request }) => {
-    const apiBaseUrl = process.env.API_BASE_URL || 'https://app-battle-tetris-prod.azurewebsites.net';
+    const apiBaseUrl = process.env.API_BASE_URL || 'https://app-battle-tetris-dev.azurewebsites.net';
     const response = await request.get(`${apiBaseUrl}/health`);
     expect(response.ok()).toBeTruthy();
     const body = await response.json();
