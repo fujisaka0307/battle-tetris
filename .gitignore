@@ -9,6 +9,7 @@ playwright-report/
 test-results/
 allure-results/
 allure-report/
+.scannerwork/
 *.tsbuildinfo
 *.zip
 deploy/
