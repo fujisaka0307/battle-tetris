@@ -5,5 +5,10 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     include: ['src/**/*.test.ts'],
+    setupFiles: ['allure-vitest/setup'],
+    reporters: [
+      'default',
+      ['allure-vitest/reporter', { resultsDir: '../allure-results/shared' }],
+    ],
   },
 });
