@@ -1,0 +1,57 @@
+name: Gitleaks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        id: gitleaks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        if: ${{ !cancelled() }}
+        with:
+          node-version: 22
+
+      - name: Convert Gitleaks results to Allure
+        if: ${{ !cancelled() }}
+        run: |
+          # gitleaks-action outputs results.json in the workspace root
+          if [ -f results.json ]; then
+            node scripts/gitleaks-to-allure.mjs results.json
+          else
+            echo '[]' > results.json
+            node scripts/gitleaks-to-allure.mjs results.json
+          fi
+
+      - name: Upload Allure results (Gitleaks)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-gitleaks
+          path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Fail if secrets detected
+        if: steps.gitleaks.outcome == 'failure'
+        run: |
+          echo "::error::Gitleaks detected secrets in the codebase. Check the scan results."
+          exit 1

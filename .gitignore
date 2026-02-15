@@ -10,6 +10,7 @@ test-results/
 allure-results/
 allure-report/
 .scannerwork/
+.lighthouseci/
 *.tsbuildinfo
 *.zip
 deploy/

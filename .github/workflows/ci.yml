@@ -60,6 +60,36 @@ jobs:
           retention-days: 5
           if-no-files-found: warn
 
+  # ---------------------------------------------------------------------------
+  # P1: npm audit — dependency vulnerability scanning
+  # ---------------------------------------------------------------------------
+  npm-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit and generate Allure results
+        run: node scripts/npm-audit-to-allure.mjs
+        continue-on-error: true
+
+      - name: Upload Allure results (npm audit)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-npm-audit
+          path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
   sonarcloud:
     runs-on: ubuntu-latest
     needs: lint-and-test
@@ -139,9 +169,174 @@ jobs:
           retention-days: 5
           if-no-files-found: warn
 
+  # ---------------------------------------------------------------------------
+  # P2: OWASP ZAP — Dynamic Application Security Testing
+  # ---------------------------------------------------------------------------
+  zap-scan:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared
+        run: npm run build -w shared
+
+      - name: Build client
+        run: npm run build -w client
+
+      - name: Build server
+        run: npm run build -w server
+
+      - name: Start server
+        run: node server/dist/index.js &
+        env:
+          PORT: 4000
+          NODE_ENV: production
+
+      - name: Serve client
+        run: npx serve client/dist -l 3000 -s &
+
+      - name: Wait for services
+        run: |
+          for i in $(seq 1 30); do
+            curl -s http://localhost:3000 > /dev/null && curl -s http://localhost:4000/health > /dev/null && break
+            sleep 1
+          done
+
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: 'http://localhost:3000'
+          allow_issue_writing: false
+          cmd_options: '-J zap-report.json'
+        continue-on-error: true
+
+      - name: Convert ZAP results to Allure
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f zap-report.json ]; then
+            node scripts/zap-to-allure.mjs zap-report.json
+          else
+            echo "No ZAP report found, generating empty results"
+            mkdir -p allure-results/zap
+          fi
+
+      - name: Upload ZAP report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: zap-report.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload Allure results (ZAP)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-zap
+          path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # P2: Lighthouse CI — Performance, Accessibility, SEO monitoring
+  # ---------------------------------------------------------------------------
+  lighthouse:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared
+        run: npm run build -w shared
+
+      - name: Build client
+        run: npm run build -w client
+
+      - name: Build server
+        run: npm run build -w server
+
+      - name: Start server
+        run: node server/dist/index.js &
+        env:
+          PORT: 4000
+          NODE_ENV: production
+
+      - name: Serve client
+        run: npx serve client/dist -l 3000 -s &
+
+      - name: Wait for services
+        run: |
+          for i in $(seq 1 30); do
+            curl -s http://localhost:3000 > /dev/null && break
+            sleep 1
+          done
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse CI
+        run: lhci collect --url=http://localhost:3000 --numberOfRuns=3
+        continue-on-error: true
+
+      - name: Convert Lighthouse results to Allure
+        if: ${{ !cancelled() }}
+        run: |
+          LHCI_DIR=".lighthouseci"
+          if [ -d "$LHCI_DIR" ]; then
+            LHR_FILE=$(ls "$LHCI_DIR"/lhr-*.json 2>/dev/null | head -1)
+            if [ -n "$LHR_FILE" ]; then
+              node scripts/lighthouse-to-allure.mjs "$LHR_FILE"
+            else
+              echo "No Lighthouse result files found"
+            fi
+          else
+            echo "No .lighthouseci directory found"
+          fi
+
+      - name: Upload Lighthouse results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload Allure results (Lighthouse)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-lighthouse
+          path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # Unified Allure Report — aggregates ALL quality & security results
+  # ---------------------------------------------------------------------------
   allure-report:
     runs-on: ubuntu-latest
-    needs: [lint-and-test, e2e, sonarcloud]
+    needs: [lint-and-test, e2e, sonarcloud, npm-audit, zap-scan, lighthouse]
     if: ${{ !cancelled() }}
 
     steps:
@@ -171,10 +366,54 @@ jobs:
           name: allure-results-codeql
           path: allure-results/
 
+      - name: Download npm audit Allure results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: allure-results-npm-audit
+          path: allure-results/
+
+      - name: Download Gitleaks Allure results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: allure-results-gitleaks
+          path: allure-results/
+
+      - name: Download ZAP Allure results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: allure-results-zap
+          path: allure-results/
+
+      - name: Download Lighthouse Allure results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: allure-results-lighthouse
+          path: allure-results/
+
       - name: Flatten allure results
         run: |
           find allure-results -mindepth 2 -type f -exec mv {} allure-results/ \;
           find allure-results -mindepth 1 -type d -empty -delete
+
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+          path: repo
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate Security Dashboard summary
+        run: node repo/scripts/security-summary-to-allure.mjs allure-results
+        env:
+          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
+          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+          DEFECTDOJO_ENGAGEMENT_ID: ${{ secrets.DEFECTDOJO_ENGAGEMENT_ID }}
 
       - name: Load Allure report history
         uses: actions/checkout@v4
