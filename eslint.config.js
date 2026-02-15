@@ -5,7 +5,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['**/dist/**', '**/node_modules/**', 'playwright-report/**'],
+    ignores: ['**/dist/**', '**/node_modules/**', 'playwright-report/**', 'scripts/**'],
   },
   {
     rules: {

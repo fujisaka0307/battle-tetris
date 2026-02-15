@@ -1,4 +1,4 @@
-import { test, expect, enterNickname, startBattleAndFinish, playToGameOver } from './fixtures/setup';
+import { test, expect, enterNickname, playToGameOver } from './fixtures/setup';
 
 // ランダムマッチはキュー共有のためシリアル実行
 test.describe.configure({ mode: 'serial' });
