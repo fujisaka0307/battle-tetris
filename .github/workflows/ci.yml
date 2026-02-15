@@ -40,13 +40,13 @@ jobs:
         run: npm run typecheck -w server
 
       - name: Test shared
-        run: npm run test -w shared
+        run: npm run test -w shared -- --coverage
 
       - name: Test client
-        run: npm run test -w client
+        run: npm run test -w client -- --coverage
 
       - name: Test server
-        run: npm run test -w server
+        run: npm run test -w server -- --coverage
 
       - name: Build
         run: npm run build
@@ -57,6 +57,18 @@ jobs:
         with:
           name: allure-results-unit
           path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Upload coverage reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-reports
+          path: |
+            shared/coverage/lcov.info
+            client/coverage/lcov.info
+            server/coverage/lcov.info
           retention-days: 5
           if-no-files-found: warn
 
@@ -103,6 +115,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v7
+        with:
+          name: coverage-reports
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master

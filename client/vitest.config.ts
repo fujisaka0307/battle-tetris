@@ -12,5 +12,10 @@ export default defineConfig({
       'default',
       ['allure-vitest/reporter', { resultsDir: '../allure-results/client' }],
     ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: './coverage',
+    },
   },
 });
