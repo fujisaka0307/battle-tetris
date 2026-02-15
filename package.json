@@ -27,7 +27,7 @@
     "allure-playwright": "^3.4.5",
     "allure-vitest": "^3.4.5",
     "concurrently": "^9.1.0",
-    "eslint": "^9.20.0",
+    "eslint": "^10.0.0",
     "prettier": "^3.5.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.24.0"
