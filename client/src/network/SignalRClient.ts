@@ -22,6 +22,7 @@ import type {
   RematchAcceptedPayload,
   OpponentDisconnectedPayload,
   ErrorPayload,
+  WaitingRoomListUpdatedPayload,
 } from '@battle-tetris/shared';
 
 // =============================================================================
@@ -47,6 +48,7 @@ export interface SignalREventHandlers {
   onRematchAccepted?: (payload: RematchAcceptedPayload) => void;
   onOpponentDisconnected?: (payload: OpponentDisconnectedPayload) => void;
   onOpponentReconnected?: () => void;
+  onWaitingRoomListUpdated?: (payload: WaitingRoomListUpdatedPayload) => void;
   onError?: (payload: ErrorPayload) => void;
   onConnectionStateChanged?: (state: ConnectionState) => void;
 }
@@ -189,6 +191,14 @@ export class SignalRClient {
     this.invoke(ClientEvents.LeaveRoom);
   }
 
+  sendSubscribeRoomList(): void {
+    this.invoke(ClientEvents.SubscribeRoomList);
+  }
+
+  sendUnsubscribeRoomList(): void {
+    this.invoke(ClientEvents.UnsubscribeRoomList);
+  }
+
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
@@ -253,6 +263,10 @@ export class SignalRClient {
 
     this.connection.on(ServerEvents.OpponentReconnected, () => {
       this.handlers.onOpponentReconnected?.();
+    });
+
+    this.connection.on(ServerEvents.WaitingRoomListUpdated, (payload: WaitingRoomListUpdatedPayload) => {
+      this.handlers.onWaitingRoomListUpdated?.(payload);
     });
 
     this.connection.on(ServerEvents.Error, (payload: ErrorPayload) => {

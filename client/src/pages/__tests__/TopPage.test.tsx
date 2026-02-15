@@ -18,6 +18,8 @@ vi.mock('../../network/SignalRClient', () => ({
     sendCreateRoom: vi.fn(),
     sendJoinRoom: vi.fn(),
     sendJoinRandomMatch: vi.fn(),
+    sendSubscribeRoomList: vi.fn(),
+    sendUnsubscribeRoomList: vi.fn(),
   },
 }));
 
@@ -131,7 +133,7 @@ describe('TopPage', () => {
 
   it('connect() 失敗でエラーメッセージが表示されること', async () => {
     (signalRClient as any).state = 'disconnected';
-    (signalRClient.connect as any).mockRejectedValueOnce(new Error('fail'));
+    (signalRClient.connect as any).mockRejectedValue(new Error('fail'));
     renderTopPage();
 
     await userEvent.type(screen.getByTestId('nickname-input'), 'Alice');
@@ -140,6 +142,7 @@ describe('TopPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toBeInTheDocument();
     });
+    (signalRClient.connect as any).mockResolvedValue(undefined);
   });
 
   it('onRoomCreated ハンドラでロビーにナビゲートされること', async () => {
@@ -219,7 +222,7 @@ describe('TopPage', () => {
 
   it('JoinRoom 接続失敗でエラーメッセージが表示されること', async () => {
     (signalRClient as any).state = 'disconnected';
-    (signalRClient.connect as any).mockRejectedValueOnce(new Error('fail'));
+    (signalRClient.connect as any).mockRejectedValue(new Error('fail'));
     renderTopPage();
 
     await userEvent.type(screen.getByTestId('nickname-input'), 'Bob');
@@ -229,11 +232,12 @@ describe('TopPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toBeInTheDocument();
     });
+    (signalRClient.connect as any).mockResolvedValue(undefined);
   });
 
   it('ランダムマッチ接続失敗でエラーメッセージが表示されること', async () => {
     (signalRClient as any).state = 'disconnected';
-    (signalRClient.connect as any).mockRejectedValueOnce(new Error('fail'));
+    (signalRClient.connect as any).mockRejectedValue(new Error('fail'));
     renderTopPage();
 
     await userEvent.type(screen.getByTestId('nickname-input'), 'Charlie');
@@ -242,6 +246,7 @@ describe('TopPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toBeInTheDocument();
     });
+    (signalRClient.connect as any).mockResolvedValue(undefined);
   });
 
   it('ルームID入力が大文字に変換されること', async () => {

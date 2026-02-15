@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NICKNAME_MIN_LENGTH, NICKNAME_MAX_LENGTH, ROOM_ID_LENGTH } from '@battle-tetris/shared';
+import type { WaitingRoomInfo } from '@battle-tetris/shared';
 import { signalRClient } from '../network/SignalRClient';
 import { usePlayerStore } from '../stores/usePlayerStore';
 
@@ -12,6 +13,9 @@ export default function TopPage() {
   const [roomId, setRoomId_] = useState('');
   const [error, setError] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [waitingRooms, setWaitingRooms] = useState<WaitingRoomInfo[]>([]);
+  const subscribedRef = useRef(false);
+  const connectingPromiseRef = useRef<Promise<boolean> | null>(null);
 
   const nicknameValid =
     nickname.trim().length >= NICKNAME_MIN_LENGTH &&
@@ -26,16 +30,54 @@ export default function TopPage() {
 
   const ensureConnected = useCallback(async () => {
     if (signalRClient.state === 'connected') return true;
+    if (connectingPromiseRef.current) return connectingPromiseRef.current;
     setIsConnecting(true);
-    try {
-      const url = import.meta.env.VITE_SIGNALR_URL || '/hub';
-      await signalRClient.connect(url);
-      return true;
-    } catch {
-      setError('サーバーに接続できませんでした');
-      return false;
-    } finally {
-      setIsConnecting(false);
+    const promise = (async () => {
+      try {
+        const url = import.meta.env.VITE_SIGNALR_URL || '/hub';
+        await signalRClient.connect(url);
+        return true;
+      } catch {
+        setError('サーバーに接続できませんでした');
+        return false;
+      } finally {
+        setIsConnecting(false);
+        connectingPromiseRef.current = null;
+      }
+    })();
+    connectingPromiseRef.current = promise;
+    return promise;
+  }, []);
+
+  // Early connection and room list subscription
+  useEffect(() => {
+    let cancelled = false;
+    const connectAndSubscribe = async () => {
+      const connected = await ensureConnected();
+      if (!cancelled && connected && signalRClient.state === 'connected') {
+        signalRClient.setHandlers({
+          onWaitingRoomListUpdated: (payload) => {
+            if (!cancelled) setWaitingRooms(payload.rooms);
+          },
+        });
+        signalRClient.sendSubscribeRoomList();
+        subscribedRef.current = true;
+      }
+    };
+    connectAndSubscribe();
+    return () => {
+      cancelled = true;
+      if (subscribedRef.current) {
+        signalRClient.sendUnsubscribeRoomList();
+        subscribedRef.current = false;
+      }
+    };
+  }, [ensureConnected]);
+
+  const subscribeIfNeeded = useCallback(() => {
+    if (!subscribedRef.current && signalRClient.state === 'connected') {
+      signalRClient.sendSubscribeRoomList();
+      subscribedRef.current = true;
     }
   }, []);
 
@@ -52,11 +94,13 @@ export default function TopPage() {
         setRoomId(payload.roomId);
         navigate(`/lobby/${payload.roomId}`);
       },
+      onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
       onError: (payload) => setError(payload.message),
     });
 
+    subscribeIfNeeded();
     signalRClient.sendCreateRoom(trimmed);
-  }, [nickname, nicknameValid, storeNickname, ensureConnected, setRoomId, navigate]);
+  }, [nickname, nicknameValid, storeNickname, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
   const handleJoinRoom = useCallback(async () => {
     if (!nicknameValid || !roomIdValid) return;
@@ -72,11 +116,13 @@ export default function TopPage() {
         usePlayerStore.getState().setOpponentNickname(payload.nickname);
         navigate(`/lobby/${roomId.toUpperCase()}`);
       },
+      onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
       onError: (payload) => setError(payload.message),
     });
 
+    subscribeIfNeeded();
     signalRClient.sendJoinRoom(trimmed, roomId.toUpperCase());
-  }, [nickname, nicknameValid, roomId, roomIdValid, storeNickname, ensureConnected, setRoomId, navigate]);
+  }, [nickname, nicknameValid, roomId, roomIdValid, storeNickname, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
   const handleRandomMatch = useCallback(async () => {
     if (!nicknameValid) return;
@@ -92,11 +138,38 @@ export default function TopPage() {
         usePlayerStore.getState().setOpponentNickname(payload.opponentNickname);
         navigate(`/lobby/${payload.roomId}`);
       },
+      onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
       onError: (payload) => setError(payload.message),
     });
 
+    subscribeIfNeeded();
     signalRClient.sendJoinRandomMatch(trimmed);
-  }, [nickname, nicknameValid, storeNickname, ensureConnected, setRoomId, navigate]);
+  }, [nickname, nicknameValid, storeNickname, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+
+  const handleJoinFromList = useCallback(async (targetRoomId: string) => {
+    if (!nicknameValid) {
+      setError('ニックネームを入力してください');
+      return;
+    }
+    setError('');
+    const trimmed = nickname.trim();
+    storeNickname(trimmed);
+
+    if (!(await ensureConnected())) return;
+
+    signalRClient.setHandlers({
+      onOpponentJoined: (payload) => {
+        setRoomId(targetRoomId);
+        usePlayerStore.getState().setOpponentNickname(payload.nickname);
+        navigate(`/lobby/${targetRoomId}`);
+      },
+      onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
+      onError: (payload) => setError(payload.message),
+    });
+
+    subscribeIfNeeded();
+    signalRClient.sendJoinRoom(trimmed, targetRoomId);
+  }, [nickname, nicknameValid, storeNickname, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
@@ -165,6 +238,39 @@ export default function TopPage() {
           ランダムマッチ
         </button>
       </div>
+
+      {/* Waiting Room List */}
+      {waitingRooms.length > 0 && (
+        <div className="w-full max-w-sm mt-6" data-testid="waiting-room-list">
+          <h2 className="text-sm text-gray-300 mb-2">待機中のルーム</h2>
+          <div className="space-y-2">
+            {waitingRooms.map((room) => (
+              <div
+                key={room.roomId}
+                className="flex items-center justify-between bg-gray-800 border border-gray-700 rounded px-3 py-2"
+                data-testid="waiting-room-item"
+              >
+                <div className="flex gap-3 items-center">
+                  <span className="text-cyan-400 font-mono text-sm" data-testid="waiting-room-id">
+                    {room.roomId}
+                  </span>
+                  <span className="text-gray-300 text-sm" data-testid="waiting-room-creator">
+                    {room.creatorNickname}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleJoinFromList(room.roomId)}
+                  disabled={!nicknameValid || isConnecting}
+                  className="px-3 py-1 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-500 rounded text-sm font-bold transition-colors"
+                  data-testid="waiting-room-join-btn"
+                >
+                  参加
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (

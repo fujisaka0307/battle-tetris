@@ -15,6 +15,8 @@ export const ClientEvents = {
   GameOver: 'GameOver',
   RequestRematch: 'RequestRematch',
   LeaveRoom: 'LeaveRoom',
+  SubscribeRoomList: 'SubscribeRoomList',
+  UnsubscribeRoomList: 'UnsubscribeRoomList',
 } as const;
 
 /** サーバー → クライアント イベント名 */
@@ -31,6 +33,7 @@ export const ServerEvents = {
   RematchAccepted: 'RematchAccepted',
   OpponentDisconnected: 'OpponentDisconnected',
   OpponentReconnected: 'OpponentReconnected',
+  WaitingRoomListUpdated: 'WaitingRoomListUpdated',
   Error: 'Error',
 } as const;
 
@@ -67,6 +70,8 @@ export interface LinesClearedPayload {
 // GameOver: no payload
 // RequestRematch: no payload
 // LeaveRoom: no payload
+// SubscribeRoomList: no payload
+// UnsubscribeRoomList: no payload
 
 // =============================================================================
 // Server → Client Payloads
@@ -121,6 +126,15 @@ export interface OpponentDisconnectedPayload {
 }
 
 // OpponentReconnected: no payload
+
+export interface WaitingRoomInfo {
+  roomId: string;
+  creatorNickname: string;
+}
+
+export interface WaitingRoomListUpdatedPayload {
+  rooms: WaitingRoomInfo[];
+}
 
 export interface ErrorPayload {
   code: number;
