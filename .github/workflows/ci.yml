@@ -118,6 +118,11 @@ jobs:
           name: allure-results-e2e
           path: allure-results/
 
+      - name: Flatten allure results
+        run: |
+          find allure-results -mindepth 2 -type f -exec mv {} allure-results/ \;
+          find allure-results -mindepth 1 -type d -empty -delete
+
       - name: Load Allure report history
         uses: actions/checkout@v4
         continue-on-error: true
