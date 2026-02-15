@@ -53,7 +53,7 @@ jobs:
 
       - name: Upload Allure results (unit tests)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-unit
           path: allure-results/
@@ -83,7 +83,7 @@ jobs:
 
       - name: Upload Allure results (npm audit)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-npm-audit
           path: allure-results/
@@ -122,7 +122,7 @@ jobs:
 
       - name: Upload Allure results (SonarCloud)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-sonarcloud
           path: allure-results/
@@ -153,7 +153,7 @@ jobs:
       - name: Run E2E tests
         run: npx playwright test
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -162,7 +162,7 @@ jobs:
 
       - name: Upload Allure results (e2e)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-e2e
           path: allure-results/
@@ -232,7 +232,7 @@ jobs:
 
       - name: Upload ZAP report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: zap-report
           path: zap-report.json
@@ -241,7 +241,7 @@ jobs:
 
       - name: Upload Allure results (ZAP)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-zap
           path: allure-results/
@@ -315,7 +315,7 @@ jobs:
 
       - name: Upload Lighthouse results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lighthouse-report
           path: .lighthouseci/
@@ -324,7 +324,7 @@ jobs:
 
       - name: Upload Allure results (Lighthouse)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-lighthouse
           path: allure-results/
