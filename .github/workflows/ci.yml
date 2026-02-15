@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -53,7 +53,7 @@ jobs:
 
       - name: Upload Allure results (unit tests)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-unit
           path: allure-results/
@@ -67,9 +67,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -83,7 +83,7 @@ jobs:
 
       - name: Upload Allure results (npm audit)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-npm-audit
           path: allure-results/
@@ -95,11 +95,11 @@ jobs:
     needs: lint-and-test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -123,7 +123,7 @@ jobs:
 
       - name: Upload Allure results (SonarCloud)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-sonarcloud
           path: allure-results/
@@ -135,9 +135,9 @@ jobs:
     needs: lint-and-test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -154,7 +154,7 @@ jobs:
       - name: Run E2E tests
         run: npx playwright test
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -163,7 +163,7 @@ jobs:
 
       - name: Upload Allure results (e2e)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-e2e
           path: allure-results/
@@ -178,9 +178,9 @@ jobs:
     needs: lint-and-test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -233,7 +233,7 @@ jobs:
 
       - name: Upload ZAP report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: zap-report
           path: zap-report.json
@@ -242,7 +242,7 @@ jobs:
 
       - name: Upload Allure results (ZAP)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-zap
           path: allure-results/
@@ -257,9 +257,9 @@ jobs:
     needs: lint-and-test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -316,7 +316,7 @@ jobs:
 
       - name: Upload Lighthouse results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lighthouse-report
           path: .lighthouseci/
@@ -325,7 +325,7 @@ jobs:
 
       - name: Upload Allure results (Lighthouse)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-results-lighthouse
           path: allure-results/
@@ -342,54 +342,54 @@ jobs:
 
     steps:
       - name: Download unit test Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: allure-results-unit
           path: allure-results/
 
       - name: Download E2E Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: allure-results-e2e
           path: allure-results/
 
       - name: Download SonarCloud Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-sonarcloud
           path: allure-results/
 
       - name: Download CodeQL Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-codeql
           path: allure-results/
 
       - name: Download npm audit Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-npm-audit
           path: allure-results/
 
       - name: Download Gitleaks Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-gitleaks
           path: allure-results/
 
       - name: Download ZAP Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-zap
           path: allure-results/
 
       - name: Download Lighthouse Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-lighthouse
@@ -400,12 +400,12 @@ jobs:
           find allure-results -mindepth 2 -type f -exec mv {} allure-results/ \;
           find allure-results -mindepth 1 -type d -empty -delete
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           sparse-checkout: scripts
           path: repo
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -417,7 +417,7 @@ jobs:
           DEFECTDOJO_ENGAGEMENT_ID: ${{ secrets.DEFECTDOJO_ENGAGEMENT_ID }}
 
       - name: Load Allure report history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         continue-on-error: true
         with:
           ref: gh-pages
