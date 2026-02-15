@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/setup';
 
 test.describe('TopPage — ニックネームバリデーション', () => {
   test('ニックネーム1文字でボタンが有効になること', async ({ page }) => {

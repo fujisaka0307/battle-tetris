@@ -5,7 +5,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     include: ['src/**/*.test.ts'],
-    setupFiles: ['allure-vitest/setup'],
+    setupFiles: ['allure-vitest/setup', './src/__tests__/allure-setup.ts'],
     reporters: [
       'default',
       ['allure-vitest/reporter', { resultsDir: '../allure-results/server' }],

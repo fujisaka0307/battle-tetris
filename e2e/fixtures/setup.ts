@@ -1,4 +1,10 @@
 import { test as base, expect, type Page } from '@playwright/test';
+import { parentSuite } from 'allure-js-commons';
+
+// すべてのE2Eテストに parentSuite ラベルを付与
+base.beforeEach(() => {
+  parentSuite('E2Eテスト');
+});
 
 /**
  * E2Eテスト用のセットアップヘルパー。

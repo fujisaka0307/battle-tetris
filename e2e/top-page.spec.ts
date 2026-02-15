@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/setup';
 
 test.describe('TopPage', () => {
   test('タイトルが表示されること', async ({ page }) => {
