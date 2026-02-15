@@ -263,9 +263,8 @@ export class GameEngine {
     if (!offsets) return false;
 
     for (const [dx, dy] of offsets) {
-      // SRS: dx = right positive, dy = down positive (positive = up in standard SRS)
-      // Our grid: row increases downward, col increases rightward
-      // SRS offset dy is "up" in visual space, so we negate for grid
+      // SRS: dx = right positive, dy = up positive (SRS standard)
+      // Grid conversion: testCol = col + dx, testRow = row - dy
       const testCol = col + dx;
       const testRow = row - dy;
       if (this.board.canPlace(type, newRotation, testRow, testCol)) {
