@@ -17,6 +17,9 @@
     "test:shared": "npm run test -w shared",
     "test:client": "npm run test -w client",
     "test:server": "npm run test -w server",
+    "pretest": "rm -rf allure-results/shared allure-results/client allure-results/server",
+    "pretest:e2e": "rm -rf allure-results/e2e",
+    "clean:allure": "rm -rf allure-results allure-report",
     "test:e2e": "npx playwright test",
     "test:e2e:prod": "npx playwright test --config playwright.production.config.ts e2e/production-smoke.spec.ts"
   },

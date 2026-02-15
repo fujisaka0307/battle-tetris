@@ -8,6 +8,7 @@
     "build": "tsc -b tsconfig.build.json && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.build.json",
+    "pretest": "rm -rf ../allure-results/client",
     "test": "vitest run",
     "test:watch": "vitest"
   },

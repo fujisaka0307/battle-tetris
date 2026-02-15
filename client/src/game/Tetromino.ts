@@ -228,6 +228,28 @@ export const TETROMINO_COLORS: Record<TetrominoType, string> = {
   [TetrominoType.L]: '#f0a000', // orange
 };
 
+/** グラデーション描画用 — 明るい方の色 */
+export const TETROMINO_COLORS_LIGHT: Record<TetrominoType, string> = {
+  [TetrominoType.I]: '#66ffff',
+  [TetrominoType.O]: '#ffff66',
+  [TetrominoType.T]: '#cc66ff',
+  [TetrominoType.S]: '#66ff66',
+  [TetrominoType.Z]: '#ff6666',
+  [TetrominoType.J]: '#6666ff',
+  [TetrominoType.L]: '#ffcc66',
+};
+
+/** グラデーション描画用 — 暗い方の色 */
+export const TETROMINO_COLORS_DARK: Record<TetrominoType, string> = {
+  [TetrominoType.I]: '#009999',
+  [TetrominoType.O]: '#999900',
+  [TetrominoType.T]: '#660099',
+  [TetrominoType.S]: '#009900',
+  [TetrominoType.Z]: '#990000',
+  [TetrominoType.J]: '#000099',
+  [TetrominoType.L]: '#996600',
+};
+
 // =============================================================================
 // Utility
 // =============================================================================

@@ -1,1 +1,153 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+/* ==========================================================================
+   Battle Tetris — Custom Styles
+   ========================================================================== */
+
+.battle-container {
+  font-family: 'Orbitron', sans-serif;
+  background: radial-gradient(ellipse at center, #0d0d1a 0%, #000000 70%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   Panel — HOLD / NEXT / STATS の共通枠
+   -------------------------------------------------------------------------- */
+
+.game-panel {
+  background: rgba(10, 10, 30, 0.85);
+  border: 1px solid rgba(0, 200, 255, 0.25);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow:
+    0 0 8px rgba(0, 200, 255, 0.1),
+    inset 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.game-panel-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: rgba(0, 200, 255, 0.6);
+  text-align: center;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   Field Frame — メインフィールドの枠
+   -------------------------------------------------------------------------- */
+
+.field-frame {
+  border: 2px solid rgba(0, 200, 255, 0.4);
+  box-shadow:
+    0 0 12px rgba(0, 200, 255, 0.15),
+    0 0 30px rgba(0, 200, 255, 0.05),
+    inset 0 0 12px rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
+  padding: 2px;
+  background: #000;
+  line-height: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Stats Panel — SCORE / LEVEL / LINES
+   -------------------------------------------------------------------------- */
+
+.stats-panel {
+  min-width: 96px;
+}
+
+.stat-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.stat-row + .stat-row {
+  border-top: 1px solid rgba(0, 200, 255, 0.1);
+}
+
+.stat-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: rgba(0, 200, 255, 0.5);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(0, 200, 255, 0.3);
+  margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Garbage Bar — 赤い垂直ゲージ
+   -------------------------------------------------------------------------- */
+
+.garbage-bar {
+  width: 6px;
+  height: 100%;
+  background: rgba(255, 0, 0, 0.08);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.garbage-bar-fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to top, #ff0000, #ff4444);
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+  border-radius: 3px;
+  transition: height 0.2s ease;
+}
+
+/* --------------------------------------------------------------------------
+   Opponent Area
+   -------------------------------------------------------------------------- */
+
+.opponent-panel {
+  opacity: 0.9;
+}
+
+.opponent-name {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.opponent-frame {
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px;
+  background: #000;
+  line-height: 0;
+}
+
+.opponent-stats {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.opponent-stats span {
+  display: block;
+  margin-top: 2px;
+}

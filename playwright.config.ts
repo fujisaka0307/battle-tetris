@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
+  globalSetup: './e2e/global-setup.ts',
   testDir: './e2e',
   testIgnore: ['**/production-smoke*'],
   fullyParallel: true,
@@ -20,6 +21,17 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: [
+        '**/random-match*.spec.ts',
+        '**/cross-match*.spec.ts',
+      ],
+    },
+    {
+      name: 'random-match',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /random-match.*\.spec\.ts|cross-match.*\.spec\.ts/,
+      fullyParallel: false,
+      dependencies: ['chromium'],
     },
   ],
   webServer: [

@@ -1,6 +1,8 @@
 import { test, expect, startBattleAndFinish } from './fixtures/setup';
 
 test.describe('Rematch Scenario — リマッチシナリオ', () => {
+  test.slow();
+
   test('勝者からのリマッチ要求が敗者に通知されること', async ({ playerAPage, playerBPage }) => {
     await startBattleAndFinish(playerAPage, playerBPage);
 

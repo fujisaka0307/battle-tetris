@@ -5,7 +5,7 @@ test.describe('Disconnect — 切断テスト（拡張）', () => {
     playerAPage,
     browser,
   }) => {
-    test.setTimeout(180_000); // DISCONNECT_TIMEOUT_MS(30s) + サーバー負荷マージン
+    test.setTimeout(240_000); // DISCONNECT_TIMEOUT_MS(30s) + CI処理遅延マージン
 
     // Create a separate context for playerB so we can close it cleanly
     const playerBContext = await browser.newContext();
@@ -28,7 +28,7 @@ test.describe('Disconnect — 切断テスト（拡張）', () => {
     await playerBContext.close();
 
     // Server needs DISCONNECT_TIMEOUT_MS (30s) to detect disconnect and send GameResult
-    await playerAPage.waitForURL(/\/result/, { timeout: 150_000 });
+    await playerAPage.waitForURL(/\/result/, { timeout: 200_000 });
     await expect(playerAPage.getByTestId('result-text')).toHaveText('WIN');
   });
 

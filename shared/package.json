@@ -14,6 +14,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "pretest": "rm -rf ../allure-results/shared",
     "test": "vitest run",
     "test:watch": "vitest"
   },

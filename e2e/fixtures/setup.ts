@@ -106,4 +106,39 @@ export async function startBattleAndFinish(
   await playerBPage.waitForURL(/\/result/, { timeout: 30000 });
 }
 
+/**
+ * ランダムマッチでマッチング→ロビーまで進めるヘルパー。
+ */
+export async function randomMatchToLobby(
+  playerAPage: Page,
+  playerBPage: Page,
+  nicknameA = 'Alice',
+  nicknameB = 'Bob',
+): Promise<void> {
+  await enterNickname(playerAPage, nicknameA);
+  await playerAPage.getByTestId('random-match-btn').click();
+  await enterNickname(playerBPage, nicknameB);
+  await playerBPage.getByTestId('random-match-btn').click();
+  await playerAPage.waitForURL(/\/lobby\//, { timeout: 10000 });
+  await playerBPage.waitForURL(/\/lobby\//, { timeout: 10000 });
+  await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+  await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+}
+
+/**
+ * ランダムマッチで対戦画面まで進めるヘルパー。
+ */
+export async function randomMatchToBattle(
+  playerAPage: Page,
+  playerBPage: Page,
+  nicknameA = 'Alice',
+  nicknameB = 'Bob',
+): Promise<void> {
+  await randomMatchToLobby(playerAPage, playerBPage, nicknameA, nicknameB);
+  await playerAPage.getByTestId('ready-btn').click();
+  await playerBPage.getByTestId('ready-btn').click();
+  await playerAPage.waitForURL(/\/battle\//, { timeout: 10000 });
+  await playerBPage.waitForURL(/\/battle\//, { timeout: 10000 });
+}
+
 export { expect };

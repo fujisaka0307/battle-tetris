@@ -66,8 +66,12 @@ vi.mock('../../game/Renderer', () => {
   class MockRenderer {
     static fieldWidth = 300;
     static fieldHeight = 600;
-    static miniFieldWidth = 150;
-    static miniFieldHeight = 300;
+    static miniFieldWidth = 140;
+    static miniFieldHeight = 280;
+    static nextQueueWidth = 96;
+    static nextQueueHeight = 312;
+    static holdWidth = 96;
+    static holdHeight = 96;
     drawField = vi.fn();
     drawNextQueue = vi.fn();
     drawHold = vi.fn();
@@ -77,18 +81,25 @@ vi.mock('../../game/Renderer', () => {
 });
 
 // Mock canvas getContext
+const mockGradient = { addColorStop: vi.fn() };
 HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
   fillStyle: '',
   strokeStyle: '',
   lineWidth: 0,
   globalAlpha: 1,
+  shadowColor: '',
+  shadowBlur: 0,
   fillRect: vi.fn(),
   strokeRect: vi.fn(),
+  clearRect: vi.fn(),
   beginPath: vi.fn(),
   moveTo: vi.fn(),
   lineTo: vi.fn(),
   stroke: vi.fn(),
-  clearRect: vi.fn(),
+  save: vi.fn(),
+  restore: vi.fn(),
+  createLinearGradient: vi.fn().mockReturnValue(mockGradient),
+  createRadialGradient: vi.fn().mockReturnValue(mockGradient),
 });
 
 // Capture requestAnimationFrame callbacks
@@ -209,16 +220,22 @@ describe('BattlePage', () => {
     expect(() => signalRHandlers.onOpponentReconnected?.()).not.toThrow();
   });
 
-  it('pendingGarbage > 0 の場合にガーベジインジケータが表示されること', () => {
+  it('pendingGarbage > 0 の場合にガーベジバーのフィルが表示されること', () => {
     useBattleStore.getState().addPendingGarbage(2);
     renderBattlePage();
 
-    expect(screen.getByText('Garbage: 2')).toBeInTheDocument();
+    // Garbage bar should always exist, fill should be visible when > 0
+    const bar = screen.getByTestId('garbage-bar');
+    expect(bar).toBeInTheDocument();
+    expect(bar.querySelector('.garbage-bar-fill')).toBeInTheDocument();
   });
 
-  it('pendingGarbage = 0 の場合にガーベジインジケータが表示されないこと', () => {
+  it('pendingGarbage = 0 の場合にガーベジバーのフィルが表示されないこと', () => {
     renderBattlePage();
-    expect(screen.queryByText(/Garbage:/)).not.toBeInTheDocument();
+    // Garbage bar element exists but has no fill child
+    const bar = screen.getByTestId('garbage-bar');
+    expect(bar).toBeInTheDocument();
+    expect(bar.querySelector('.garbage-bar-fill')).not.toBeInTheDocument();
   });
 
   it('opponentNickname が null の場合に "Opponent" が表示されること', () => {

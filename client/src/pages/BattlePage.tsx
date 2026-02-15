@@ -22,10 +22,14 @@ export default function BattlePage() {
   const opponentLevel = useBattleStore((s) => s.opponentLevel);
   const pendingGarbage = useBattleStore((s) => s.pendingGarbage);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fieldCanvasRef = useRef<HTMLCanvasElement>(null);
+  const nextCanvasRef = useRef<HTMLCanvasElement>(null);
+  const holdCanvasRef = useRef<HTMLCanvasElement>(null);
   const opponentCanvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
-  const rendererRef = useRef<Renderer | null>(null);
+  const fieldRendererRef = useRef<Renderer | null>(null);
+  const nextRendererRef = useRef<Renderer | null>(null);
+  const holdRendererRef = useRef<Renderer | null>(null);
   const opponentRendererRef = useRef<Renderer | null>(null);
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
@@ -67,16 +71,24 @@ export default function BattlePage() {
 
   // Initialize engine and start game loop
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const fieldCanvas = fieldCanvasRef.current;
+    const nextCanvas = nextCanvasRef.current;
+    const holdCanvas = holdCanvasRef.current;
     const opponentCanvas = opponentCanvasRef.current;
-    if (!canvas || !opponentCanvas) return;
+    if (!fieldCanvas || !nextCanvas || !holdCanvas || !opponentCanvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const fieldCtx = fieldCanvas.getContext('2d');
+    const nextCtx = nextCanvas.getContext('2d');
+    const holdCtx = holdCanvas.getContext('2d');
     const opCtx = opponentCanvas.getContext('2d');
-    if (!ctx || !opCtx) return;
+    if (!fieldCtx || !nextCtx || !holdCtx || !opCtx) return;
 
-    const renderer = new Renderer(ctx);
-    rendererRef.current = renderer;
+    const fieldRenderer = new Renderer(fieldCtx);
+    const nextRenderer = new Renderer(nextCtx);
+    const holdRenderer = new Renderer(holdCtx);
+    fieldRendererRef.current = fieldRenderer;
+    nextRendererRef.current = nextRenderer;
+    holdRendererRef.current = holdRenderer;
     opponentRendererRef.current = new Renderer(opCtx);
 
     const engine = new GameEngine(seed ?? 0);
@@ -122,7 +134,7 @@ export default function BattlePage() {
       // Draw main field
       const piece = engine.currentPiece;
       const nextPieces = engine.bag.peek(3);
-      renderer.drawField({
+      fieldRenderer.drawField({
         grid: engine.board.grid,
         currentPiece: piece,
         ghostRow: engine.getGhostRow(),
@@ -130,12 +142,11 @@ export default function BattlePage() {
         holdPiece: engine.holdPiece,
       });
 
-      // Draw next queue
-      const nextX = Renderer.fieldWidth + 20;
-      renderer.drawNextQueue(nextPieces, nextX, 30);
+      // Draw next queue (dedicated canvas)
+      nextRenderer.drawNextQueue(nextPieces);
 
-      // Draw hold
-      renderer.drawHold(engine.holdPiece, nextX, 280);
+      // Draw hold (dedicated canvas)
+      holdRenderer.drawHold(engine.holdPiece);
 
       if (engine.state === GameState.Playing) {
         rafRef.current = requestAnimationFrame(loop);
@@ -158,62 +169,97 @@ export default function BattlePage() {
     if (!ctx) return;
 
     const renderer = new Renderer(ctx);
-    renderer.drawOpponentField({ grid: opponentField }, 0, 0);
+    renderer.drawOpponentField({ grid: opponentField });
   }, [opponentField]);
 
   if (!nickname) return null;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
-      <div className="flex gap-8 items-start">
-        {/* Main game area */}
-        <div>
-          <canvas
-            ref={canvasRef}
-            width={Renderer.fieldWidth + 150}
-            height={Renderer.fieldHeight}
-            className="border border-gray-700"
-            data-testid="game-canvas"
-          />
-          {/* Score board */}
-          <div className="mt-4 grid grid-cols-3 gap-4 text-center" data-testid="scoreboard">
-            <div>
-              <p className="text-sm text-gray-400">Score</p>
-              <p className="text-xl font-bold" data-testid="score">{score}</p>
+    <div className="battle-container">
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+        {/* Left sidebar: HOLD + STATS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '120px' }}>
+          {/* HOLD panel */}
+          <div className="game-panel">
+            <div className="game-panel-label">Hold</div>
+            <canvas
+              ref={holdCanvasRef}
+              width={Renderer.holdWidth}
+              height={Renderer.holdHeight}
+              style={{ display: 'block', margin: '0 auto' }}
+            />
+          </div>
+
+          {/* Stats panel */}
+          <div className="game-panel stats-panel" data-testid="scoreboard">
+            <div className="stat-row">
+              <span className="stat-label">Score</span>
+              <span className="stat-value" data-testid="score">{score}</span>
             </div>
-            <div>
-              <p className="text-sm text-gray-400">Level</p>
-              <p className="text-xl font-bold" data-testid="level">{level}</p>
+            <div className="stat-row">
+              <span className="stat-label">Level</span>
+              <span className="stat-value" data-testid="level">{level}</span>
             </div>
-            <div>
-              <p className="text-sm text-gray-400">Lines</p>
-              <p className="text-xl font-bold" data-testid="lines">{lines}</p>
+            <div className="stat-row">
+              <span className="stat-label">Lines</span>
+              <span className="stat-value" data-testid="lines">{lines}</span>
             </div>
           </div>
-          {/* Garbage indicator */}
-          {pendingGarbage > 0 && (
-            <div className="mt-2 text-center">
-              <span className="text-red-400 text-sm">Garbage: {pendingGarbage}</span>
-            </div>
-          )}
+        </div>
+
+        {/* Center: Garbage bar + Main field */}
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'stretch' }}>
+          {/* Garbage bar */}
+          <div className="garbage-bar" data-testid="garbage-bar" style={{ height: Renderer.fieldHeight + 4 }}>
+            {pendingGarbage > 0 && (
+              <div
+                className="garbage-bar-fill"
+                style={{ height: `${Math.min(pendingGarbage / 20, 1) * 100}%` }}
+              />
+            )}
+          </div>
+
+          {/* Main field */}
+          <div className="field-frame">
+            <canvas
+              ref={fieldCanvasRef}
+              width={Renderer.fieldWidth}
+              height={Renderer.fieldHeight}
+              data-testid="game-canvas"
+            />
+          </div>
+        </div>
+
+        {/* Right sidebar: NEXT */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '120px' }}>
+          <div className="game-panel">
+            <div className="game-panel-label">Next</div>
+            <canvas
+              ref={nextCanvasRef}
+              width={Renderer.nextQueueWidth}
+              height={Renderer.nextQueueHeight}
+              style={{ display: 'block', margin: '0 auto' }}
+            />
+          </div>
         </div>
 
         {/* Opponent area */}
-        <div>
-          <p className="text-sm text-gray-400 mb-2 text-center">
+        <div className="opponent-panel" style={{ marginLeft: '16px' }}>
+          <p className="opponent-name">
             {usePlayerStore.getState().opponentNickname ?? 'Opponent'}
           </p>
-          <canvas
-            ref={opponentCanvasRef}
-            width={Renderer.miniFieldWidth}
-            height={Renderer.miniFieldHeight}
-            className="border border-gray-700"
-            data-testid="opponent-canvas"
-          />
-          <div className="mt-2 text-center text-xs text-gray-500">
-            <p data-testid="opponent-score">Score: {opponentScore}</p>
-            <p data-testid="opponent-lines">Lines: {opponentLines}</p>
-            <p data-testid="opponent-level">Lv: {opponentLevel}</p>
+          <div className="opponent-frame">
+            <canvas
+              ref={opponentCanvasRef}
+              width={Renderer.miniFieldWidth}
+              height={Renderer.miniFieldHeight}
+              data-testid="opponent-canvas"
+            />
+          </div>
+          <div className="opponent-stats">
+            <span data-testid="opponent-score">Score: {opponentScore}</span>
+            <span data-testid="opponent-lines">Lines: {opponentLines}</span>
+            <span data-testid="opponent-level">Lv: {opponentLevel}</span>
           </div>
         </div>
       </div>
