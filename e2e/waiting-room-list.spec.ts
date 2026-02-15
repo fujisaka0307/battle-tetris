@@ -116,11 +116,28 @@ test.describe('Waiting Room List — 待機中ルームリスト', () => {
 
   test('G-5: 待機ルームがなければリスト非表示', async ({
     playerAPage,
+    browser,
   }) => {
+    // Use a fresh server-like scenario: create and destroy a room to verify it disappears
     await playerAPage.goto('/');
-    await playerAPage.waitForTimeout(2000);
+    await playerAPage.waitForTimeout(1000);
 
-    // No rooms created, so the list should not be visible
-    await expect(playerAPage.getByTestId('waiting-room-list')).not.toBeVisible({ timeout: 3000 });
+    // Create a room with a separate context
+    const contextTemp = await browser.newContext();
+    const tempPage = await contextTemp.newPage();
+    const roomId = await createRoom(tempPage, 'TempUser');
+
+    // Verify it appears in the list
+    const roomItem = playerAPage.getByTestId('waiting-room-item').filter({
+      has: playerAPage.getByTestId('waiting-room-id').getByText(roomId),
+    });
+    await expect(roomItem).toBeVisible({ timeout: 5000 });
+
+    // Creator leaves → room is deleted
+    await tempPage.getByTestId('leave-btn').click();
+    await contextTemp.close();
+
+    // That specific room should no longer be visible
+    await expect(roomItem).not.toBeVisible({ timeout: 5000 });
   });
 });
