@@ -341,54 +341,54 @@ jobs:
 
     steps:
       - name: Download unit test Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: allure-results-unit
           path: allure-results/
 
       - name: Download E2E Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: allure-results-e2e
           path: allure-results/
 
       - name: Download SonarCloud Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-sonarcloud
           path: allure-results/
 
       - name: Download CodeQL Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-codeql
           path: allure-results/
 
       - name: Download npm audit Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-npm-audit
           path: allure-results/
 
       - name: Download Gitleaks Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-gitleaks
           path: allure-results/
 
       - name: Download ZAP Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-zap
           path: allure-results/
 
       - name: Download Lighthouse Allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: allure-results-lighthouse
