@@ -1,7 +1,6 @@
 import {
   test,
   expect,
-  enterNickname,
   randomMatchToLobby,
   randomMatchToBattle,
   playToGameOver,

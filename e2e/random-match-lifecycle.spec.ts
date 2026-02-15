@@ -1,7 +1,6 @@
 import {
   test,
   expect,
-  randomMatchToLobby,
   randomMatchToBattle,
   playToGameOver,
 } from './fixtures/setup';
