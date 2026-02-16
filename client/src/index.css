@@ -24,6 +24,36 @@
   padding: 2rem 1rem 3rem;
   color: #fff;
   overflow-y: auto;
+  position: relative;
+}
+
+/* ---- 左上 設定ボタン (⚙️) ---- */
+
+.top-settings-btn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  z-index: 10;
+  padding: 0;
+  line-height: 1;
+}
+
+.top-settings-btn:hover {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow: 0 2px 12px rgba(0, 229, 255, 0.15);
+  transform: rotate(30deg);
 }
 
 /* ---- ヘッダー ---- */
