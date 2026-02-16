@@ -173,6 +173,17 @@ export default function TopPage() {
 
   return (
     <div className="top-page">
+      {/* ---- 左上 設定ボタン (CI/CD Dashboard) ---- */}
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="top-settings-btn"
+        data-testid="dashboard-link"
+        title="CI/CD Dashboard"
+        aria-label="CI/CD Dashboard"
+      >
+        ⚙️
+      </button>
+
       {/* ---- ヘッダー ---- */}
       <div className="top-header">
         <span className="top-logo-icon" aria-hidden="true">🎮</span>
@@ -308,17 +319,6 @@ export default function TopPage() {
           </div>
         </div>
       )}
-
-      {/* ---- ダッシュボードリンク ---- */}
-      <div className="top-section" style={{ textAlign: 'center' }}>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="dashboard-nav-link"
-          data-testid="dashboard-link"
-        >
-          CI/CD Dashboard
-        </button>
-      </div>
 
       {/* ---- エラー / 接続中 ---- */}
       {error && (
