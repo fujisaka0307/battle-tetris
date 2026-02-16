@@ -199,12 +199,11 @@ describe('GameEngine', () => {
       // depending on the piece type (T, S, Z, L, J all support rotation at bottom)
       const beforeRotation = engine.currentPiece!.rotation;
       simulateAction(engine, GameAction.RotateCW);
-      let afterRotation = engine.currentPiece!.rotation;
+      const afterRotation = engine.currentPiece!.rotation;
 
       if (afterRotation === beforeRotation) {
         // CW failed, try CCW
         simulateAction(engine, GameAction.RotateCCW);
-        afterRotation = engine.currentPiece!.rotation;
       }
 
       // If rotation succeeded while grounded, resetLockDelay was called (line 278)
