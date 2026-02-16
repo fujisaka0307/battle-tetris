@@ -33,7 +33,7 @@ export const LinesClearedSchema = z.object({
  * 成功時はパースされた値を返し、失敗時は null を返す。
  */
 export function validatePayload<T>(
-  schema: z.ZodSchema<T>,
+  schema: z.ZodType<T>,
   data: unknown,
 ): T | null {
   const result = schema.safeParse(data);
