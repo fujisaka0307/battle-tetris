@@ -27,8 +27,16 @@ import type { Express, Request, Response } from 'express';
 import { GameHub, type HubConnection } from './GameHub.js';
 import { ClientEvents } from '@battle-tetris/shared';
 
-// SignalR record separator
+// SignalR レコードセパレータ
 const RECORD_SEPARATOR = String.fromCharCode(0x1e);
+
+// WebSocket ハートビート間隔。
+// SignalR クライアントの keepAliveIntervalInMilliseconds（デフォルト15秒）
+// より長く設定し、生存中の接続が必ず1回以上メッセージを送るようにする。
+// WebSocket レベルの ping/pong ではなくアプリケーションレベル（SignalR type-6）
+// の ping を使用する。WebSocket ping は Vite 開発プロキシまでしか届かず、
+// プロキシが常に pong を返すため、切断済み接続を検出できないため。
+const HEARTBEAT_INTERVAL_MS = 20_000;
 
 // =============================================================================
 // Types
@@ -50,15 +58,17 @@ export class LocalSignalRAdapter implements HubConnection {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private wss: any = null;
   private readonly connections = new Map<string, WebSocket>();
+  private readonly alive = new Map<string, boolean>();
   private gameHub: GameHub;
   private nextConnectionId = 1;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.gameHub = new GameHub(this);
   }
 
   // ---------------------------------------------------------------------------
-  // HubConnection implementation
+  // HubConnection 実装
   // ---------------------------------------------------------------------------
 
   sendToClient(connectionId: string, event: string, payload: unknown): void {
@@ -74,7 +84,7 @@ export class LocalSignalRAdapter implements HubConnection {
   }
 
   // ---------------------------------------------------------------------------
-  // Setup
+  // セットアップ
   // ---------------------------------------------------------------------------
 
   /**
@@ -82,7 +92,7 @@ export class LocalSignalRAdapter implements HubConnection {
    * HTTP サーバーに WebSocket サーバーをアタッチする。
    */
   setup(app: Express, server: HttpServer): void {
-    // SignalR negotiate endpoint
+    // SignalR ネゴシエーションエンドポイント
     app.post('/hub/negotiate', (req: Request, res: Response) => {
       const connectionId = `conn-${this.nextConnectionId++}`;
       res.json({
@@ -97,33 +107,59 @@ export class LocalSignalRAdapter implements HubConnection {
       });
     });
 
-    // WebSocket server
+    // WebSocket サーバー
     this.wss = new wsModule.Server({ server, path: '/hub' });
 
     this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
-      // Extract connectionId from query param
+      // クエリパラメータから connectionId を取得
       const url = new URL(req.url || '', `http://${req.headers.host}`);
       const connectionId = url.searchParams.get('id') || `conn-${this.nextConnectionId++}`;
 
       this.connections.set(connectionId, ws);
+      this.alive.set(connectionId, true);
 
       ws.on('message', (data: WS.RawData) => {
+        this.alive.set(connectionId, true);
         this.handleMessage(connectionId, data.toString());
       });
 
       ws.on('close', () => {
+        this.alive.delete(connectionId);
         this.gameHub.handleDisconnected(connectionId);
         this.connections.delete(connectionId);
       });
 
       ws.on('error', () => {
+        this.alive.delete(connectionId);
         this.connections.delete(connectionId);
       });
+    });
+
+    // ハートビート: アプリケーションレベルの SignalR ping で切断済み接続を検出
+    this.heartbeatTimer = setInterval(() => {
+      for (const [connectionId, ws] of this.connections) {
+        if (!this.alive.get(connectionId)) {
+          this.alive.delete(connectionId);
+          this.connections.delete(connectionId);
+          this.gameHub.handleDisconnected(connectionId);
+          ws.terminate();
+          continue;
+        }
+        this.alive.set(connectionId, false);
+        // WebSocket ping ではなく SignalR レベルの ping（type 6）を送信。
+        // このメッセージは Vite プロキシを通過して実際のブラウザに届き、
+        // クライアントの serverTimeout タイマーもリセットする。
+        this.sendPing(connectionId);
+      }
+    }, HEARTBEAT_INTERVAL_MS);
+
+    this.wss.on('close', () => {
+      if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
     });
   }
 
   // ---------------------------------------------------------------------------
-  // For testing
+  // テスト用
   // ---------------------------------------------------------------------------
 
   getGameHub(): GameHub {
@@ -131,11 +167,11 @@ export class LocalSignalRAdapter implements HubConnection {
   }
 
   // ---------------------------------------------------------------------------
-  // Private
+  // プライベート
   // ---------------------------------------------------------------------------
 
   private handleMessage(connectionId: string, raw: string): void {
-    // SignalR sends messages separated by record separator
+    // SignalR はレコードセパレータ区切りでメッセージを送信する
     const parts = raw.split(RECORD_SEPARATOR).filter((p) => p.length > 0);
 
     for (const part of parts) {
@@ -143,25 +179,25 @@ export class LocalSignalRAdapter implements HubConnection {
         const msg: SignalRMessage = JSON.parse(part);
         this.processMessage(connectionId, msg);
       } catch {
-        // Ignore malformed messages
+        // 不正なメッセージは無視
       }
     }
   }
 
   private processMessage(connectionId: string, msg: SignalRMessage): void {
     switch (msg.type) {
-      case 1: // Invocation
+      case 1: // 呼び出し
         this.handleInvocation(connectionId, msg);
         break;
       case 6: // Ping
         this.sendPing(connectionId);
         break;
-      case 7: // Close
-        // Client wants to close
+      case 7: // クローズ
+        // クライアントが切断を要求
         break;
       default:
-        // Handshake response (type undefined or 0): client sends {} after connect
-        // This is the handshake — respond with empty handshake response
+        // ハンドシェイク応答（type 未定義 or 0）: 接続後にクライアントが {} を送信
+        // これがハンドシェイク — 空のハンドシェイク応答を返す
         this.sendHandshakeResponse(connectionId);
         break;
     }

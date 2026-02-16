@@ -1,9 +1,376 @@
-@import 'tailwindcss';
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+@import 'tailwindcss';
 
 /* ==========================================================================
-   Battle Tetris — Custom Styles
+   Battle Tetris — カスタムスタイル
    ========================================================================== */
+
+/* ==========================================================================
+   TopPage — おじいちゃんも子供も直感でわかる UI
+   ========================================================================== */
+
+.top-page {
+  font-family: 'Noto Sans JP', sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29 0%, #1a1a4e 40%, #24243e 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem 3rem;
+  color: #fff;
+  overflow-y: auto;
+}
+
+/* ---- ヘッダー ---- */
+
+.top-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.top-logo-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  animation: top-bounce 2s ease-in-out infinite;
+}
+
+@keyframes top-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.top-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #00e5ff, #7c4dff, #ff4081);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 12px rgba(0, 200, 255, 0.4));
+  letter-spacing: 0.05em;
+}
+
+.top-subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.3em;
+  margin-top: 0.25rem;
+}
+
+/* ---- セクション / ラベル ---- */
+
+.top-section {
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 1.5rem;
+}
+
+.top-label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+/* ---- ニックネーム入力 ---- */
+
+.top-nickname-wrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 0 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.top-nickname-wrapper:focus-within {
+  border-color: #00e5ff;
+  box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.15), 0 0 20px rgba(0, 229, 255, 0.1);
+}
+
+.top-nickname-icon {
+  font-size: 1.4rem;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.top-nickname-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 1.2rem;
+  font-family: 'Noto Sans JP', sans-serif;
+  padding: 0.9rem 0;
+  letter-spacing: 0.05em;
+}
+
+.top-nickname-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.top-error-inline {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  padding-left: 0.25rem;
+  font-weight: 700;
+}
+
+/* ---- モードカード ---- */
+
+.top-cards {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mode-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+
+.mode-card:hover {
+  transform: translateY(-2px);
+}
+
+.mode-card--cyan:hover {
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow: 0 4px 24px rgba(0, 229, 255, 0.12);
+}
+
+.mode-card--green:hover {
+  border-color: rgba(76, 175, 80, 0.4);
+  box-shadow: 0 4px 24px rgba(76, 175, 80, 0.12);
+}
+
+.mode-card--purple:hover {
+  border-color: rgba(156, 39, 176, 0.4);
+  box-shadow: 0 4px 24px rgba(156, 39, 176, 0.12);
+}
+
+.mode-card-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.mode-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mode-card-title {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.05em;
+}
+
+.mode-card-desc {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+}
+
+.mode-card-join-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* ---- ルームID入力（カード内） ---- */
+
+.top-room-input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 1.1rem;
+  font-family: 'Orbitron', sans-serif;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.top-room-input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: none;
+}
+
+.top-room-input:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+}
+
+/* ---- モードボタン ---- */
+
+.mode-btn {
+  flex-shrink: 0;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s, opacity 0.15s;
+  min-height: 50px;
+  letter-spacing: 0.1em;
+}
+
+.mode-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.mode-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  box-shadow: none !important;
+}
+
+.mode-btn--cyan {
+  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  box-shadow: 0 4px 16px rgba(0, 188, 212, 0.3);
+}
+
+.mode-btn--cyan:hover:not(:disabled) {
+  box-shadow: 0 6px 24px rgba(0, 188, 212, 0.45);
+}
+
+.mode-btn--green {
+  background: linear-gradient(135deg, #4caf50, #388e3c);
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+}
+
+.mode-btn--green:hover:not(:disabled) {
+  box-shadow: 0 6px 24px rgba(76, 175, 80, 0.45);
+}
+
+.mode-btn--purple {
+  background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+  box-shadow: 0 4px 16px rgba(156, 39, 176, 0.3);
+}
+
+.mode-btn--purple:hover:not(:disabled) {
+  box-shadow: 0 6px 24px rgba(156, 39, 176, 0.45);
+}
+
+.mode-btn--small {
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  min-height: 42px;
+  border-radius: 10px;
+}
+
+/* ---- 待機中ルーム ---- */
+
+.top-waiting {
+  margin-top: 0.5rem;
+}
+
+.top-waiting-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.waiting-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  transition: border-color 0.15s;
+}
+
+.waiting-card:hover {
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.waiting-card-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.waiting-card-id {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  color: #00e5ff;
+  letter-spacing: 0.1em;
+}
+
+.waiting-card-creator {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---- エラー / 接続中 ---- */
+
+.top-error {
+  max-width: 480px;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 82, 82, 0.12);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-radius: 12px;
+  color: #ff6b6b;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.top-connecting {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1rem;
+}
+
+.top-connecting-dot {
+  width: 10px;
+  height: 10px;
+  background: #00e5ff;
+  border-radius: 50%;
+  animation: top-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes top-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
 
 .battle-container {
   font-family: 'Orbitron', sans-serif;
@@ -115,7 +482,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Opponent Area
+   対戦相手エリア
    -------------------------------------------------------------------------- */
 
 .opponent-panel {

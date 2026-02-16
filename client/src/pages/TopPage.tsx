@@ -49,7 +49,7 @@ export default function TopPage() {
     return promise;
   }, []);
 
-  // Early connection and room list subscription
+  // 早期接続とルームリスト購読
   useEffect(() => {
     let cancelled = false;
     const connectAndSubscribe = async () => {
@@ -172,99 +172,135 @@ export default function TopPage() {
   }, [nickname, nicknameValid, storeNickname, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
-      <h1 className="text-5xl font-bold mb-2 text-cyan-400">Battle Tetris</h1>
-      <p className="text-gray-400 mb-8">Online</p>
+    <div className="top-page">
+      {/* ---- ヘッダー ---- */}
+      <div className="top-header">
+        <span className="top-logo-icon" aria-hidden="true">🎮</span>
+        <h1 className="top-title">Battle Tetris</h1>
+        <p className="top-subtitle">オンライン たいせん</p>
+      </div>
 
-      {/* Nickname input */}
-      <div className="w-full max-w-sm mb-6">
-        <label htmlFor="nickname" className="block text-sm text-gray-300 mb-1">
-          ニックネーム
+      {/* ---- ニックネーム ---- */}
+      <div className="top-section">
+        <label htmlFor="nickname" className="top-label">
+          なまえを いれてね
         </label>
-        <input
-          id="nickname"
-          type="text"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
-          maxLength={NICKNAME_MAX_LENGTH + 1}
-          placeholder="1〜16文字"
-          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400"
-          data-testid="nickname-input"
-        />
+        <div className="top-nickname-wrapper">
+          <span className="top-nickname-icon" aria-hidden="true">✏️</span>
+          <input
+            id="nickname"
+            type="text"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            maxLength={NICKNAME_MAX_LENGTH + 1}
+            placeholder="ニックネーム"
+            className="top-nickname-input"
+            data-testid="nickname-input"
+          />
+        </div>
         {nicknameError && (
-          <p className="text-red-400 text-sm mt-1" data-testid="nickname-error">
+          <p className="top-error-inline" data-testid="nickname-error">
             {nicknameError}
           </p>
         )}
       </div>
 
-      {/* Action buttons */}
-      <div className="w-full max-w-sm space-y-3">
-        <button
-          onClick={handleCreateRoom}
-          disabled={!nicknameValid || isConnecting}
-          className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-700 disabled:text-gray-500 rounded font-bold transition-colors"
-          data-testid="create-room-btn"
-        >
-          ルームを作成
-        </button>
-
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={roomId}
-            onChange={(e) => setRoomId_(e.target.value.toUpperCase())}
-            maxLength={ROOM_ID_LENGTH}
-            placeholder="ルームID (6桁)"
-            className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 uppercase"
-            data-testid="room-id-input"
-          />
+      {/* ---- モードカード ---- */}
+      <div className="top-cards">
+        {/* カード1 — ルーム作成 */}
+        <div className="mode-card mode-card--cyan">
+          <span className="mode-card-icon" aria-hidden="true">🏠</span>
+          <div className="mode-card-body">
+            <p className="mode-card-title">へやを つくる</p>
+            <p className="mode-card-desc">あたらしい へやを つくって ともだちを まとう</p>
+          </div>
           <button
-            onClick={handleJoinRoom}
-            disabled={!nicknameValid || !roomIdValid || isConnecting}
-            className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-500 rounded font-bold transition-colors"
-            data-testid="join-room-btn"
+            onClick={handleCreateRoom}
+            disabled={!nicknameValid || isConnecting}
+            className="mode-btn mode-btn--cyan"
+            data-testid="create-room-btn"
+            aria-label="ルームを作成する"
           >
-            参加
+            つくる
           </button>
         </div>
 
-        <button
-          onClick={handleRandomMatch}
-          disabled={!nicknameValid || isConnecting}
-          className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 rounded font-bold transition-colors"
-          data-testid="random-match-btn"
-        >
-          ランダムマッチ
-        </button>
+        {/* カード2 — ルーム参加 */}
+        <div className="mode-card mode-card--green">
+          <span className="mode-card-icon" aria-hidden="true">🔑</span>
+          <div className="mode-card-body">
+            <p className="mode-card-title">へやに はいる</p>
+            <p className="mode-card-desc">ともだちの へやIDを いれて さんかしよう</p>
+            <div className="mode-card-join-row">
+              <input
+                type="text"
+                value={roomId}
+                onChange={(e) => setRoomId_(e.target.value.toUpperCase())}
+                maxLength={ROOM_ID_LENGTH}
+                placeholder="へやID (6もじ)"
+                className="top-room-input"
+                data-testid="room-id-input"
+                aria-label="ルームIDを入力"
+              />
+              <button
+                onClick={handleJoinRoom}
+                disabled={!nicknameValid || !roomIdValid || isConnecting}
+                className="mode-btn mode-btn--green mode-btn--small"
+                data-testid="join-room-btn"
+                aria-label="ルームに参加する"
+              >
+                はいる
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* カード3 — ランダムマッチ */}
+        <div className="mode-card mode-card--purple">
+          <span className="mode-card-icon" aria-hidden="true">🎲</span>
+          <div className="mode-card-body">
+            <p className="mode-card-title">すぐ あそぶ！</p>
+            <p className="mode-card-desc">だれかと すぐ たいせんできるよ</p>
+          </div>
+          <button
+            onClick={handleRandomMatch}
+            disabled={!nicknameValid || isConnecting}
+            className="mode-btn mode-btn--purple"
+            data-testid="random-match-btn"
+            aria-label="ランダムマッチを開始する"
+          >
+            さがす
+          </button>
+        </div>
       </div>
 
-      {/* Waiting Room List */}
+      {/* ---- 待機中ルームリスト ---- */}
       {waitingRooms.length > 0 && (
-        <div className="w-full max-w-sm mt-6" data-testid="waiting-room-list">
-          <h2 className="text-sm text-gray-300 mb-2">待機中のルーム</h2>
-          <div className="space-y-2">
+        <div className="top-section top-waiting" data-testid="waiting-room-list">
+          <h2 className="top-label">まっている へや</h2>
+          <div className="top-waiting-list">
             {waitingRooms.map((room) => (
               <div
                 key={room.roomId}
-                className="flex items-center justify-between bg-gray-800 border border-gray-700 rounded px-3 py-2"
+                className="waiting-card"
                 data-testid="waiting-room-item"
               >
-                <div className="flex gap-3 items-center">
-                  <span className="text-cyan-400 font-mono text-sm" data-testid="waiting-room-id">
+                <div className="waiting-card-info">
+                  <span className="waiting-card-id" data-testid="waiting-room-id">
                     {room.roomId}
                   </span>
-                  <span className="text-gray-300 text-sm" data-testid="waiting-room-creator">
+                  <span className="waiting-card-creator" data-testid="waiting-room-creator">
                     {room.creatorNickname}
                   </span>
                 </div>
                 <button
                   onClick={() => handleJoinFromList(room.roomId)}
                   disabled={!nicknameValid || isConnecting}
-                  className="px-3 py-1 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-500 rounded text-sm font-bold transition-colors"
+                  className="mode-btn mode-btn--green mode-btn--small"
                   data-testid="waiting-room-join-btn"
+                  aria-label={`${room.creatorNickname}のルームに参加`}
                 >
-                  参加
+                  はいる
                 </button>
               </div>
             ))}
@@ -272,15 +308,18 @@ export default function TopPage() {
         </div>
       )}
 
-      {/* Error */}
+      {/* ---- エラー / 接続中 ---- */}
       {error && (
-        <p className="text-red-400 mt-4" data-testid="error-message">
+        <p className="top-error" data-testid="error-message">
           {error}
         </p>
       )}
 
       {isConnecting && (
-        <p className="text-gray-400 mt-4">接続中...</p>
+        <div className="top-connecting">
+          <span className="top-connecting-dot" />
+          <span>せつぞくちゅう...</span>
+        </div>
       )}
     </div>
   );
