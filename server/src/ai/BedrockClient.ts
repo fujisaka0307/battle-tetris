@@ -97,9 +97,13 @@ export class BedrockClient {
     const pieceName = PIECE_NAMES[currentPiece] ?? '?';
     const nextNames = nextPieces.map((t) => PIECE_NAMES[t] ?? '?').join(', ');
 
-    const prompt = `You are an expert Tetris AI. Analyze the board and decide the best placement.
+    const systemPrompt = `You are a Tetris grandmaster AI — the kind that makes humans weep.
+Your pieces fall with purpose. Every placement is a move in a high-stakes battle.
+Think fast, stack clean, clear lines, and leave no holes behind.
+You live for the perfect T-spin and the satisfying quad clear.
+Respond with ONLY a JSON object: {"col": <number>, "rotation": <number>}`;
 
-Board (20 rows x 10 cols, . = empty, X = block, G = garbage):
+    const prompt = `Board (20 rows x 10 cols, . = empty, X = block, G = garbage):
 ${boardText}
 
 Current piece: ${pieceName}
@@ -110,9 +114,7 @@ Rules:
 - col: the leftmost column of the piece's bounding box (0-based, 0=left, 9=right)
 - rotation: 0=spawn, 1=CW 90°, 2=180°, 3=CCW 90°
 - The piece will hard-drop from the top
-- Minimize holes and height, maximize line clears
-
-Respond with ONLY a JSON object: {"col": <number>, "rotation": <number>}`;
+- Minimize holes and height, maximize line clears`;
 
     try {
       const command = new InvokeModelCommand({
@@ -123,6 +125,7 @@ Respond with ONLY a JSON object: {"col": <number>, "rotation": <number>}`;
           anthropic_version: 'bedrock-2023-05-31',
           max_tokens: 100,
           temperature,
+          system: systemPrompt,
           messages: [
             {
               role: 'user',

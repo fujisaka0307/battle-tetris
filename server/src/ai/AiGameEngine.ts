@@ -20,7 +20,7 @@ export interface AiGameCallbacks {
   onFieldUpdate?: (field: number[][], score: number, lines: number, level: number) => void;
   onLinesCleared?: (count: number) => void;
   onGameOver?: () => void;
-  onAiThinking?: (prompt: string, response: string, model: string) => void;
+  onAiThinking?: (prompt: string, response: string, model: string, modelTier: string, temperature: number, seq: number) => void;
 }
 
 // =============================================================================

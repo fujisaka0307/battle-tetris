@@ -72,6 +72,9 @@ export default function BattlePage() {
           prompt: payload.prompt,
           response: payload.response,
           model: payload.model,
+          modelTier: payload.modelTier,
+          temperature: payload.temperature,
+          seq: payload.seq,
           timestamp: Date.now(),
         });
       },
@@ -298,7 +301,11 @@ export default function BattlePage() {
             <div className="ai-thinking-panel" data-testid="ai-thinking-panel">
               {aiThinkingLog.map((entry: AiThinkingEntry, idx: number) => (
                 <div key={`${entry.timestamp}-${idx}`} className="ai-thinking-entry">
-                  <span className="ai-thinking-model">{entry.model.split('.').pop()}</span>
+                  <div className="ai-thinking-header">
+                    <span className="ai-thinking-seq">#{entry.seq}</span>
+                    <span className="ai-thinking-model">{entry.modelTier}</span>
+                    <span className="ai-thinking-temp">T={entry.temperature.toFixed(1)}</span>
+                  </div>
                   <details className="ai-thinking-prompt">
                     <summary>Prompt</summary>
                     <pre>{entry.prompt}</pre>

@@ -18,6 +18,13 @@ const PIECE_NAMES: Record<TetrominoType, string> = {
 
 const logger = createLogger({ module: 'AiPlayer' });
 
+const MODEL_TIER_DISPLAY: Record<ModelTier | 'heuristic', string> = {
+  haiku: 'Haiku',
+  sonnet: 'Sonnet',
+  claude: 'Claude (Opus)',
+  heuristic: 'Heuristic',
+};
+
 // =============================================================================
 // Level Configuration
 // =============================================================================
@@ -56,6 +63,7 @@ export class AiPlayer {
   private readonly config: LevelConfig;
   private timer: ReturnType<typeof setInterval> | null = null;
   private running = false;
+  private tickSeq = 0;
 
   constructor(seed: number, level: number) {
     this.level = Math.max(1, Math.min(10, level));
@@ -140,7 +148,11 @@ export class AiPlayer {
         );
         if (result) {
           placement = result.placement;
-          this.engine.callbacks.onAiThinking?.(result.prompt, result.response, result.model);
+          this.tickSeq++;
+          this.engine.callbacks.onAiThinking?.(
+            result.prompt, result.response, result.model,
+            MODEL_TIER_DISPLAY[this.config.model], this.config.temperature, this.tickSeq,
+          );
         }
       } catch {
         // フォールバック
@@ -157,7 +169,11 @@ export class AiPlayer {
       const nextNames = nextPieces.map((t) => PIECE_NAMES[t] ?? '?').join(', ');
       const prompt = `[Heuristic] Board:\n${boardText}\nCurrent: ${pieceName} | Next: ${nextNames}`;
       const response = `{"col": ${placement.col}, "rotation": ${placement.rotation}}`;
-      this.engine.callbacks.onAiThinking?.(prompt, response, `heuristic (Lv.${this.level})`);
+      this.tickSeq++;
+      this.engine.callbacks.onAiThinking?.(
+        prompt, response, `heuristic (Lv.${this.level})`,
+        MODEL_TIER_DISPLAY.heuristic, this.config.temperature, this.tickSeq,
+      );
     }
 
     // 配置実行

@@ -10,6 +10,9 @@ export interface AiThinkingEntry {
   prompt: string;
   response: string;
   model: string;
+  modelTier: string;
+  temperature: number;
+  seq: number;
   timestamp: number;
 }
 
