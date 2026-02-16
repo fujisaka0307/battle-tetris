@@ -67,11 +67,6 @@ export class AiPlayer {
     this.engine.start();
     logger.info({ level: this.level, intervalMs: this.config.intervalMs }, 'AI player started');
 
-    // 初回のフィールド状態を通知
-    this.engine.setCallbacks({
-      ...this.getCallbacks(),
-    });
-
     this.timer = setInterval(() => {
       this.tick();
     }, this.config.intervalMs);
