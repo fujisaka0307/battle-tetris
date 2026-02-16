@@ -17,8 +17,8 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
-      styleSrc: ["'self'", 'https://fonts.googleapis.com'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      styleSrc: ["'self'"],
+      fontSrc: ["'self'"],
       connectSrc: ["'self'"],
       imgSrc: ["'self'", 'data:', 'blob:'],
       frameSrc: ["'none'"],
