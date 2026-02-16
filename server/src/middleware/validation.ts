@@ -1,8 +1,13 @@
 import { z } from 'zod';
+import { logger } from '../lib/logger.js';
 
 // =============================================================================
 // Client → Server payload schemas
 // =============================================================================
+
+export const CreateAiRoomSchema = z.object({
+  aiLevel: z.number().int().min(1).max(10),
+});
 
 export const JoinRoomSchema = z.object({
   roomId: z.string().length(6),
@@ -31,5 +36,6 @@ export function validatePayload<T>(
   if (result.success) {
     return result.data;
   }
+  logger.warn({ issues: result.error.issues }, 'Payload validation failed');
   return null;
 }

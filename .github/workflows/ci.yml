@@ -441,6 +441,14 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
+      - name: Collect metrics for dashboard history
+        run: |
+          EXISTING=""
+          if [ -f gh-pages/metrics-history.json ]; then
+            EXISTING="gh-pages/metrics-history.json"
+          fi
+          node repo/scripts/collect-metrics.mjs allure-results "$EXISTING"
+
       - name: Generate Allure report
         uses: simple-elf/allure-report-action@v1.13
         with:
@@ -451,6 +459,9 @@ jobs:
 
       - name: Fix allure-history permissions
         run: sudo chown -R $(whoami) allure-history || true
+
+      - name: Include metrics history in published output
+        run: cp metrics-history.json allure-history/metrics-history.json
 
       - name: Publish Allure report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

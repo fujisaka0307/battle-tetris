@@ -60,3 +60,6 @@ export enum LoserReason {
   GameOver = 'gameover',
   Disconnect = 'disconnect',
 }
+
+/** AIレベル (1=最弱 〜 10=最強) */
+export type AiLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;

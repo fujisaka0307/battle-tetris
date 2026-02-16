@@ -16,6 +16,7 @@ export default function TopPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [waitingRooms, setWaitingRooms] = useState<WaitingRoomInfo[]>([]);
+  const [aiLevel, setAiLevel] = useState(5);
   const subscribedRef = useRef(false);
   const connectingPromiseRef = useRef<Promise<boolean> | null>(null);
 
@@ -144,6 +145,24 @@ export default function TopPage() {
     signalRClient.sendJoinRoom(targetRoomId);
   }, [ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
+  const handleCreateAiRoom = useCallback(async () => {
+    setError('');
+
+    if (!(await ensureConnected())) return;
+
+    signalRClient.setHandlers({
+      onRoomCreated: (payload) => {
+        setRoomId(payload.roomId);
+        navigate(`/lobby/${payload.roomId}`);
+      },
+      onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
+      onError: (payload) => setError(payload.message),
+    });
+
+    subscribeIfNeeded();
+    signalRClient.sendCreateAiRoom(aiLevel);
+  }, [aiLevel, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+
   return (
     <div className="top-page">
       {/* ---- ヘッダー ---- */}
@@ -215,6 +234,38 @@ export default function TopPage() {
           </div>
         </div>
 
+        {/* カード3 — AI対戦 */}
+        <div className="mode-card mode-card--purple">
+          <span className="mode-card-icon" aria-hidden="true">🤖</span>
+          <div className="mode-card-body">
+            <p className="mode-card-title">AI と たいせん</p>
+            <p className="mode-card-desc">つよさを えらんで AIと しょうぶ！</p>
+            <div className="mode-card-join-row">
+              <select
+                value={aiLevel}
+                onChange={(e) => setAiLevel(Number(e.target.value))}
+                className="top-ai-select"
+                data-testid="ai-level-select"
+                aria-label="AIレベル"
+              >
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((lv) => (
+                  <option key={lv} value={lv}>
+                    Lv.{lv}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleCreateAiRoom}
+                disabled={!isReady || isConnecting}
+                className="mode-btn mode-btn--purple mode-btn--small"
+                data-testid="ai-battle-btn"
+              >
+                たいせん
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* ---- 待機中ルームリスト ---- */}
@@ -249,6 +300,17 @@ export default function TopPage() {
           </div>
         </div>
       )}
+
+      {/* ---- ダッシュボードリンク ---- */}
+      <div className="top-section" style={{ textAlign: 'center' }}>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="dashboard-nav-link"
+          data-testid="dashboard-link"
+        >
+          CI/CD Dashboard
+        </button>
+      </div>
 
       {/* ---- エラー / 接続中 ---- */}
       {error && (

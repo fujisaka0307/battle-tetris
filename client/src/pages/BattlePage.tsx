@@ -7,6 +7,7 @@ import { signalRClient } from '../network/SignalRClient';
 import { usePlayerStore } from '../stores/usePlayerStore';
 import { useGameStore } from '../stores/useGameStore';
 import { useBattleStore } from '../stores/useBattleStore';
+import { trackFps } from '../lib/gameMetrics';
 
 export default function BattlePage() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export default function BattlePage() {
   const opponentRendererRef = useRef<Renderer | null>(null);
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
+  const frameCountRef = useRef<number>(0);
 
   // Redirect if no enterpriseId or seed
   useEffect(() => {
@@ -130,6 +132,12 @@ export default function BattlePage() {
       lastTimeRef.current = time;
 
       engine.update(dt);
+
+      // Track FPS every 60 frames
+      frameCountRef.current++;
+      if (frameCountRef.current % 60 === 0 && dt > 0) {
+        trackFps(Math.round(1000 / dt));
+      }
 
       // Draw main field
       const piece = engine.currentPiece;

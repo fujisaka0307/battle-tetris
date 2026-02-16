@@ -1,4 +1,4 @@
-import type { Field, LoserReason } from './types.js';
+import type { Field, LoserReason, AiLevel } from './types.js';
 
 // =============================================================================
 // SignalR Event Names
@@ -7,6 +7,7 @@ import type { Field, LoserReason } from './types.js';
 /** クライアント → サーバー イベント名 */
 export const ClientEvents = {
   CreateRoom: 'CreateRoom',
+  CreateAiRoom: 'CreateAiRoom',
   JoinRoom: 'JoinRoom',
   PlayerReady: 'PlayerReady',
   FieldUpdate: 'FieldUpdate',
@@ -40,6 +41,10 @@ export const ServerEvents = {
 // =============================================================================
 
 // CreateRoom: no payload (enterprise ID from JWT)
+
+export interface CreateAiRoomPayload {
+  aiLevel: AiLevel;
+}
 
 export interface JoinRoomPayload {
   roomId: string;

@@ -1,3 +1,8 @@
+import { initFaro } from './lib/faro';
+
+// Initialize Faro RUM before React renders
+initFaro();
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PublicClientApplication } from '@azure/msal-browser';

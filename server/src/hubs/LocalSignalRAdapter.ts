@@ -25,8 +25,16 @@ const WS_OPEN: number = wsModule.OPEN;
 type WebSocket = WS;
 import type { Express, Request, Response } from 'express';
 import { GameHub, type HubConnection } from './GameHub.js';
-import { ClientEvents } from '@battle-tetris/shared';
+import { ClientEvents, RoomStatus } from '@battle-tetris/shared';
 import { verifyToken, extractToken } from '../middleware/jwtAuth.js';
+import { logger, createLogger } from '../lib/logger.js';
+import { trace, SpanKind } from '@opentelemetry/api';
+import {
+  activeConnectionsGauge,
+  wsMessagesReceived,
+  wsMessagesSent,
+} from '../lib/metrics.js';
+import { setHealthStateProvider } from '../lib/healthState.js';
 
 // SignalR レコードセパレータ
 const RECORD_SEPARATOR = String.fromCharCode(0x1e);
@@ -83,6 +91,7 @@ export class LocalSignalRAdapter implements HubConnection {
       arguments: [payload],
     };
     ws.send(JSON.stringify(message) + RECORD_SEPARATOR);
+    wsMessagesSent.add(1, { 'ws.message.type': event });
   }
 
   getEnterpriseId(connectionId: string): string | undefined {
@@ -104,11 +113,13 @@ export class LocalSignalRAdapter implements HubConnection {
       if (token) {
         const result = await verifyToken(token);
         if (!result) {
+          logger.warn('Negotiate: JWT verification failed');
           res.status(401).json({ error: 'Unauthorized' });
           return;
         }
         const connectionId = `conn-${this.nextConnectionId++}`;
         this.connectionUsers.set(connectionId, result.enterpriseId);
+        logger.info({ connectionId, enterpriseId: result.enterpriseId }, 'Negotiate: authenticated');
         res.json({
           connectionId,
           negotiateVersion: 1,
@@ -123,6 +134,7 @@ export class LocalSignalRAdapter implements HubConnection {
         // SKIP_AUTH mode: assign test enterprise ID for E2E testing
         const connectionId = `conn-${this.nextConnectionId++}`;
         this.connectionUsers.set(connectionId, `test-player-${connectionId}@dxc.com`);
+        logger.info({ connectionId }, 'Negotiate: SKIP_AUTH mode');
         res.json({
           connectionId,
           negotiateVersion: 1,
@@ -136,6 +148,7 @@ export class LocalSignalRAdapter implements HubConnection {
       } else {
         // No token — allow for dev/test but mark as unauthenticated
         const connectionId = `conn-${this.nextConnectionId++}`;
+        logger.info({ connectionId }, 'Negotiate: unauthenticated (dev mode)');
         res.json({
           connectionId,
           negotiateVersion: 1,
@@ -173,12 +186,16 @@ export class LocalSignalRAdapter implements HubConnection {
       this.connections.set(connectionId, ws);
       this.alive.set(connectionId, true);
 
+      const connLog = createLogger({ connectionId });
+      connLog.info('WebSocket connected');
+
       ws.on('message', (data: WS.RawData) => {
         this.alive.set(connectionId, true);
         this.handleMessage(connectionId, data.toString());
       });
 
       ws.on('close', () => {
+        connLog.info('WebSocket disconnected');
         this.alive.delete(connectionId);
         this.connectionUsers.delete(connectionId);
         this.gameHub.handleDisconnected(connectionId);
@@ -186,6 +203,7 @@ export class LocalSignalRAdapter implements HubConnection {
       });
 
       ws.on('error', () => {
+        connLog.warn('WebSocket error');
         this.alive.delete(connectionId);
         this.connectionUsers.delete(connectionId);
         this.connections.delete(connectionId);
@@ -196,6 +214,7 @@ export class LocalSignalRAdapter implements HubConnection {
     this.heartbeatTimer = setInterval(() => {
       for (const [connectionId, ws] of this.connections) {
         if (!this.alive.get(connectionId)) {
+          logger.info({ connectionId }, 'Heartbeat timeout, terminating connection');
           this.alive.delete(connectionId);
           this.connections.delete(connectionId);
           this.connectionUsers.delete(connectionId);
@@ -213,6 +232,25 @@ export class LocalSignalRAdapter implements HubConnection {
 
     this.wss.on('close', () => {
       if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    });
+
+    // Register observable gauge callbacks
+    activeConnectionsGauge.addCallback((result) => {
+      result.observe(this.connections.size);
+    });
+
+    // Register health state provider
+    setHealthStateProvider(() => {
+      const roomManager = this.gameHub.getRoomManager();
+      const allRooms = roomManager.getAllRooms();
+      const playingSessions = allRooms.filter(
+        (r) => r.status === RoomStatus.Playing,
+      ).length;
+      return {
+        connections: this.connections.size,
+        rooms: roomManager.size,
+        sessions: playingSessions,
+      };
     });
   }
 
@@ -265,9 +303,31 @@ export class LocalSignalRAdapter implements HubConnection {
     const target = msg.target;
     const args = msg.arguments || [];
 
+    wsMessagesReceived.add(1, { 'ws.message.type': target ?? 'unknown' });
+
+    const tracer = trace.getTracer('battle-tetris-server');
+    const span = tracer.startSpan(`ws.invoke ${target}`, {
+      kind: SpanKind.SERVER,
+      attributes: {
+        'ws.target': target ?? 'unknown',
+        'ws.connection_id': connectionId,
+      },
+    });
+
+    try {
+      this.dispatchInvocation(connectionId, target, args);
+    } finally {
+      span.end();
+    }
+  }
+
+  private dispatchInvocation(connectionId: string, target: string | undefined, args: unknown[]): void {
     switch (target) {
       case ClientEvents.CreateRoom:
         this.gameHub.handleCreateRoom(connectionId);
+        break;
+      case ClientEvents.CreateAiRoom:
+        this.gameHub.handleCreateAiRoom(connectionId, args[0]);
         break;
       case ClientEvents.JoinRoom:
         this.gameHub.handleJoinRoom(connectionId, args[0]);

@@ -4,6 +4,15 @@ import { Room } from '../models/Room.js';
 import { RoomManager } from './RoomManager.js';
 import { calculateGarbage } from './GarbageCalculator.js';
 import { generateSeed } from '../utils/seedGenerator.js';
+import { createLogger } from '../lib/logger.js';
+import {
+  activeSessionsGauge,
+  sessionsTotal,
+  linesClearedTotal,
+  garbageSentTotal,
+  sessionDuration,
+  gameResults,
+} from '../lib/metrics.js';
 
 // =============================================================================
 // Callbacks — Hub がこのマネージャーに渡すコールバック群
@@ -35,6 +44,10 @@ export class GameSessionManager {
 
   constructor(roomManager: RoomManager) {
     this.roomManager = roomManager;
+
+    activeSessionsGauge.addCallback((result) => {
+      result.observe(this.sessions.size);
+    });
   }
 
   setCallbacks(callbacks: SessionCallbacks): void {
@@ -64,6 +77,9 @@ export class GameSessionManager {
       room.player2.connectionId,
     );
     this.sessions.set(room.roomId, session);
+    sessionsTotal.add(1);
+
+    createLogger({ roomId: room.roomId }).info({ seed }, 'Session started');
 
     return seed;
   }
@@ -92,9 +108,11 @@ export class GameSessionManager {
     if (!session || session.isFinished()) return;
 
     session.addLinesCleared(connectionId, count);
+    linesClearedTotal.add(count);
 
     const garbage = calculateGarbage(count);
     if (garbage > 0) {
+      garbageSentTotal.add(garbage);
       const room = this.roomManager.getRoom(roomId);
       const opponent = room?.getOpponent(connectionId);
       if (opponent && this.callbacks) {
@@ -116,6 +134,16 @@ export class GameSessionManager {
 
     session.setResult(loserConnectionId, LoserReason.GameOver);
     room.transitionToFinished();
+
+    const durationMs = Date.now() - session.startedAt.getTime();
+    const durationSec = durationMs / 1000;
+    sessionDuration.record(durationSec);
+    gameResults.add(1, { reason: 'game_over' });
+
+    createLogger({ roomId }).info(
+      { winner: session.winner, loser: loserConnectionId, reason: 'game_over', durationMs },
+      'Game ended',
+    );
 
     if (session.winner && this.callbacks) {
       this.callbacks.sendGameResult(
@@ -142,6 +170,11 @@ export class GameSessionManager {
 
     const room = this.roomManager.getRoom(roomId);
     if (!room) return;
+
+    createLogger({ roomId, connectionId: disconnectedId }).info(
+      { timeoutMs: DISCONNECT_TIMEOUT_MS },
+      'Player disconnected during game, starting timeout',
+    );
 
     const opponent = room.getOpponent(disconnectedId);
     if (opponent && this.callbacks) {
@@ -195,6 +228,16 @@ export class GameSessionManager {
 
     session.setResult(disconnectedId, LoserReason.Disconnect);
     room.transitionToFinished();
+
+    const durationMs = Date.now() - session.startedAt.getTime();
+    const durationSec = durationMs / 1000;
+    sessionDuration.record(durationSec);
+    gameResults.add(1, { reason: 'disconnect' });
+
+    createLogger({ roomId }).info(
+      { winner: session.winner, loser: disconnectedId, reason: 'disconnect', durationMs },
+      'Game ended by disconnect timeout',
+    );
 
     if (session.winner && this.callbacks) {
       this.callbacks.sendGameResult(

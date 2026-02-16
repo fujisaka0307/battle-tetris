@@ -275,6 +275,34 @@
   border-radius: 10px;
 }
 
+/* ---- AIレベルセレクト ---- */
+
+.top-ai-select {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  font-family: 'Orbitron', sans-serif;
+  color: #fff;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: auto;
+}
+
+.top-ai-select:focus {
+  border-color: #9c27b0;
+  box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.15);
+}
+
+.top-ai-select option {
+  background: #1a1a4e;
+  color: #fff;
+}
+
 /* ---- 待機中ルーム ---- */
 
 .top-waiting {
@@ -533,4 +561,267 @@
 .opponent-stats span {
   display: block;
   margin-top: 2px;
+}
+
+/* ==========================================================================
+   DashboardPage — CI/CD ダッシュボード
+   ========================================================================== */
+
+.dashboard-page {
+  font-family: 'Noto Sans JP', sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29 0%, #1a1a4e 40%, #24243e 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem 3rem;
+  color: #fff;
+  overflow-y: auto;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+.dashboard-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #00e5ff, #7c4dff, #ff4081);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 12px rgba(0, 200, 255, 0.4));
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-back-link {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.dashboard-back-link:hover {
+  color: #00e5ff;
+  border-color: rgba(0, 229, 255, 0.3);
+}
+
+/* ---- External links ---- */
+
+.dashboard-links {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+.dashboard-ext-link {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  color: #00e5ff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.dashboard-ext-link:hover {
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow: 0 2px 12px rgba(0, 229, 255, 0.15);
+}
+
+/* ---- Period selector ---- */
+
+.dashboard-period {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-period-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 0.4rem 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.dashboard-period-btn:hover {
+  color: #fff;
+  border-color: rgba(0, 229, 255, 0.3);
+}
+
+.dashboard-period-btn--active {
+  color: #00e5ff;
+  border-color: rgba(0, 229, 255, 0.5);
+  background: rgba(0, 229, 255, 0.1);
+}
+
+/* ---- Card grid ---- */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  width: 100%;
+  max-width: 900px;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+}
+
+.dashboard-card--ok {
+  border-color: rgba(76, 175, 80, 0.35);
+}
+
+.dashboard-card--ok:hover {
+  box-shadow: 0 4px 24px rgba(76, 175, 80, 0.12);
+}
+
+.dashboard-card--warning {
+  border-color: rgba(255, 152, 0, 0.35);
+}
+
+.dashboard-card--warning:hover {
+  box-shadow: 0 4px 24px rgba(255, 152, 0, 0.12);
+}
+
+.dashboard-card--error {
+  border-color: rgba(255, 82, 82, 0.35);
+}
+
+.dashboard-card--error:hover {
+  box-shadow: 0 4px 24px rgba(255, 82, 82, 0.12);
+}
+
+.dashboard-card-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(0, 200, 255, 0.7);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.dashboard-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* ---- Metric rows ---- */
+
+.dashboard-metric-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.dashboard-metric-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  min-width: 90px;
+}
+
+.dashboard-metric-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(0, 200, 255, 0.2);
+}
+
+.dashboard-metric-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+}
+
+/* ---- Sparkline ---- */
+
+.dashboard-sparkline {
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+/* ---- Error box ---- */
+
+.dashboard-error-box {
+  max-width: 480px;
+  width: 100%;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---- Footer ---- */
+
+.dashboard-footer {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+}
+
+/* ---- Dashboard nav link (on TopPage) ---- */
+
+.dashboard-nav-link {
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 10px;
+  padding: 0.6rem 1.25rem;
+  color: #00e5ff;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.dashboard-nav-link:hover {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 2px 12px rgba(0, 229, 255, 0.15);
 }

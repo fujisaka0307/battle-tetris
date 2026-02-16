@@ -18,6 +18,8 @@
     "@battle-tetris/shared": "*",
     "@fontsource/noto-sans-jp": "^5.2.9",
     "@fontsource/orbitron": "^5.2.8",
+    "@grafana/faro-web-sdk": "^1.19.0",
+    "@grafana/faro-web-tracing": "^1.19.0",
     "@microsoft/signalr": "^10.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

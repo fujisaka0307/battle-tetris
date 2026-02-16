@@ -21,6 +21,13 @@ param environment string = 'dev'
 @description('Base project name used for resource naming.')
 param projectName string = 'battle-tetris'
 
+@description('Grafana Cloud OTLP Gateway endpoint (optional).')
+param grafanaOtlpEndpoint string = ''
+
+@secure()
+@description('Grafana Cloud OTLP auth header value (optional).')
+param grafanaOtlpAuthHeader string = ''
+
 // -----------------------------------------------------------------------------
 // Variables
 // -----------------------------------------------------------------------------
@@ -63,6 +70,8 @@ module appService 'modules/appService.bicep' = {
     name: suffix
     signalRConnectionString: signalr.outputs.connectionString
     appInsightsConnectionString: monitoring.outputs.connectionString
+    grafanaOtlpEndpoint: grafanaOtlpEndpoint
+    grafanaOtlpAuthHeader: grafanaOtlpAuthHeader
   }
 }
 
