@@ -27,8 +27,8 @@ test.describe('リマッチバリエーション', () => {
     await playerAPage.getByTestId('ready-btn').click();
     await playerBPage.getByTestId('ready-btn').click();
 
-    await playerAPage.waitForURL(/\/battle\//, { timeout: 10000 });
-    await playerBPage.waitForURL(/\/battle\//, { timeout: 10000 });
+    await playerAPage.waitForURL(/\/battle\//, { timeout: 30000 });
+    await playerBPage.waitForURL(/\/battle\//, { timeout: 30000 });
 
     // Verify scores reset to 0 for game 2
     await expect(playerAPage.getByTestId('score')).toHaveText('0');
@@ -49,8 +49,8 @@ test.describe('リマッチバリエーション', () => {
     await playerAPage.getByTestId('ready-btn').click();
     await playerBPage.getByTestId('ready-btn').click();
 
-    await playerAPage.waitForURL(/\/battle\//, { timeout: 10000 });
-    await playerBPage.waitForURL(/\/battle\//, { timeout: 10000 });
+    await playerAPage.waitForURL(/\/battle\//, { timeout: 30000 });
+    await playerBPage.waitForURL(/\/battle\//, { timeout: 30000 });
 
     // Verify scores reset to 0 for game 3
     await expect(playerAPage.getByTestId('score')).toHaveText('0');

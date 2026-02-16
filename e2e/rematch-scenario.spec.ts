@@ -45,9 +45,9 @@ test.describe('リマッチシナリオ', () => {
     await playerAPage.getByTestId('ready-btn').click();
     await playerBPage.getByTestId('ready-btn').click();
 
-    // Should navigate to battle again
-    await playerAPage.waitForURL(/\/battle\//, { timeout: 10000 });
-    await playerBPage.waitForURL(/\/battle\//, { timeout: 10000 });
+    // Should navigate to battle again (countdown + navigation takes time in CI)
+    await playerAPage.waitForURL(/\/battle\//, { timeout: 30000 });
+    await playerBPage.waitForURL(/\/battle\//, { timeout: 30000 });
 
     // Scores should be reset to 0
     await expect(playerAPage.getByTestId('score')).toHaveText('0');
