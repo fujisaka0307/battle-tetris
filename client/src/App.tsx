@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { useAuth } from './auth/useAuth';
 import LoginPage from './pages/LoginPage';
 import TopPage from './pages/TopPage';
@@ -8,33 +8,36 @@ import ResultPage from './pages/ResultPage';
 import NotFoundPage from './pages/NotFoundPage';
 import DashboardPage from './pages/DashboardPage';
 
-export default function App() {
+function AuthLayout() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return (
+      <div className="top-page">
+        <p style={{ color: 'rgba(255,255,255,0.5)' }}>認証中...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  return <Outlet />;
+}
+
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/dashboard" element={<DashboardPage />} />
-        {isLoading ? (
-          <Route
-            path="*"
-            element={
-              <div className="top-page">
-                <p style={{ color: 'rgba(255,255,255,0.5)' }}>認証中...</p>
-              </div>
-            }
-          />
-        ) : !isAuthenticated ? (
-          <Route path="*" element={<LoginPage />} />
-        ) : (
-          <>
-            <Route path="/" element={<TopPage />} />
-            <Route path="/lobby/:roomId" element={<LobbyPage />} />
-            <Route path="/battle/:roomId" element={<BattlePage />} />
-            <Route path="/result" element={<ResultPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </>
-        )}
+        <Route element={<AuthLayout />}>
+          <Route path="/" element={<TopPage />} />
+          <Route path="/lobby/:roomId" element={<LobbyPage />} />
+          <Route path="/battle/:roomId" element={<BattlePage />} />
+          <Route path="/result" element={<ResultPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
