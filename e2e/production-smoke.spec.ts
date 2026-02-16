@@ -10,11 +10,13 @@ test.describe('本番スモークテスト', () => {
     await expect(page.getByText('Battle Tetris')).toBeVisible({ timeout: 10000 });
   });
 
-  test('ログイン画面が表示されること', async ({ page }) => {
+  test('認証UIが表示されること', async ({ page }) => {
     await page.goto('/');
-    // 本番環境では Azure AD 認証が必要なため、ログインボタンの表示を確認
     await expect(page.getByText('Battle Tetris')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByTestId('login-btn')).toBeVisible({ timeout: 10000 });
+    // SKIP_AUTH モード: テストログインボタン、本番: Azure AD ログインボタン
+    const testLoginBtn = page.getByTestId('test-login-btn');
+    const loginBtn = page.getByTestId('login-btn');
+    await expect(testLoginBtn.or(loginBtn)).toBeVisible({ timeout: 10000 });
   });
 
   test('バックエンドAPIのヘルスチェック', async ({ request }) => {
