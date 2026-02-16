@@ -1,7 +1,8 @@
 import { AiGameEngine } from './AiGameEngine.js';
 import type { AiGameCallbacks } from './AiGameEngine.js';
 import { AiDecisionMaker } from './AiDecisionMaker.js';
-import { BedrockClient } from './BedrockClient.js';
+import { BedrockClient, resolveModelId } from './BedrockClient.js';
+import type { ModelTier } from './BedrockClient.js';
 import { createLogger } from '../lib/logger.js';
 
 const logger = createLogger({ module: 'AiPlayer' });
@@ -13,21 +14,23 @@ const logger = createLogger({ module: 'AiPlayer' });
 interface LevelConfig {
   /** 配置間隔 (ms) */
   intervalMs: number;
-  /** Bedrock 使用率 (0.0 - 1.0) */
-  bedrockRate: number;
+  /** 使用するモデル */
+  model: ModelTier;
+  /** temperature (0=決定的, 1=ランダム) */
+  temperature: number;
 }
 
 const LEVEL_CONFIG: Record<number, LevelConfig> = {
-  1:  { intervalMs: 2500, bedrockRate: 0 },
-  2:  { intervalMs: 2000, bedrockRate: 0 },
-  3:  { intervalMs: 1700, bedrockRate: 0 },
-  4:  { intervalMs: 1400, bedrockRate: 0 },
-  5:  { intervalMs: 1100, bedrockRate: 0 },
-  6:  { intervalMs: 900,  bedrockRate: 0 },
-  7:  { intervalMs: 750,  bedrockRate: 0.25 },
-  8:  { intervalMs: 600,  bedrockRate: 0.50 },
-  9:  { intervalMs: 450,  bedrockRate: 0.75 },
-  10: { intervalMs: 300,  bedrockRate: 1.0 },
+  1:  { intervalMs: 2500, model: 'haiku',  temperature: 1.0 },
+  2:  { intervalMs: 2200, model: 'haiku',  temperature: 0.8 },
+  3:  { intervalMs: 1900, model: 'haiku',  temperature: 0.5 },
+  4:  { intervalMs: 1600, model: 'sonnet', temperature: 0.8 },
+  5:  { intervalMs: 1400, model: 'sonnet', temperature: 0.5 },
+  6:  { intervalMs: 1200, model: 'sonnet', temperature: 0.3 },
+  7:  { intervalMs: 1000, model: 'sonnet', temperature: 0.1 },
+  8:  { intervalMs: 800,  model: 'claude', temperature: 0.3 },
+  9:  { intervalMs: 600,  model: 'claude', temperature: 0.1 },
+  10: { intervalMs: 400,  model: 'claude', temperature: 0 },
 };
 
 // =============================================================================
@@ -48,7 +51,9 @@ export class AiPlayer {
     this.config = LEVEL_CONFIG[this.level] ?? LEVEL_CONFIG[5];
     this.engine = new AiGameEngine(seed);
     this.decisionMaker = new AiDecisionMaker(this.level);
-    this.bedrockClient = new BedrockClient(this.level);
+
+    const modelId = resolveModelId(this.config.model);
+    this.bedrockClient = new BedrockClient(modelId);
   }
 
   /**
@@ -65,7 +70,12 @@ export class AiPlayer {
     if (this.running) return;
     this.running = true;
     this.engine.start();
-    logger.info({ level: this.level, intervalMs: this.config.intervalMs }, 'AI player started');
+    logger.info({
+      level: this.level,
+      intervalMs: this.config.intervalMs,
+      model: this.config.model,
+      temperature: this.config.temperature,
+    }, 'AI player started');
 
     this.timer = setInterval(() => {
       this.tick();
@@ -107,18 +117,15 @@ export class AiPlayer {
 
     let placement = null;
 
-    // Bedrock を使うかどうか判定
-    const useBedrock = this.config.bedrockRate > 0
-      && this.bedrockClient.isAvailable()
-      && Math.random() < this.config.bedrockRate; // NOSONAR
-
-    if (useBedrock) {
+    // LLM で配置決定を試みる
+    if (this.bedrockClient.isAvailable()) {
       try {
         placement = await this.bedrockClient.findPlacement(
           this.engine.getBoardAsText(),
           currentPiece,
           nextPieces,
           this.engine.garbage.pending(),
+          this.config.temperature,
         );
       } catch {
         // フォールバック

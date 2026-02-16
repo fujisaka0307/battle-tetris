@@ -11,10 +11,12 @@ const logger = createLogger({ module: 'BedrockClient' });
 // Types
 // =============================================================================
 
-interface BedrockPlacement {
+export interface BedrockPlacement {
   col: number;
   rotation: number;
 }
+
+export type ModelTier = 'haiku' | 'sonnet' | 'claude';
 
 // テトリミノ名マッピング
 const PIECE_NAMES: Record<TetrominoType, string> = {
@@ -27,6 +29,21 @@ const PIECE_NAMES: Record<TetrominoType, string> = {
   [TetrominoType.L]: 'L',
 };
 
+// モデルIDのデフォルト値
+const DEFAULT_MODELS: Record<ModelTier, string> = {
+  haiku:  'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+  sonnet: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+  claude: 'us.anthropic.claude-3-opus-20240229-v1:0',
+};
+
+/**
+ * 環境変数またはデフォルトからモデルIDを解決する。
+ */
+export function resolveModelId(tier: ModelTier): string {
+  const envKey = `BEDROCK_MODEL_${tier.toUpperCase()}`;
+  return process.env[envKey] ?? DEFAULT_MODELS[tier];
+}
+
 // =============================================================================
 // BedrockClient
 // =============================================================================
@@ -34,18 +51,16 @@ const PIECE_NAMES: Record<TetrominoType, string> = {
 export class BedrockClient {
   private client: BedrockRuntimeClient | null = null;
   private readonly modelId: string;
-  private readonly level: number;
   private _available = true;
 
-  constructor(level: number) {
-    this.level = level;
-    this.modelId = process.env.BEDROCK_MODEL_ID ?? 'us.anthropic.claude-3-5-haiku-20241022-v1:0';
+  constructor(modelId: string) {
+    this.modelId = modelId;
 
     try {
       this.client = new BedrockRuntimeClient({
         region: process.env.AWS_REGION ?? 'ap-northeast-1',
       });
-      logger.info({ region: process.env.AWS_REGION ?? 'ap-northeast-1' }, 'BedrockClient initialized');
+      logger.info({ region: process.env.AWS_REGION ?? 'ap-northeast-1', modelId }, 'BedrockClient initialized');
     } catch (err) {
       logger.warn({ err }, 'BedrockClient initialization failed');
       this._available = false;
@@ -68,6 +83,7 @@ export class BedrockClient {
     currentPiece: TetrominoType,
     nextPieces: TetrominoType[],
     pendingGarbage: number,
+    temperature: number,
   ): Promise<BedrockPlacement | null> {
     if (!this.client) return null;
 
@@ -92,8 +108,6 @@ Rules:
 Respond with ONLY a JSON object: {"col": <number>, "rotation": <number>}`;
 
     try {
-      const temperature = this.level >= 10 ? 0 : 0.3;
-
       const command = new InvokeModelCommand({
         modelId: this.modelId,
         contentType: 'application/json',
