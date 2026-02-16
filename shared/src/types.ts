@@ -63,3 +63,34 @@ export enum LoserReason {
 
 /** AIレベル (1=最弱 〜 10=最強) */
 export type AiLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+
+// =============================================================================
+// Leaderboard / Match History Types
+// =============================================================================
+
+/** 対戦履歴エントリ */
+export interface MatchHistoryEntry {
+  id: number;
+  roomId: string;
+  winnerId: string;
+  loserId: string;
+  winnerScore: number;
+  loserScore: number;
+  winnerLines: number;
+  loserLines: number;
+  loserReason: LoserReason;
+  durationMs: number;
+  playedAt: string; // ISO 8601
+  isAiMatch: boolean;
+}
+
+/** ランキングエントリ */
+export interface RankingEntry {
+  rank: number;
+  enterpriseId: string;
+  wins: number;
+  losses: number;
+  totalScore: number;
+  maxScore: number;
+  winRate: number; // 0-100
+}

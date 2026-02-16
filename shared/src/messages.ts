@@ -1,4 +1,4 @@
-import type { Field, LoserReason, AiLevel } from './types.js';
+import type { Field, LoserReason, AiLevel, RankingEntry, MatchHistoryEntry } from './types.js';
 
 // =============================================================================
 // SignalR Event Names
@@ -17,6 +17,8 @@ export const ClientEvents = {
   LeaveRoom: 'LeaveRoom',
   SubscribeRoomList: 'SubscribeRoomList',
   UnsubscribeRoomList: 'UnsubscribeRoomList',
+  SubscribeLeaderboard: 'SubscribeLeaderboard',
+  UnsubscribeLeaderboard: 'UnsubscribeLeaderboard',
 } as const;
 
 /** サーバー → クライアント イベント名 */
@@ -34,6 +36,8 @@ export const ServerEvents = {
   OpponentReconnected: 'OpponentReconnected',
   WaitingRoomListUpdated: 'WaitingRoomListUpdated',
   AiThinking: 'AiThinking',
+  LeaderboardUpdated: 'LeaderboardUpdated',
+  MatchHistoryUpdated: 'MatchHistoryUpdated',
   Error: 'Error',
 } as const;
 
@@ -69,6 +73,8 @@ export interface LinesClearedPayload {
 // LeaveRoom: no payload
 // SubscribeRoomList: no payload
 // UnsubscribeRoomList: no payload
+// SubscribeLeaderboard: no payload
+// UnsubscribeLeaderboard: no payload
 
 // =============================================================================
 // Server → Client Payloads
@@ -135,6 +141,14 @@ export interface AiThinkingPayload {
   modelTier: string;
   temperature: number;
   seq: number;
+}
+
+export interface LeaderboardUpdatedPayload {
+  rankings: RankingEntry[];
+}
+
+export interface MatchHistoryUpdatedPayload {
+  matches: MatchHistoryEntry[];
 }
 
 export interface ErrorPayload {

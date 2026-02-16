@@ -31,6 +31,8 @@ vi.mock('../../network/SignalRClient', () => ({
     sendJoinRoom: vi.fn(),
     sendSubscribeRoomList: vi.fn(),
     sendUnsubscribeRoomList: vi.fn(),
+    sendSubscribeLeaderboard: vi.fn(),
+    sendUnsubscribeLeaderboard: vi.fn(),
   },
 }));
 
@@ -282,5 +284,55 @@ describe('TopPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/lobby/JOIN01');
     expect(usePlayerStore.getState().opponentEnterpriseId).toBe('dave@dxc.com');
+  });
+
+  // === ランキング & 対戦履歴テスト ===
+
+  it('onLeaderboardUpdated でランキングが表示されること', async () => {
+    (signalRClient as any).state = 'connected';
+    renderTopPage();
+
+    await userEvent.click(screen.getByTestId('create-room-btn'));
+
+    act(() => {
+      capturedHandlers.onLeaderboardUpdated?.({
+        rankings: [
+          { rank: 1, enterpriseId: 'alice@dxc.com', wins: 10, losses: 2, totalScore: 50000, maxScore: 8000, winRate: 83 },
+          { rank: 2, enterpriseId: 'bob@dxc.com', wins: 5, losses: 5, totalScore: 25000, maxScore: 6000, winRate: 50 },
+        ],
+      });
+    });
+
+    const items = screen.getAllByTestId('ranking-item');
+    expect(items).toHaveLength(2);
+  });
+
+  it('onMatchHistoryUpdated で対戦履歴が表示されること', async () => {
+    (signalRClient as any).state = 'connected';
+    renderTopPage();
+
+    await userEvent.click(screen.getByTestId('create-room-btn'));
+
+    act(() => {
+      capturedHandlers.onMatchHistoryUpdated?.({
+        matches: [
+          {
+            id: 1, roomId: 'ROOM01', winnerId: 'alice@dxc.com', loserId: 'bob@dxc.com',
+            winnerScore: 5000, loserScore: 2000, winnerLines: 20, loserLines: 10,
+            loserReason: 'gameover', durationMs: 120000, playedAt: '2024-01-01T00:00:00Z', isAiMatch: false,
+          },
+        ],
+      });
+    });
+
+    const items = screen.getAllByTestId('history-item');
+    expect(items).toHaveLength(1);
+  });
+
+  it('データなし時に空メッセージが表示されること', () => {
+    renderTopPage();
+
+    expect(screen.getByTestId('ranking-empty')).toBeInTheDocument();
+    expect(screen.getByTestId('history-empty')).toBeInTheDocument();
   });
 });

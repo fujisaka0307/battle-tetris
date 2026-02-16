@@ -40,7 +40,7 @@ const PIECE_NAMES: Record<TetrominoType, string> = {
 const DEFAULT_MODELS: Record<ModelTier, string> = {
   haiku:  'us.anthropic.claude-3-5-haiku-20241022-v1:0',
   sonnet: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
-  claude: 'us.anthropic.claude-3-opus-20240229-v1:0',
+  claude: 'us.anthropic.claude-opus-4-1-20250805-v1:0',
 };
 
 /**

@@ -16,6 +16,15 @@ export class GameSession {
   /** connectionId → linesCleared */
   private readonly linesCleared: Map<string, number>;
 
+  /** connectionId → 最新のFieldUpdateから取得したスコア */
+  private readonly latestScores: Map<string, number>;
+
+  /** connectionId → 最新のFieldUpdateから取得したライン数 */
+  private readonly latestLines: Map<string, number>;
+
+  /** connectionId → 最新のFieldUpdateから取得したレベル */
+  private readonly latestLevels: Map<string, number>;
+
   constructor(roomId: string, player1Id: string, player2Id: string) {
     this.roomId = roomId;
     this.startedAt = new Date();
@@ -26,6 +35,18 @@ export class GameSession {
       [player2Id, 0],
     ]);
     this.linesCleared = new Map([
+      [player1Id, 0],
+      [player2Id, 0],
+    ]);
+    this.latestScores = new Map([
+      [player1Id, 0],
+      [player2Id, 0],
+    ]);
+    this.latestLines = new Map([
+      [player1Id, 0],
+      [player2Id, 0],
+    ]);
+    this.latestLevels = new Map([
       [player1Id, 0],
       [player2Id, 0],
     ]);
@@ -58,6 +79,27 @@ export class GameSession {
    */
   getLinesCleared(connectionId: string): number {
     return this.linesCleared.get(connectionId) ?? 0;
+  }
+
+  /**
+   * FieldUpdate から最新のスコア・ライン数・レベルを記録する。
+   */
+  updateFieldStats(connectionId: string, score: number, lines: number, level: number): void {
+    this.latestScores.set(connectionId, score);
+    this.latestLines.set(connectionId, lines);
+    this.latestLevels.set(connectionId, level);
+  }
+
+  getLatestScore(connectionId: string): number {
+    return this.latestScores.get(connectionId) ?? 0;
+  }
+
+  getLatestLines(connectionId: string): number {
+    return this.latestLines.get(connectionId) ?? 0;
+  }
+
+  getLatestLevel(connectionId: string): number {
+    return this.latestLevels.get(connectionId) ?? 0;
   }
 
   /**

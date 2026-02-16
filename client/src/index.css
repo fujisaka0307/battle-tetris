@@ -378,6 +378,150 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* ---- ランキング & 対戦履歴 ---- */
+
+.top-stats-row {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.top-ranking,
+.top-history {
+  margin-bottom: 0;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ranking-table th {
+  font-size: 0.7rem;
+  color: rgba(0, 200, 255, 0.6);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid rgba(0, 200, 255, 0.15);
+  text-align: left;
+}
+
+.ranking-row td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ranking-rank {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  color: #ffd740;
+  width: 30px;
+}
+
+.ranking-player {
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-wins {
+  color: #4caf50;
+  text-align: center;
+}
+
+.ranking-losses {
+  color: #ff6b6b;
+  text-align: center;
+}
+
+.ranking-rate {
+  font-family: 'Orbitron', sans-serif;
+  color: #00e5ff;
+  text-align: right;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.history-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  transition: border-color 0.15s;
+}
+
+.history-card:hover {
+  border-color: rgba(0, 229, 255, 0.3);
+}
+
+.history-players {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.history-winner {
+  color: #ffd740;
+  font-weight: 700;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-vs {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.history-loser {
+  color: rgba(255, 255, 255, 0.5);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.history-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.history-ai-badge {
+  font-size: 0.6rem;
+  color: #9c27b0;
+  background: rgba(156, 39, 176, 0.15);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-weight: 700;
+}
+
+.top-empty {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+  padding: 1rem 0;
+}
+
 /* ---- エラー / 接続中 ---- */
 
 .top-error {

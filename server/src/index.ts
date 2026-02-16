@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import app from './app.js';
 import { LocalSignalRAdapter } from './hubs/LocalSignalRAdapter.js';
 import { logger } from './lib/logger.js';
+import { getDb, closeDb } from './db/database.js';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -15,6 +16,9 @@ if (!AZURE_TENANT_ID || !AZURE_CLIENT_ID) {
   );
 }
 
+// Initialize SQLite database
+getDb();
+
 // Create HTTP server from Express app
 const server = createServer(app);
 
@@ -26,4 +30,17 @@ server.listen(PORT, () => {
   logger.info({ port: PORT }, 'Server listening');
   logger.info({ url: `http://localhost:${PORT}/health` }, 'Health endpoint');
   logger.info({ url: `ws://localhost:${PORT}/hub` }, 'SignalR Hub endpoint');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down...');
+  closeDb();
+  server.close();
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down...');
+  closeDb();
+  server.close();
 });

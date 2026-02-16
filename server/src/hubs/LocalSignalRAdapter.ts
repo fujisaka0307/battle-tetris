@@ -373,6 +373,12 @@ export class LocalSignalRAdapter implements HubConnection {
       case ClientEvents.UnsubscribeRoomList:
         this.gameHub.handleUnsubscribeRoomList(connectionId);
         break;
+      case ClientEvents.SubscribeLeaderboard:
+        this.gameHub.handleSubscribeLeaderboard(connectionId);
+        break;
+      case ClientEvents.UnsubscribeLeaderboard:
+        this.gameHub.handleUnsubscribeLeaderboard(connectionId);
+        break;
     }
   }
 

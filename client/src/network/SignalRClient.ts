@@ -23,6 +23,8 @@ import type {
   AiThinkingPayload,
   ErrorPayload,
   WaitingRoomListUpdatedPayload,
+  LeaderboardUpdatedPayload,
+  MatchHistoryUpdatedPayload,
 } from '@battle-tetris/shared';
 
 // =============================================================================
@@ -49,6 +51,8 @@ export interface SignalREventHandlers {
   onOpponentReconnected?: () => void;
   onAiThinking?: (payload: AiThinkingPayload) => void;
   onWaitingRoomListUpdated?: (payload: WaitingRoomListUpdatedPayload) => void;
+  onLeaderboardUpdated?: (payload: LeaderboardUpdatedPayload) => void;
+  onMatchHistoryUpdated?: (payload: MatchHistoryUpdatedPayload) => void;
   onError?: (payload: ErrorPayload) => void;
   onConnectionStateChanged?: (state: ConnectionState) => void;
 }
@@ -205,6 +209,14 @@ export class SignalRClient {
     this.invoke(ClientEvents.UnsubscribeRoomList);
   }
 
+  sendSubscribeLeaderboard(): void {
+    this.invoke(ClientEvents.SubscribeLeaderboard);
+  }
+
+  sendUnsubscribeLeaderboard(): void {
+    this.invoke(ClientEvents.UnsubscribeLeaderboard);
+  }
+
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
@@ -273,6 +285,14 @@ export class SignalRClient {
 
     this.connection.on(ServerEvents.WaitingRoomListUpdated, (payload: WaitingRoomListUpdatedPayload) => {
       this.handlers.onWaitingRoomListUpdated?.(payload);
+    });
+
+    this.connection.on(ServerEvents.LeaderboardUpdated, (payload: LeaderboardUpdatedPayload) => {
+      this.handlers.onLeaderboardUpdated?.(payload);
+    });
+
+    this.connection.on(ServerEvents.MatchHistoryUpdated, (payload: MatchHistoryUpdatedPayload) => {
+      this.handlers.onMatchHistoryUpdated?.(payload);
     });
 
     this.connection.on(ServerEvents.Error, (payload: ErrorPayload) => {

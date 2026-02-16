@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROOM_ID_LENGTH } from '@battle-tetris/shared';
-import type { WaitingRoomInfo } from '@battle-tetris/shared';
+import type { WaitingRoomInfo, RankingEntry, MatchHistoryEntry } from '@battle-tetris/shared';
 import { signalRClient } from '../network/SignalRClient';
 import { usePlayerStore } from '../stores/usePlayerStore';
 import { useGameStore } from '../stores/useGameStore';
@@ -17,6 +17,8 @@ export default function TopPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [waitingRooms, setWaitingRooms] = useState<WaitingRoomInfo[]>([]);
+  const [rankings, setRankings] = useState<RankingEntry[]>([]);
+  const [matchHistory, setMatchHistory] = useState<MatchHistoryEntry[]>([]);
   const [aiLevel, setAiLevel] = useState(5);
   const subscribedRef = useRef(false);
   const connectingPromiseRef = useRef<Promise<boolean> | null>(null);
@@ -56,7 +58,7 @@ export default function TopPage() {
     }
   }, [enterpriseId, storeEnterpriseId]);
 
-  // 早期接続とルームリスト購読
+  // 早期接続とルームリスト・リーダーボード購読
   useEffect(() => {
     let cancelled = false;
     const connectAndSubscribe = async () => {
@@ -66,8 +68,15 @@ export default function TopPage() {
           onWaitingRoomListUpdated: (payload) => {
             if (!cancelled) setWaitingRooms(payload.rooms);
           },
+          onLeaderboardUpdated: (payload) => {
+            if (!cancelled) setRankings(payload.rankings);
+          },
+          onMatchHistoryUpdated: (payload) => {
+            if (!cancelled) setMatchHistory(payload.matches);
+          },
         });
         signalRClient.sendSubscribeRoomList();
+        signalRClient.sendSubscribeLeaderboard();
         subscribedRef.current = true;
         setIsReady(true);
       }
@@ -77,6 +86,7 @@ export default function TopPage() {
       cancelled = true;
       if (subscribedRef.current) {
         signalRClient.sendUnsubscribeRoomList();
+        signalRClient.sendUnsubscribeLeaderboard();
         subscribedRef.current = false;
       }
     };
@@ -100,6 +110,8 @@ export default function TopPage() {
         navigate(`/lobby/${payload.roomId}`);
       },
       onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
+      onLeaderboardUpdated: (payload) => setRankings(payload.rankings),
+      onMatchHistoryUpdated: (payload) => setMatchHistory(payload.matches),
       onError: (payload) => setError(payload.message),
     });
 
@@ -120,6 +132,8 @@ export default function TopPage() {
         navigate(`/lobby/${roomId.toUpperCase()}`);
       },
       onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
+      onLeaderboardUpdated: (payload) => setRankings(payload.rankings),
+      onMatchHistoryUpdated: (payload) => setMatchHistory(payload.matches),
       onError: (payload) => setError(payload.message),
     });
 
@@ -139,6 +153,8 @@ export default function TopPage() {
         navigate(`/lobby/${targetRoomId}`);
       },
       onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
+      onLeaderboardUpdated: (payload) => setRankings(payload.rankings),
+      onMatchHistoryUpdated: (payload) => setMatchHistory(payload.matches),
       onError: (payload) => setError(payload.message),
     });
 
@@ -164,6 +180,8 @@ export default function TopPage() {
         useGameStore.getState().setPendingCountdown(payload.countdown);
       },
       onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
+      onLeaderboardUpdated: (payload) => setRankings(payload.rankings),
+      onMatchHistoryUpdated: (payload) => setMatchHistory(payload.matches),
       onError: (payload) => setError(payload.message),
     });
 
@@ -319,6 +337,64 @@ export default function TopPage() {
           </div>
         </div>
       )}
+
+      {/* ---- ランキング & 対戦履歴 ---- */}
+      <div className="top-stats-row">
+        {/* ランキング */}
+        <div className="top-section top-ranking" data-testid="ranking-list">
+          <h2 className="top-label">ランキング</h2>
+          {rankings.length > 0 ? (
+            <table className="ranking-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>プレイヤー</th>
+                  <th>W</th>
+                  <th>L</th>
+                  <th>しょうりつ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rankings.map((r) => (
+                  <tr key={r.enterpriseId} className="ranking-row" data-testid="ranking-item">
+                    <td className="ranking-rank">{r.rank}</td>
+                    <td className="ranking-player">{r.enterpriseId}</td>
+                    <td className="ranking-wins">{r.wins}</td>
+                    <td className="ranking-losses">{r.losses}</td>
+                    <td className="ranking-rate">{r.winRate}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="top-empty" data-testid="ranking-empty">まだ きろくが ありません</p>
+          )}
+        </div>
+
+        {/* 対戦履歴 */}
+        <div className="top-section top-history" data-testid="match-history">
+          <h2 className="top-label">たいせん りれき</h2>
+          {matchHistory.length > 0 ? (
+            <div className="history-list">
+              {matchHistory.map((m) => (
+                <div key={m.id} className="history-card" data-testid="history-item">
+                  <div className="history-players">
+                    <span className="history-winner">{m.winnerId}</span>
+                    <span className="history-vs">VS</span>
+                    <span className="history-loser">{m.loserId}</span>
+                  </div>
+                  <div className="history-details">
+                    <span>{m.winnerScore} - {m.loserScore}</span>
+                    {m.isAiMatch && <span className="history-ai-badge">AI</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="top-empty" data-testid="history-empty">まだ きろくが ありません</p>
+          )}
+        </div>
+      </div>
 
       {/* ---- エラー / 接続中 ---- */}
       {error && (

@@ -13,10 +13,12 @@ describe('ClientEvents', () => {
     expect(ClientEvents.LeaveRoom).toBe('LeaveRoom');
     expect(ClientEvents.SubscribeRoomList).toBe('SubscribeRoomList');
     expect(ClientEvents.UnsubscribeRoomList).toBe('UnsubscribeRoomList');
+    expect(ClientEvents.SubscribeLeaderboard).toBe('SubscribeLeaderboard');
+    expect(ClientEvents.UnsubscribeLeaderboard).toBe('UnsubscribeLeaderboard');
   });
 
-  it('has exactly 11 events', () => {
-    expect(Object.keys(ClientEvents)).toHaveLength(11);
+  it('has exactly 13 events', () => {
+    expect(Object.keys(ClientEvents)).toHaveLength(13);
   });
 });
 
@@ -35,11 +37,13 @@ describe('ServerEvents', () => {
     expect(ServerEvents.OpponentReconnected).toBe('OpponentReconnected');
     expect(ServerEvents.WaitingRoomListUpdated).toBe('WaitingRoomListUpdated');
     expect(ServerEvents.AiThinking).toBe('AiThinking');
+    expect(ServerEvents.LeaderboardUpdated).toBe('LeaderboardUpdated');
+    expect(ServerEvents.MatchHistoryUpdated).toBe('MatchHistoryUpdated');
     expect(ServerEvents.Error).toBe('Error');
   });
 
-  it('has exactly 14 events', () => {
-    expect(Object.keys(ServerEvents)).toHaveLength(14);
+  it('has exactly 16 events', () => {
+    expect(Object.keys(ServerEvents)).toHaveLength(16);
   });
 });
 

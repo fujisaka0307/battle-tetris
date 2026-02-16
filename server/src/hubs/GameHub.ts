@@ -3,8 +3,13 @@ import {
   ErrorCodes,
   COUNTDOWN_SECONDS,
   RoomStatus,
+  LoserReason,
 } from '@battle-tetris/shared';
 import type { WaitingRoomInfo } from '@battle-tetris/shared';
+import { insertMatchResult } from '../db/matchResultRepository.js';
+import { upsertPlayerStats } from '../db/playerStatsRepository.js';
+import { getTopRankings } from '../db/playerStatsRepository.js';
+import { getRecentMatches } from '../db/matchResultRepository.js';
 import { RoomManager } from '../services/RoomManager.js';
 import { GameSessionManager } from '../services/GameSessionManager.js';
 import { Player } from '../models/Player.js';
@@ -45,6 +50,7 @@ export class GameHub {
   private readonly sessionManager: GameSessionManager;
   private readonly hub: HubConnection;
   private readonly roomListSubscribers = new Set<string>();
+  private readonly leaderboardSubscribers = new Set<string>();
   private readonly aiPlayers = new Map<string, AiPlayer>();
 
   constructor(hub: HubConnection) {
@@ -80,6 +86,9 @@ export class GameHub {
         // Stop AI player on game end
         this.stopAiIfExists(winnerId);
         this.stopAiIfExists(loserId);
+
+        // 対戦結果を永続化
+        this.persistMatchResult(winnerId, loserId, reason);
       },
       sendOpponentDisconnected: (connectionId, timeout) => {
         if (!this.isAiConnection(connectionId)) {
@@ -179,6 +188,11 @@ export class GameHub {
       // 6. AIコールバック設定
       ai.setCallbacks({
         onFieldUpdate: (field, score, lines, level) => {
+          // セッションにAIのスコアを記録
+          const aiSession = this.sessionManager.getSession(roomId);
+          if (aiSession) {
+            aiSession.updateFieldStats(aiConnectionId, score, lines, level);
+          }
           // 人間に OpponentFieldUpdate 送信
           this.hub.sendToClient(connectionId, ServerEvents.OpponentFieldUpdate, {
             field,
@@ -319,6 +333,12 @@ export class GameHub {
     const room = this.roomManager.getRoomByConnectionId(connectionId);
     if (!room) return;
 
+    // セッションにスコア・ライン・レベルを記録
+    const session = this.sessionManager.getSession(room.roomId);
+    if (session) {
+      session.updateFieldStats(connectionId, payload.score, payload.lines, payload.level);
+    }
+
     const opponent = room.getOpponent(connectionId);
     if (!opponent) return;
 
@@ -432,6 +452,10 @@ export class GameHub {
 
           ai.setCallbacks({
             onFieldUpdate: (field, score, lines, level) => {
+              const aiSession = this.sessionManager.getSession(room.roomId);
+              if (aiSession) {
+                aiSession.updateFieldStats(aiConnId, score, lines, level);
+              }
               this.hub.sendToClient(humanConnId, ServerEvents.OpponentFieldUpdate, {
                 field, score, lines, level,
               });
@@ -548,13 +572,47 @@ export class GameHub {
   }
 
   // ---------------------------------------------------------------------------
+  // Leaderboard subscription
+  // ---------------------------------------------------------------------------
+
+  handleSubscribeLeaderboard(connectionId: string): void {
+    this.leaderboardSubscribers.add(connectionId);
+    // 即座に現在のデータを送信
+    const rankings = getTopRankings(20);
+    const matches = getRecentMatches(20);
+    this.hub.sendToClient(connectionId, ServerEvents.LeaderboardUpdated, { rankings });
+    this.hub.sendToClient(connectionId, ServerEvents.MatchHistoryUpdated, { matches });
+  }
+
+  handleUnsubscribeLeaderboard(connectionId: string): void {
+    this.leaderboardSubscribers.delete(connectionId);
+  }
+
+  private broadcastLeaderboard(): void {
+    const rankings = getTopRankings(20);
+    const payload = { rankings };
+    for (const connId of this.leaderboardSubscribers) {
+      this.hub.sendToClient(connId, ServerEvents.LeaderboardUpdated, payload);
+    }
+  }
+
+  private broadcastMatchHistory(): void {
+    const matches = getRecentMatches(20);
+    const payload = { matches };
+    for (const connId of this.leaderboardSubscribers) {
+      this.hub.sendToClient(connId, ServerEvents.MatchHistoryUpdated, payload);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Connection lifecycle
   // ---------------------------------------------------------------------------
 
   handleDisconnected(connectionId: string): void {
     withSpan('GameHub.handleDisconnected', { 'player.connection_id': connectionId }, (span) => {
-    // Remove from room list subscribers
+    // Remove from subscribers
     this.roomListSubscribers.delete(connectionId);
+    this.leaderboardSubscribers.delete(connectionId);
 
     const room = this.roomManager.getRoomByConnectionId(connectionId);
     if (!room) return;
@@ -645,5 +703,61 @@ export class GameHub {
     if (!aiPlayer) return 5;
     const match = aiPlayer.enterpriseId.match(/AI Lv\.(\d+)/);
     return match ? parseInt(match[1], 10) : 5;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Match result persistence
+  // ---------------------------------------------------------------------------
+
+  private persistMatchResult(winnerId: string, loserId: string, reason: LoserReason): void {
+    try {
+      const room = this.roomManager.getRoomByConnectionId(winnerId)
+        ?? this.roomManager.getRoomByConnectionId(loserId);
+      if (!room) return;
+
+      const session = this.sessionManager.getSession(room.roomId);
+      if (!session) return;
+
+      const winnerEntId = this.resolveEnterpriseId(winnerId, room);
+      const loserEntId = this.resolveEnterpriseId(loserId, room);
+      if (!winnerEntId || !loserEntId) return;
+
+      const isAiMatch = this.isAiConnection(winnerId) || this.isAiConnection(loserId);
+      const durationMs = Date.now() - session.startedAt.getTime();
+
+      insertMatchResult({
+        roomId: room.roomId,
+        winnerId: winnerEntId,
+        loserId: loserEntId,
+        winnerScore: session.getLatestScore(winnerId),
+        winnerLines: session.getLatestLines(winnerId),
+        winnerLevel: session.getLatestLevel(winnerId),
+        loserScore: session.getLatestScore(loserId),
+        loserLines: session.getLatestLines(loserId),
+        loserLevel: session.getLatestLevel(loserId),
+        loserReason: reason,
+        durationMs,
+        isAiMatch,
+      });
+
+      // プレイヤースタッツ更新（AI接続は除外）
+      if (!this.isAiConnection(winnerId)) {
+        upsertPlayerStats(winnerEntId, true, session.getLatestScore(winnerId), session.getLatestLines(winnerId));
+      }
+      if (!this.isAiConnection(loserId)) {
+        upsertPlayerStats(loserEntId, false, session.getLatestScore(loserId), session.getLatestLines(loserId));
+      }
+
+      // リアルタイム配信
+      this.broadcastLeaderboard();
+      this.broadcastMatchHistory();
+    } catch (err) {
+      createLogger({}).warn({ err }, 'Failed to persist match result');
+    }
+  }
+
+  private resolveEnterpriseId(connectionId: string, room: { getPlayer: (id: string) => { enterpriseId: string } | null }): string | undefined {
+    const player = room.getPlayer(connectionId);
+    return player?.enterpriseId;
   }
 }

@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import pinoHttp from 'pino-http';
 import { logger } from './lib/logger.js';
 import { getHealthInfo } from './lib/healthState.js';
+import statsRoutes from './routes/statsRoutes.js';
 
 const app = express();
 
@@ -66,6 +67,8 @@ app.use(express.json());
 app.get('/health', (_req, res) => {
   res.json(getHealthInfo());
 });
+
+app.use('/api', statsRoutes);
 
 // 本番環境: クライアント静的ファイルを配信
 if (process.env.NODE_ENV === 'production') {
