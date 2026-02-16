@@ -170,6 +170,8 @@ jobs:
 
       - name: Run E2E tests
         run: npx playwright test
+        env:
+          VITE_SKIP_AUTH: 'true'
 
       - uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}
@@ -210,6 +212,8 @@ jobs:
 
       - name: Build client
         run: npm run build -w client
+        env:
+          VITE_SKIP_AUTH: 'true'
 
       - name: Build server
         run: npm run build -w server
@@ -286,6 +290,8 @@ jobs:
 
       - name: Build client
         run: npm run build -w client
+        env:
+          VITE_SKIP_AUTH: 'true'
 
       - name: Build server
         run: npm run build -w server
