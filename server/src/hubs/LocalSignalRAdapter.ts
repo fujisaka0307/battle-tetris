@@ -28,7 +28,7 @@ import { GameHub, type HubConnection } from './GameHub.js';
 import { ClientEvents, RoomStatus } from '@battle-tetris/shared';
 import { verifyToken, extractToken } from '../middleware/jwtAuth.js';
 import { logger, createLogger } from '../lib/logger.js';
-import { trace, SpanKind, SpanStatusCode } from '@opentelemetry/api';
+import { trace, SpanKind, SpanStatusCode, ROOT_CONTEXT } from '@opentelemetry/api';
 import {
   activeConnectionsGauge,
   wsMessagesReceived,
@@ -311,13 +311,15 @@ export class LocalSignalRAdapter implements HubConnection {
     wsMessagesReceived.add(1, { 'ws.message.type': target ?? 'unknown' });
 
     const tracer = trace.getTracer('battle-tetris-server');
+    // Use ROOT_CONTEXT so each WS message is an independent trace
+    // (not a child of the HTTP upgrade span)
     tracer.startActiveSpan(`ws.invoke ${target}`, {
       kind: SpanKind.SERVER,
       attributes: {
         'ws.target': target ?? 'unknown',
         'ws.connection_id': connectionId,
       },
-    }, (span) => {
+    }, ROOT_CONTEXT, (span) => {
       try {
         this.dispatchInvocation(connectionId, target, args);
         span.setStatus({ code: SpanStatusCode.OK });
