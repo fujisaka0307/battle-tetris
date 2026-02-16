@@ -70,6 +70,16 @@ async function main() {
     `/api/qualitygates/project_status?projectKey=${encodeURIComponent(PROJECT_KEY)}`
   );
   const qgStatus = qgData.projectStatus.status; // OK, WARN, ERROR, NONE
+  const qgConditions = qgData.projectStatus.conditions ?? [];
+
+  // Quality Gate 条件の詳細をログ出力
+  if (qgConditions.length > 0) {
+    console.log('\nQuality Gate Conditions:');
+    for (const c of qgConditions) {
+      const icon = c.status === 'OK' ? '✓' : '✗';
+      console.log(`  ${icon} ${c.metricKey}: actual=${c.actualValue} ${c.comparator} threshold=${c.errorThreshold} → ${c.status}`);
+    }
+  }
 
   // Fetch project measures
   const metricKeys = [
@@ -92,16 +102,23 @@ async function main() {
   const results = [];
 
   // 1. Quality Gate
+  const failedConditions = qgConditions.filter((c) => c.status !== 'OK');
+  const qgMessage =
+    qgStatus !== 'OK'
+      ? [
+          `Quality Gate status: ${qgStatus}.`,
+          ...failedConditions.map(
+            (c) => `  ${c.metricKey}: actual=${c.actualValue} (threshold ${c.comparator === 'GT' ? '<=' : '>='} ${c.errorThreshold})`
+          ),
+        ].join('\n')
+      : undefined;
   results.push(
     createAllureResult({
       name: `Quality Gate: ${qgStatus === 'OK' ? 'Passed' : qgStatus}`,
       suite: 'Quality Gate',
       historyId: 'quality-gate',
       status: qgStatus === 'OK' ? 'passed' : 'failed',
-      message:
-        qgStatus !== 'OK'
-          ? `Quality Gate status: ${qgStatus}. Check SonarCloud dashboard for details.`
-          : undefined,
+      message: qgMessage,
     })
   );
 
