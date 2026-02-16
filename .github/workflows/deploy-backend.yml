@@ -57,26 +57,34 @@ jobs:
           publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
           package: server-deploy.zip
 
-      - name: Configure Bedrock AI settings
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
-          publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
-          app-settings-json: |
-            [
-              { "name": "AWS_BEARER_TOKEN_BEDROCK", "value": "${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}", "slotSetting": false },
-              { "name": "AWS_REGION", "value": "ap-northeast-1", "slotSetting": false }
-            ]
+      - name: Configure App Settings via Kudu API
+        env:
+          PUBLISH_PROFILE: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
+          APP_NAME: ${{ vars.AZURE_APP_SERVICE_NAME }}
+          BEDROCK_TOKEN: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
+          GRAFANA_ENDPOINT: ${{ secrets.GRAFANA_OTLP_ENDPOINT }}
+          GRAFANA_AUTH: ${{ secrets.GRAFANA_OTLP_AUTH_HEADER }}
+        run: |
+          # Extract SCM credentials from publish profile
+          SCM_USER=$(echo "$PUBLISH_PROFILE" | grep -oP 'userName="\K[^"]+' | head -1)
+          SCM_PASS=$(echo "$PUBLISH_PROFILE" | grep -oP 'userPWD="\K[^"]+' | head -1)
 
-      - name: Configure Grafana OTLP settings
-        if: vars.GRAFANA_OTLP_ENDPOINT != ''
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
-          publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
-          app-settings-json: |
-            [
-              { "name": "OTEL_EXPORTER_OTLP_ENDPOINT", "value": "${{ secrets.GRAFANA_OTLP_ENDPOINT }}" },
-              { "name": "OTEL_EXPORTER_OTLP_HEADERS", "value": "Authorization=Basic ${{ secrets.GRAFANA_OTLP_AUTH_HEADER }}" },
-              { "name": "LOG_LEVEL", "value": "info" }
-            ]
+          # Build .env file content
+          ENV_CONTENT="AWS_BEARER_TOKEN_BEDROCK=$BEDROCK_TOKEN"$'\n'
+          ENV_CONTENT+="AWS_REGION=ap-northeast-1"$'\n'
+
+          if [ -n "$GRAFANA_ENDPOINT" ]; then
+            ENV_CONTENT+="OTEL_EXPORTER_OTLP_ENDPOINT=$GRAFANA_ENDPOINT"$'\n'
+            ENV_CONTENT+="OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic $GRAFANA_AUTH"$'\n'
+            ENV_CONTENT+="LOG_LEVEL=info"$'\n'
+          fi
+
+          # Upload .env via Kudu VFS API
+          curl -sf -X PUT \
+            "https://$APP_NAME.scm.azurewebsites.net/api/vfs/site/wwwroot/.env" \
+            -u "$SCM_USER:$SCM_PASS" \
+            -H "If-Match: *" \
+            -H "Content-Type: text/plain" \
+            --data-raw "$ENV_CONTENT"
+
+          echo ".env file deployed to App Service."

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node --env-file-if-exists=.env dist/index.js",
     "typecheck": "tsc --noEmit",
     "pretest": "rm -rf ../allure-results/server",
     "test": "vitest run",
