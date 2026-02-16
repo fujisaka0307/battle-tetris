@@ -60,6 +60,22 @@ jobs:
       - name: Install Playwright system dependencies
         run: npx playwright install-deps chromium
 
+      - name: Warmup backend (wait for cold start)
+        env:
+          API_BASE_URL: ${{ inputs.api_base_url || vars.API_BASE_URL }}
+        run: |
+          URL="${API_BASE_URL:-https://app-battle-tetris-dev.azurewebsites.net}/health"
+          echo "Warming up $URL ..."
+          for i in $(seq 1 12); do
+            if curl -sf --max-time 10 "$URL" > /dev/null 2>&1; then
+              echo "Backend is ready (attempt $i)"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "::warning::Backend did not respond within 60s, proceeding anyway"
+
       - name: Run production smoke tests
         run: npx playwright test --config playwright.production.config.ts e2e/production-smoke.spec.ts
         env:
