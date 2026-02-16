@@ -17,6 +17,8 @@ import {
 } from '../middleware/validation.js';
 import { createLogger } from '../lib/logger.js';
 import { activeRoomsGauge, rematchTotal } from '../lib/metrics.js';
+import { withSpan, addSpanEvent, recordError } from '../lib/tracing.js';
+import { trace } from '@opentelemetry/api';
 import { AiPlayer } from '../ai/AiPlayer.js';
 
 // =============================================================================
@@ -102,181 +104,215 @@ export class GameHub {
   // ---------------------------------------------------------------------------
 
   handleCreateRoom(connectionId: string): void {
-    const enterpriseId = this.hub.getEnterpriseId(connectionId);
-    if (!enterpriseId) {
-      this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
-      return;
-    }
+    withSpan('GameHub.handleCreateRoom', { 'player.connection_id': connectionId }, (span) => {
+      const enterpriseId = this.hub.getEnterpriseId(connectionId);
+      if (!enterpriseId) {
+        span.addEvent('auth_failed', { reason: 'no_enterprise_id' });
+        this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
+        return;
+      }
+      span.setAttribute('player.enterprise_id', enterpriseId);
 
-    const player = new Player(connectionId, enterpriseId);
-    const room = this.roomManager.createRoom(player);
+      const player = new Player(connectionId, enterpriseId);
+      const room = this.roomManager.createRoom(player);
+      span.setAttribute('room.id', room.roomId);
 
-    const log = createLogger({ connectionId, roomId: room.roomId });
-    log.info('Room created');
+      const log = createLogger({ connectionId, roomId: room.roomId });
+      log.info('Room created');
 
-    this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, {
-      roomId: room.roomId,
+      this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, {
+        roomId: room.roomId,
+      });
+
+      this.broadcastWaitingRoomList();
     });
-
-    this.broadcastWaitingRoomList();
   }
 
   handleCreateAiRoom(connectionId: string, data: unknown): void {
-    const enterpriseId = this.hub.getEnterpriseId(connectionId);
-    if (!enterpriseId) {
-      this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
-      return;
-    }
+    withSpan('GameHub.handleCreateAiRoom', { 'player.connection_id': connectionId }, (span) => {
+      const enterpriseId = this.hub.getEnterpriseId(connectionId);
+      if (!enterpriseId) {
+        span.addEvent('auth_failed', { reason: 'no_enterprise_id' });
+        this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
+        return;
+      }
+      span.setAttribute('player.enterprise_id', enterpriseId);
 
-    const payload = validatePayload(CreateAiRoomSchema, data);
-    if (!payload) {
-      this.sendError(connectionId, ErrorCodes.INVALID_PAYLOAD, 'Invalid payload');
-      return;
-    }
+      const payload = validatePayload(CreateAiRoomSchema, data);
+      if (!payload) {
+        span.addEvent('validation_failed', { schema: 'CreateAiRoomSchema' });
+        this.sendError(connectionId, ErrorCodes.INVALID_PAYLOAD, 'Invalid payload');
+        return;
+      }
 
-    const aiLevel = payload.aiLevel;
+      const aiLevel = payload.aiLevel;
+      span.setAttribute('ai.level', aiLevel);
 
-    // 1. 人間プレイヤーでルーム作成
-    const humanPlayer = new Player(connectionId, enterpriseId);
-    const room = this.roomManager.createRoom(humanPlayer);
-    const roomId = room.roomId;
+      // 1. 人間プレイヤーでルーム作成
+      const humanPlayer = new Player(connectionId, enterpriseId);
+      const room = this.roomManager.createRoom(humanPlayer);
+      const roomId = room.roomId;
+      span.setAttribute('room.id', roomId);
 
-    const log = createLogger({ connectionId, roomId });
-    log.info({ aiLevel }, 'AI room created');
+      const log = createLogger({ connectionId, roomId });
+      log.info({ aiLevel }, 'AI room created');
 
-    // 2. AIプレイヤーでルーム参加
-    const aiConnectionId = `ai-${roomId}`;
-    const aiEnterpriseId = `AI Lv.${aiLevel}`;
-    const aiPlayer = new Player(aiConnectionId, aiEnterpriseId);
-    this.roomManager.joinRoom(roomId, aiPlayer);
+      // 2. AIプレイヤーでルーム参加
+      const aiConnectionId = `ai-${roomId}`;
+      const aiEnterpriseId = `AI Lv.${aiLevel}`;
+      span.setAttribute('ai.connection_id', aiConnectionId);
+      const aiPlayer = new Player(aiConnectionId, aiEnterpriseId);
+      this.roomManager.joinRoom(roomId, aiPlayer);
 
-    // 3. 両者 auto-ready
-    humanPlayer.setReady();
-    aiPlayer.setReady();
+      // 3. 両者 auto-ready
+      humanPlayer.setReady();
+      aiPlayer.setReady();
 
-    // 4. セッション開始
-    const seed = this.sessionManager.startSession(room);
+      // 4. セッション開始
+      const seed = this.sessionManager.startSession(room);
+      span.setAttribute('game.seed', seed);
 
-    // 5. AiPlayer インスタンス作成
-    const ai = new AiPlayer(seed, aiLevel);
-    this.aiPlayers.set(aiConnectionId, ai);
+      // 5. AiPlayer インスタンス作成
+      const ai = new AiPlayer(seed, aiLevel);
+      this.aiPlayers.set(aiConnectionId, ai);
 
-    // 6. AIコールバック設定
-    ai.setCallbacks({
-      onFieldUpdate: (field, score, lines, level) => {
-        // 人間に OpponentFieldUpdate 送信
-        this.hub.sendToClient(connectionId, ServerEvents.OpponentFieldUpdate, {
-          field,
-          score,
-          lines,
-          level,
-        });
-      },
-      onLinesCleared: (count) => {
-        // セッションマネージャー経由でガーベジ計算
-        this.sessionManager.handleLinesCleared(roomId, aiConnectionId, count);
-      },
-      onGameOver: () => {
-        // AI負け
-        this.sessionManager.handleGameOver(roomId, aiConnectionId);
-      },
+      // 6. AIコールバック設定
+      ai.setCallbacks({
+        onFieldUpdate: (field, score, lines, level) => {
+          // 人間に OpponentFieldUpdate 送信
+          this.hub.sendToClient(connectionId, ServerEvents.OpponentFieldUpdate, {
+            field,
+            score,
+            lines,
+            level,
+          });
+        },
+        onLinesCleared: (count) => {
+          // セッションマネージャー経由でガーベジ計算
+          this.sessionManager.handleLinesCleared(roomId, aiConnectionId, count);
+        },
+        onGameOver: () => {
+          // AI負け
+          this.sessionManager.handleGameOver(roomId, aiConnectionId);
+        },
+        onAiThinking: (prompt, response, model) => {
+          this.hub.sendToClient(connectionId, ServerEvents.AiThinking, { prompt, response, model });
+        },
+      });
+
+      // 7. 人間に通知
+      this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, { roomId });
+      this.hub.sendToClient(connectionId, ServerEvents.OpponentJoined, {
+        enterpriseId: aiEnterpriseId,
+      });
+      this.hub.sendToClient(connectionId, ServerEvents.BothReady, {
+        seed,
+        countdown: COUNTDOWN_SECONDS,
+      });
+
+      span.addEvent('ai_room_ready', { countdown: COUNTDOWN_SECONDS });
+
+      // 8. カウントダウン後にAI開始
+      setTimeout(() => {
+        ai.start();
+      }, COUNTDOWN_SECONDS * 1000);
     });
-
-    // 7. 人間に通知
-    this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, { roomId });
-    this.hub.sendToClient(connectionId, ServerEvents.OpponentJoined, {
-      enterpriseId: aiEnterpriseId,
-    });
-    this.hub.sendToClient(connectionId, ServerEvents.BothReady, {
-      seed,
-      countdown: COUNTDOWN_SECONDS,
-    });
-
-    // 8. カウントダウン後にAI開始
-    setTimeout(() => {
-      ai.start();
-    }, COUNTDOWN_SECONDS * 1000);
   }
 
   handleJoinRoom(connectionId: string, data: unknown): void {
-    const enterpriseId = this.hub.getEnterpriseId(connectionId);
-    if (!enterpriseId) {
-      this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
-      return;
-    }
+    withSpan('GameHub.handleJoinRoom', { 'player.connection_id': connectionId }, (span) => {
+      const enterpriseId = this.hub.getEnterpriseId(connectionId);
+      if (!enterpriseId) {
+        span.addEvent('auth_failed');
+        this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
+        return;
+      }
+      span.setAttribute('player.enterprise_id', enterpriseId);
 
-    const payload = validatePayload(JoinRoomSchema, data);
-    if (!payload) {
-      this.sendError(connectionId, ErrorCodes.INVALID_PAYLOAD, 'Invalid payload');
-      return;
-    }
+      const payload = validatePayload(JoinRoomSchema, data);
+      if (!payload) {
+        span.addEvent('validation_failed', { schema: 'JoinRoomSchema' });
+        this.sendError(connectionId, ErrorCodes.INVALID_PAYLOAD, 'Invalid payload');
+        return;
+      }
+      span.setAttribute('room.id', payload.roomId);
 
-    const room = this.roomManager.getRoom(payload.roomId);
-    if (!room) {
-      this.sendError(connectionId, ErrorCodes.ROOM_NOT_FOUND, 'Room not found');
-      return;
-    }
+      const room = this.roomManager.getRoom(payload.roomId);
+      if (!room) {
+        span.addEvent('room_not_found', { 'room.id': payload.roomId });
+        this.sendError(connectionId, ErrorCodes.ROOM_NOT_FOUND, 'Room not found');
+        return;
+      }
 
-    if (room.isFull()) {
-      this.sendError(connectionId, ErrorCodes.ROOM_FULL, 'Room is full');
-      return;
-    }
+      if (room.isFull()) {
+        span.addEvent('room_full', { 'room.id': payload.roomId });
+        this.sendError(connectionId, ErrorCodes.ROOM_FULL, 'Room is full');
+        return;
+      }
 
-    const player = new Player(connectionId, enterpriseId);
-    this.roomManager.joinRoom(payload.roomId, player);
+      const player = new Player(connectionId, enterpriseId);
+      this.roomManager.joinRoom(payload.roomId, player);
 
-    createLogger({ connectionId, roomId: payload.roomId }).info('Player joined room');
+      createLogger({ connectionId, roomId: payload.roomId }).info('Player joined room');
 
-    // Notify both players
-    const opponent = room.getOpponent(connectionId);
-    if (opponent) {
-      this.hub.sendToClient(opponent.connectionId, ServerEvents.OpponentJoined, {
-        enterpriseId,
-      });
-      this.hub.sendToClient(connectionId, ServerEvents.OpponentJoined, {
-        enterpriseId: opponent.enterpriseId,
-      });
-    }
+      const opponent = room.getOpponent(connectionId);
+      if (opponent) {
+        span.setAttribute('opponent.connection_id', opponent.connectionId);
+        this.hub.sendToClient(opponent.connectionId, ServerEvents.OpponentJoined, {
+          enterpriseId,
+        });
+        this.hub.sendToClient(connectionId, ServerEvents.OpponentJoined, {
+          enterpriseId: opponent.enterpriseId,
+        });
+      }
 
-    this.broadcastWaitingRoomList();
+      this.broadcastWaitingRoomList();
+    });
   }
 
   handlePlayerReady(connectionId: string): void {
-    const room = this.roomManager.getRoomByConnectionId(connectionId);
-    if (!room) {
-      this.sendError(connectionId, ErrorCodes.NOT_IN_ROOM, 'Not in a room');
-      return;
-    }
-
-    const player = room.getPlayer(connectionId);
-    if (!player) return;
-
-    player.setReady();
-
-    if (room.areBothReady()) {
-      const seed = this.sessionManager.startSession(room);
-
-      createLogger({ connectionId, roomId: room.roomId }).info({ seed }, 'Both players ready, starting game');
-
-      const bothReadyPayload = { seed, countdown: COUNTDOWN_SECONDS };
-      if (room.player1) {
-        this.hub.sendToClient(
-          room.player1.connectionId,
-          ServerEvents.BothReady,
-          bothReadyPayload,
-        );
+    withSpan('GameHub.handlePlayerReady', { 'player.connection_id': connectionId }, (span) => {
+      const room = this.roomManager.getRoomByConnectionId(connectionId);
+      if (!room) {
+        span.addEvent('not_in_room');
+        this.sendError(connectionId, ErrorCodes.NOT_IN_ROOM, 'Not in a room');
+        return;
       }
-      if (room.player2) {
-        this.hub.sendToClient(
-          room.player2.connectionId,
-          ServerEvents.BothReady,
-          bothReadyPayload,
-        );
+      span.setAttribute('room.id', room.roomId);
+
+      const player = room.getPlayer(connectionId);
+      if (!player) return;
+
+      player.setReady();
+      span.addEvent('player_ready');
+
+      if (room.areBothReady()) {
+        const seed = this.sessionManager.startSession(room);
+        span.addEvent('game_starting', { seed, countdown: COUNTDOWN_SECONDS });
+
+        createLogger({ connectionId, roomId: room.roomId }).info({ seed }, 'Both players ready, starting game');
+
+        const bothReadyPayload = { seed, countdown: COUNTDOWN_SECONDS };
+        if (room.player1) {
+          this.hub.sendToClient(
+            room.player1.connectionId,
+            ServerEvents.BothReady,
+            bothReadyPayload,
+          );
+        }
+        if (room.player2) {
+          this.hub.sendToClient(
+            room.player2.connectionId,
+            ServerEvents.BothReady,
+            bothReadyPayload,
+          );
+        }
       }
-    }
+    });
   }
 
   handleFieldUpdate(connectionId: string, data: unknown): void {
+    // FieldUpdate is high-frequency — use lightweight span event instead of full span
     const payload = validatePayload(FieldUpdateSchema, data);
     if (!payload) return;
 
@@ -296,149 +332,187 @@ export class GameHub {
   }
 
   handleLinesCleared(connectionId: string, data: unknown): void {
-    const payload = validatePayload(LinesClearedSchema, data);
-    if (!payload) return;
+    withSpan('GameHub.handleLinesCleared', { 'player.connection_id': connectionId }, (span) => {
+      const payload = validatePayload(LinesClearedSchema, data);
+      if (!payload) {
+        span.addEvent('validation_failed');
+        return;
+      }
+      span.setAttribute('lines.count', payload.count);
 
-    const room = this.roomManager.getRoomByConnectionId(connectionId);
-    if (!room) return;
+      const room = this.roomManager.getRoomByConnectionId(connectionId);
+      if (!room) {
+        span.addEvent('not_in_room');
+        return;
+      }
+      span.setAttribute('room.id', room.roomId);
 
-    this.sessionManager.handleLinesCleared(
-      room.roomId,
-      connectionId,
-      payload.count,
-    );
+      this.sessionManager.handleLinesCleared(
+        room.roomId,
+        connectionId,
+        payload.count,
+      );
+    });
   }
 
   handleGameOver(connectionId: string): void {
-    const room = this.roomManager.getRoomByConnectionId(connectionId);
-    if (!room) return;
+    withSpan('GameHub.handleGameOver', { 'player.connection_id': connectionId }, (span) => {
+      const room = this.roomManager.getRoomByConnectionId(connectionId);
+      if (!room) return;
+      span.setAttribute('room.id', room.roomId);
 
-    createLogger({ connectionId, roomId: room.roomId }).info('GameOver received');
-    this.sessionManager.handleGameOver(room.roomId, connectionId);
+      createLogger({ connectionId, roomId: room.roomId }).info('GameOver received');
+      span.addEvent('game_over', { loser: connectionId });
+      this.sessionManager.handleGameOver(room.roomId, connectionId);
 
-    // Stop AI opponent if exists
-    const opponent = room.getOpponent(connectionId);
-    if (opponent && this.isAiConnection(opponent.connectionId)) {
-      this.stopAiIfExists(opponent.connectionId);
-    }
+      const opponent = room.getOpponent(connectionId);
+      if (opponent && this.isAiConnection(opponent.connectionId)) {
+        span.addEvent('stopping_ai_opponent', { 'ai.connection_id': opponent.connectionId });
+        this.stopAiIfExists(opponent.connectionId);
+      }
+    });
   }
 
   handleRequestRematch(connectionId: string): void {
-    const room = this.roomManager.getRoomByConnectionId(connectionId);
-    if (!room) return;
+    withSpan('GameHub.handleRequestRematch', { 'player.connection_id': connectionId }, (span) => {
+      const room = this.roomManager.getRoomByConnectionId(connectionId);
+      if (!room) {
+        span.addEvent('not_in_room');
+        return;
+      }
+      span.setAttribute('room.id', room.roomId);
 
-    const opponent = room.getOpponent(connectionId);
-    if (!opponent) return;
+      const opponent = room.getOpponent(connectionId);
+      if (!opponent) {
+        span.addEvent('no_opponent');
+        return;
+      }
 
-    createLogger({ connectionId, roomId: room.roomId }).info('Rematch requested');
-    rematchTotal.add(1);
-    room.requestRematch(connectionId);
+      createLogger({ connectionId, roomId: room.roomId }).info('Rematch requested');
+      rematchTotal.add(1);
+      room.requestRematch(connectionId);
+      span.addEvent('rematch_requested');
 
-    // AI auto-accept rematch
-    if (this.isAiConnection(opponent.connectionId)) {
-      room.requestRematch(opponent.connectionId);
-    } else {
-      // Notify opponent that rematch was requested
-      this.hub.sendToClient(
-        opponent.connectionId,
-        ServerEvents.OpponentRematch,
-        {},
-      );
-    }
-
-    // If both players requested rematch, reset room and send both back to lobby
-    if (room.areBothRematchRequested()) {
-      createLogger({ connectionId, roomId: room.roomId }).info('Rematch accepted by both players');
-      this.sessionManager.endSession(room.roomId);
-      room.resetForRematch();
-
-      // Both ready again
-      if (room.player1) room.player1.setReady();
-      if (room.player2) room.player2.setReady();
-
-      const seed = this.sessionManager.startSession(room);
-
-      // Find AI connection and restart
-      const aiConnId = this.isAiConnection(opponent.connectionId) ? opponent.connectionId : connectionId;
-      const humanConnId = aiConnId === opponent.connectionId ? connectionId : opponent.connectionId;
-
-      if (this.isAiConnection(aiConnId)) {
-        // Recreate AI player with new seed
-        this.stopAiIfExists(aiConnId);
-        const aiLevel = this.getAiLevel(aiConnId);
-        const ai = new AiPlayer(seed, aiLevel);
-        this.aiPlayers.set(aiConnId, ai);
-
-        ai.setCallbacks({
-          onFieldUpdate: (field, score, lines, level) => {
-            this.hub.sendToClient(humanConnId, ServerEvents.OpponentFieldUpdate, {
-              field, score, lines, level,
-            });
-          },
-          onLinesCleared: (count) => {
-            this.sessionManager.handleLinesCleared(room.roomId, aiConnId, count);
-          },
-          onGameOver: () => {
-            this.sessionManager.handleGameOver(room.roomId, aiConnId);
-          },
-        });
-
-        this.hub.sendToClient(humanConnId, ServerEvents.RematchAccepted, { roomId: room.roomId });
-        this.hub.sendToClient(humanConnId, ServerEvents.BothReady, {
-          seed,
-          countdown: COUNTDOWN_SECONDS,
-        });
-
-        setTimeout(() => {
-          ai.start();
-        }, COUNTDOWN_SECONDS * 1000);
+      // AI auto-accept rematch
+      if (this.isAiConnection(opponent.connectionId)) {
+        room.requestRematch(opponent.connectionId);
+        span.addEvent('ai_auto_accepted');
       } else {
-        const payload = { roomId: room.roomId };
-        if (room.player1) {
-          this.hub.sendToClient(
-            room.player1.connectionId,
-            ServerEvents.RematchAccepted,
-            payload,
-          );
-        }
-        if (room.player2) {
-          this.hub.sendToClient(
-            room.player2.connectionId,
-            ServerEvents.RematchAccepted,
-            payload,
-          );
+        // Notify opponent that rematch was requested
+        this.hub.sendToClient(
+          opponent.connectionId,
+          ServerEvents.OpponentRematch,
+          {},
+        );
+      }
+
+      // If both players requested rematch, reset room and send both back to lobby
+      if (room.areBothRematchRequested()) {
+        span.addEvent('rematch_starting');
+        createLogger({ connectionId, roomId: room.roomId }).info('Rematch accepted by both players');
+        this.sessionManager.endSession(room.roomId);
+        room.resetForRematch();
+
+        // Both ready again
+        if (room.player1) room.player1.setReady();
+        if (room.player2) room.player2.setReady();
+
+        const seed = this.sessionManager.startSession(room);
+        span.setAttribute('game.seed', seed);
+
+        // Find AI connection and restart
+        const aiConnId = this.isAiConnection(opponent.connectionId) ? opponent.connectionId : connectionId;
+        const humanConnId = aiConnId === opponent.connectionId ? connectionId : opponent.connectionId;
+
+        if (this.isAiConnection(aiConnId)) {
+          // Recreate AI player with new seed
+          this.stopAiIfExists(aiConnId);
+          const aiLevel = this.getAiLevel(aiConnId);
+          const ai = new AiPlayer(seed, aiLevel);
+          this.aiPlayers.set(aiConnId, ai);
+
+          ai.setCallbacks({
+            onFieldUpdate: (field, score, lines, level) => {
+              this.hub.sendToClient(humanConnId, ServerEvents.OpponentFieldUpdate, {
+                field, score, lines, level,
+              });
+            },
+            onLinesCleared: (count) => {
+              this.sessionManager.handleLinesCleared(room.roomId, aiConnId, count);
+            },
+            onGameOver: () => {
+              this.sessionManager.handleGameOver(room.roomId, aiConnId);
+            },
+            onAiThinking: (prompt, response, model) => {
+              this.hub.sendToClient(humanConnId, ServerEvents.AiThinking, { prompt, response, model });
+            },
+          });
+
+          this.hub.sendToClient(humanConnId, ServerEvents.RematchAccepted, { roomId: room.roomId });
+          this.hub.sendToClient(humanConnId, ServerEvents.BothReady, {
+            seed,
+            countdown: COUNTDOWN_SECONDS,
+          });
+
+          setTimeout(() => {
+            ai.start();
+          }, COUNTDOWN_SECONDS * 1000);
+        } else {
+          const payload = { roomId: room.roomId };
+          if (room.player1) {
+            this.hub.sendToClient(
+              room.player1.connectionId,
+              ServerEvents.RematchAccepted,
+              payload,
+            );
+          }
+          if (room.player2) {
+            this.hub.sendToClient(
+              room.player2.connectionId,
+              ServerEvents.RematchAccepted,
+              payload,
+            );
+          }
         }
       }
-    }
+    });
   }
 
   handleLeaveRoom(connectionId: string): void {
-    const room = this.roomManager.getRoomByConnectionId(connectionId);
-    if (!room) return;
+    withSpan('GameHub.handleLeaveRoom', { 'player.connection_id': connectionId }, (span) => {
+      const room = this.roomManager.getRoomByConnectionId(connectionId);
+      if (!room) {
+        span.addEvent('not_in_room');
+        return;
+      }
+      span.setAttribute('room.id', room.roomId);
 
-    createLogger({ connectionId, roomId: room.roomId }).info('Player leaving room');
+      createLogger({ connectionId, roomId: room.roomId }).info('Player leaving room');
 
-    const opponent = room.getOpponent(connectionId);
+      const opponent = room.getOpponent(connectionId);
 
-    // Stop AI if opponent is AI
-    if (opponent && this.isAiConnection(opponent.connectionId)) {
-      this.stopAiIfExists(opponent.connectionId);
-      this.aiPlayers.delete(opponent.connectionId);
-    }
+      // Stop AI if opponent is AI
+      if (opponent && this.isAiConnection(opponent.connectionId)) {
+        span.addEvent('stopping_ai', { 'ai.connection_id': opponent.connectionId });
+        this.stopAiIfExists(opponent.connectionId);
+        this.aiPlayers.delete(opponent.connectionId);
+      }
 
-    // Clean up
-    this.sessionManager.endSession(room.roomId);
-    this.roomManager.deleteRoom(room.roomId);
+      // Clean up
+      this.sessionManager.endSession(room.roomId);
+      this.roomManager.deleteRoom(room.roomId);
+      span.addEvent('room_deleted');
 
-    if (opponent && !this.isAiConnection(opponent.connectionId)) {
-      this.hub.sendToClient(
-        opponent.connectionId,
-        ServerEvents.OpponentDisconnected,
-        { timeout: 0 },
-      );
-    }
+      if (opponent && !this.isAiConnection(opponent.connectionId)) {
+        this.hub.sendToClient(
+          opponent.connectionId,
+          ServerEvents.OpponentDisconnected,
+          { timeout: 0 },
+        );
+      }
 
-    this.broadcastWaitingRoomList();
+      this.broadcastWaitingRoomList();
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -479,13 +553,16 @@ export class GameHub {
   // ---------------------------------------------------------------------------
 
   handleDisconnected(connectionId: string): void {
+    withSpan('GameHub.handleDisconnected', { 'player.connection_id': connectionId }, (span) => {
     // Remove from room list subscribers
     this.roomListSubscribers.delete(connectionId);
 
     const room = this.roomManager.getRoomByConnectionId(connectionId);
     if (!room) return;
+    span.setAttribute('room.id', room.roomId);
 
     createLogger({ connectionId, roomId: room.roomId }).info('Player disconnected');
+    span.addEvent('player_disconnected');
 
     // Stop AI if opponent is AI
     const opponent = room.getOpponent(connectionId);
@@ -521,6 +598,7 @@ export class GameHub {
       this.roomManager.removeConnection(connectionId);
       this.broadcastWaitingRoomList();
     }
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -532,6 +610,15 @@ export class GameHub {
     code: number,
     message: string,
   ): void {
+    // Record error in the current active span
+    const span = trace.getActiveSpan();
+    if (span) {
+      span.addEvent('error_sent', {
+        'error.code': code,
+        'error.message': message,
+        'player.connection_id': connectionId,
+      });
+    }
     this.hub.sendToClient(connectionId, ServerEvents.Error, { code, message });
   }
 

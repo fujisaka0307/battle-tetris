@@ -33,6 +33,7 @@ export const ServerEvents = {
   OpponentDisconnected: 'OpponentDisconnected',
   OpponentReconnected: 'OpponentReconnected',
   WaitingRoomListUpdated: 'WaitingRoomListUpdated',
+  AiThinking: 'AiThinking',
   Error: 'Error',
 } as const;
 
@@ -125,6 +126,12 @@ export interface WaitingRoomInfo {
 
 export interface WaitingRoomListUpdatedPayload {
   rooms: WaitingRoomInfo[];
+}
+
+export interface AiThinkingPayload {
+  prompt: string;
+  response: string;
+  model: string;
 }
 
 export interface ErrorPayload {

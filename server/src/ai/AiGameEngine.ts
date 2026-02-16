@@ -20,6 +20,7 @@ export interface AiGameCallbacks {
   onFieldUpdate?: (field: number[][], score: number, lines: number, level: number) => void;
   onLinesCleared?: (count: number) => void;
   onGameOver?: () => void;
+  onAiThinking?: (prompt: string, response: string, model: string) => void;
 }
 
 // =============================================================================
@@ -40,7 +41,7 @@ export class AiGameEngine {
   private _score: number = 0;
   private _level: number = 0;
   private _lines: number = 0;
-  private callbacks: AiGameCallbacks = {};
+  callbacks: AiGameCallbacks = {};
 
   constructor(seed: number) {
     this.board = new Board();

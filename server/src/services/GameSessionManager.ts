@@ -5,6 +5,7 @@ import { RoomManager } from './RoomManager.js';
 import { calculateGarbage } from './GarbageCalculator.js';
 import { generateSeed } from '../utils/seedGenerator.js';
 import { createLogger } from '../lib/logger.js';
+import { withSpan } from '../lib/tracing.js';
 import {
   activeSessionsGauge,
   sessionsTotal,
@@ -63,25 +64,32 @@ export class GameSessionManager {
    * @returns seed 値（両プレイヤーへ配布するテトリミノ生成シード）
    */
   startSession(room: Room): number {
-    if (!room.player1 || !room.player2) {
-      throw new Error('Room must have 2 players to start a session');
-    }
+    return withSpan('GameSession.startSession', { 'room.id': room.roomId }, (span) => {
+      if (!room.player1 || !room.player2) {
+        throw new Error('Room must have 2 players to start a session');
+      }
 
-    const seed = generateSeed();
-    room.transitionToReady();
-    room.transitionToPlaying(seed);
+      const seed = generateSeed();
+      room.transitionToReady();
+      room.transitionToPlaying(seed);
 
-    const session = new GameSession(
-      room.roomId,
-      room.player1.connectionId,
-      room.player2.connectionId,
-    );
-    this.sessions.set(room.roomId, session);
-    sessionsTotal.add(1);
+      const session = new GameSession(
+        room.roomId,
+        room.player1.connectionId,
+        room.player2.connectionId,
+      );
+      this.sessions.set(room.roomId, session);
+      sessionsTotal.add(1);
 
-    createLogger({ roomId: room.roomId }).info({ seed }, 'Session started');
+      span.setAttribute('game.seed', seed);
+      span.setAttribute('player1.connection_id', room.player1.connectionId);
+      span.setAttribute('player2.connection_id', room.player2.connectionId);
+      span.addEvent('session_started');
 
-    return seed;
+      createLogger({ roomId: room.roomId }).info({ seed }, 'Session started');
+
+      return seed;
+    });
   }
 
   /**
@@ -104,21 +112,28 @@ export class GameSessionManager {
     connectionId: string,
     count: number,
   ): void {
-    const session = this.sessions.get(roomId);
-    if (!session || session.isFinished()) return;
-
-    session.addLinesCleared(connectionId, count);
-    linesClearedTotal.add(count);
-
-    const garbage = calculateGarbage(count);
-    if (garbage > 0) {
-      garbageSentTotal.add(garbage);
-      const room = this.roomManager.getRoom(roomId);
-      const opponent = room?.getOpponent(connectionId);
-      if (opponent && this.callbacks) {
-        this.callbacks.sendGarbage(opponent.connectionId, garbage);
+    withSpan('GameSession.handleLinesCleared', { 'room.id': roomId, 'player.connection_id': connectionId, 'lines.count': count }, (span) => {
+      const session = this.sessions.get(roomId);
+      if (!session || session.isFinished()) {
+        span.addEvent('skipped', { reason: session ? 'finished' : 'no_session' });
+        return;
       }
-    }
+
+      session.addLinesCleared(connectionId, count);
+      linesClearedTotal.add(count);
+
+      const garbage = calculateGarbage(count);
+      span.setAttribute('garbage.count', garbage);
+      if (garbage > 0) {
+        garbageSentTotal.add(garbage);
+        const room = this.roomManager.getRoom(roomId);
+        const opponent = room?.getOpponent(connectionId);
+        if (opponent && this.callbacks) {
+          span.addEvent('garbage_sent', { 'opponent.connection_id': opponent.connectionId, garbage });
+          this.callbacks.sendGarbage(opponent.connectionId, garbage);
+        }
+      }
+    });
   }
 
   /**
@@ -126,34 +141,47 @@ export class GameSessionManager {
    * 勝敗を判定し、結果を通知する。
    */
   handleGameOver(roomId: string, loserConnectionId: string): void {
-    const session = this.sessions.get(roomId);
-    if (!session || session.isFinished()) return;
+    withSpan('GameSession.handleGameOver', { 'room.id': roomId, 'loser.connection_id': loserConnectionId }, (span) => {
+      const session = this.sessions.get(roomId);
+      if (!session || session.isFinished()) {
+        span.addEvent('skipped', { reason: session ? 'finished' : 'no_session' });
+        return;
+      }
 
-    const room = this.roomManager.getRoom(roomId);
-    if (!room) return;
+      const room = this.roomManager.getRoom(roomId);
+      if (!room) {
+        span.addEvent('skipped', { reason: 'no_room' });
+        return;
+      }
 
-    session.setResult(loserConnectionId, LoserReason.GameOver);
-    room.transitionToFinished();
+      session.setResult(loserConnectionId, LoserReason.GameOver);
+      room.transitionToFinished();
 
-    const durationMs = Date.now() - session.startedAt.getTime();
-    const durationSec = durationMs / 1000;
-    sessionDuration.record(durationSec);
-    gameResults.add(1, { reason: 'game_over' });
+      const durationMs = Date.now() - session.startedAt.getTime();
+      const durationSec = durationMs / 1000;
+      sessionDuration.record(durationSec);
+      gameResults.add(1, { reason: 'game_over' });
 
-    createLogger({ roomId }).info(
-      { winner: session.winner, loser: loserConnectionId, reason: 'game_over', durationMs },
-      'Game ended',
-    );
+      span.setAttribute('game.winner', session.winner ?? 'unknown');
+      span.setAttribute('game.duration_ms', durationMs);
+      span.setAttribute('game.reason', 'game_over');
+      span.addEvent('game_ended');
 
-    if (session.winner && this.callbacks) {
-      this.callbacks.sendGameResult(
-        session.winner,
-        loserConnectionId,
-        LoserReason.GameOver,
+      createLogger({ roomId }).info(
+        { winner: session.winner, loser: loserConnectionId, reason: 'game_over', durationMs },
+        'Game ended',
       );
-    }
 
-    this.clearDisconnectTimer(roomId);
+      if (session.winner && this.callbacks) {
+        this.callbacks.sendGameResult(
+          session.winner,
+          loserConnectionId,
+          LoserReason.GameOver,
+        );
+      }
+
+      this.clearDisconnectTimer(roomId);
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -165,31 +193,43 @@ export class GameSessionManager {
    * 30秒タイマーを開始し、タイムアウトで敗北判定。
    */
   handleDisconnect(roomId: string, disconnectedId: string): void {
-    const session = this.sessions.get(roomId);
-    if (!session || session.isFinished()) return;
+    withSpan('GameSession.handleDisconnect', { 'room.id': roomId, 'player.connection_id': disconnectedId }, (span) => {
+      const session = this.sessions.get(roomId);
+      if (!session || session.isFinished()) {
+        span.addEvent('skipped', { reason: session ? 'finished' : 'no_session' });
+        return;
+      }
 
-    const room = this.roomManager.getRoom(roomId);
-    if (!room) return;
+      const room = this.roomManager.getRoom(roomId);
+      if (!room) {
+        span.addEvent('skipped', { reason: 'no_room' });
+        return;
+      }
 
-    createLogger({ roomId, connectionId: disconnectedId }).info(
-      { timeoutMs: DISCONNECT_TIMEOUT_MS },
-      'Player disconnected during game, starting timeout',
-    );
+      span.setAttribute('disconnect.timeout_ms', DISCONNECT_TIMEOUT_MS);
+      span.addEvent('disconnect_timer_started');
 
-    const opponent = room.getOpponent(disconnectedId);
-    if (opponent && this.callbacks) {
-      this.callbacks.sendOpponentDisconnected(
-        opponent.connectionId,
-        DISCONNECT_TIMEOUT_MS,
+      createLogger({ roomId, connectionId: disconnectedId }).info(
+        { timeoutMs: DISCONNECT_TIMEOUT_MS },
+        'Player disconnected during game, starting timeout',
       );
-    }
 
-    // Start timeout timer
-    const timer = setTimeout(() => {
-      this.handleDisconnectTimeout(roomId, disconnectedId);
-    }, DISCONNECT_TIMEOUT_MS);
+      const opponent = room.getOpponent(disconnectedId);
+      if (opponent && this.callbacks) {
+        span.setAttribute('opponent.connection_id', opponent.connectionId);
+        this.callbacks.sendOpponentDisconnected(
+          opponent.connectionId,
+          DISCONNECT_TIMEOUT_MS,
+        );
+      }
 
-    this.disconnectTimers.set(roomId, timer);
+      // Start timeout timer
+      const timer = setTimeout(() => {
+        this.handleDisconnectTimeout(roomId, disconnectedId);
+      }, DISCONNECT_TIMEOUT_MS);
+
+      this.disconnectTimers.set(roomId, timer);
+    });
   }
 
   /**
@@ -208,8 +248,16 @@ export class GameSessionManager {
    * セッションを終了・クリーンアップする。
    */
   endSession(roomId: string): void {
-    this.clearDisconnectTimer(roomId);
-    this.sessions.delete(roomId);
+    withSpan('GameSession.endSession', { 'room.id': roomId }, (span) => {
+      const session = this.sessions.get(roomId);
+      span.setAttribute('session.existed', !!session);
+      if (session) {
+        span.setAttribute('session.finished', session.isFinished());
+      }
+      span.addEvent('session_cleanup');
+      this.clearDisconnectTimer(roomId);
+      this.sessions.delete(roomId);
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -220,34 +268,47 @@ export class GameSessionManager {
     roomId: string,
     disconnectedId: string,
   ): void {
-    const session = this.sessions.get(roomId);
-    if (!session || session.isFinished()) return;
+    withSpan('GameSession.handleDisconnectTimeout', { 'room.id': roomId, 'player.connection_id': disconnectedId }, (span) => {
+      const session = this.sessions.get(roomId);
+      if (!session || session.isFinished()) {
+        span.addEvent('skipped', { reason: session ? 'finished' : 'no_session' });
+        return;
+      }
 
-    const room = this.roomManager.getRoom(roomId);
-    if (!room) return;
+      const room = this.roomManager.getRoom(roomId);
+      if (!room) {
+        span.addEvent('skipped', { reason: 'no_room' });
+        return;
+      }
 
-    session.setResult(disconnectedId, LoserReason.Disconnect);
-    room.transitionToFinished();
+      session.setResult(disconnectedId, LoserReason.Disconnect);
+      room.transitionToFinished();
 
-    const durationMs = Date.now() - session.startedAt.getTime();
-    const durationSec = durationMs / 1000;
-    sessionDuration.record(durationSec);
-    gameResults.add(1, { reason: 'disconnect' });
+      const durationMs = Date.now() - session.startedAt.getTime();
+      const durationSec = durationMs / 1000;
+      sessionDuration.record(durationSec);
+      gameResults.add(1, { reason: 'disconnect' });
 
-    createLogger({ roomId }).info(
-      { winner: session.winner, loser: disconnectedId, reason: 'disconnect', durationMs },
-      'Game ended by disconnect timeout',
-    );
+      span.setAttribute('game.winner', session.winner ?? 'unknown');
+      span.setAttribute('game.duration_ms', durationMs);
+      span.setAttribute('game.reason', 'disconnect');
+      span.addEvent('game_ended_by_disconnect_timeout');
 
-    if (session.winner && this.callbacks) {
-      this.callbacks.sendGameResult(
-        session.winner,
-        disconnectedId,
-        LoserReason.Disconnect,
+      createLogger({ roomId }).info(
+        { winner: session.winner, loser: disconnectedId, reason: 'disconnect', durationMs },
+        'Game ended by disconnect timeout',
       );
-    }
 
-    this.disconnectTimers.delete(roomId);
+      if (session.winner && this.callbacks) {
+        this.callbacks.sendGameResult(
+          session.winner,
+          disconnectedId,
+          LoserReason.Disconnect,
+        );
+      }
+
+      this.disconnectTimers.delete(roomId);
+    });
   }
 
   private clearDisconnectTimer(roomId: string): void {

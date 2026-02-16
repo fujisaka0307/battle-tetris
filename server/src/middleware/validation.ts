@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { logger } from '../lib/logger.js';
+import { addSpanEvent } from '../lib/tracing.js';
 
 // =============================================================================
 // Client → Server payload schemas
@@ -37,5 +38,9 @@ export function validatePayload<T>(
     return result.data;
   }
   logger.warn({ issues: result.error.issues }, 'Payload validation failed');
+  addSpanEvent('validation_error', {
+    'validation.issue_count': result.error.issues.length,
+    'validation.message': result.error.issues.map(i => i.message).join('; '),
+  });
   return null;
 }

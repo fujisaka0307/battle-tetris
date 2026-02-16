@@ -33,29 +33,20 @@ if (endpoint) {
   );
   const { BatchLogRecordProcessor } = await import('@opentelemetry/sdk-logs');
 
-  const headers = process.env.OTEL_EXPORTER_OTLP_HEADERS;
+  // Parse OTEL_EXPORTER_OTLP_HEADERS (format: "key=value,key2=value2")
+  // The value may contain '=' (e.g. Base64), so split only on the first '='
+  const headersEnv = process.env.OTEL_EXPORTER_OTLP_HEADERS;
   const parsedHeaders: Record<string, string> = {};
-  if (headers) {
-    for (const pair of headers.split(',')) {
-      const [key, ...rest] = pair.split('=');
-      if (key && rest.length > 0) {
-        parsedHeaders[key.trim()] = rest.join('=').trim();
+  if (headersEnv) {
+    for (const pair of headersEnv.split(',')) {
+      const idx = pair.indexOf('=');
+      if (idx > 0) {
+        parsedHeaders[pair.slice(0, idx).trim()] = pair.slice(idx + 1).trim();
       }
     }
   }
 
-  const exporterOptions = {
-    url: `${endpoint}/v1/traces`,
-    headers: parsedHeaders,
-  };
-  const metricExporterOptions = {
-    url: `${endpoint}/v1/metrics`,
-    headers: parsedHeaders,
-  };
-  const logExporterOptions = {
-    url: `${endpoint}/v1/logs`,
-    headers: parsedHeaders,
-  };
+  const commonOpts = { headers: parsedHeaders };
 
   const resource = new Resource({
     [ATTR_SERVICE_NAME]: 'battle-tetris-server',
@@ -66,13 +57,23 @@ if (endpoint) {
 
   const sdk = new NodeSDK({
     resource,
-    traceExporter: new OTLPTraceExporter(exporterOptions),
+    traceExporter: new OTLPTraceExporter({
+      url: `${endpoint}/v1/traces`,
+      ...commonOpts,
+    }),
     metricReader: new PeriodicExportingMetricReader({
-      exporter: new OTLPMetricExporter(metricExporterOptions),
+      exporter: new OTLPMetricExporter({
+        url: `${endpoint}/v1/metrics`,
+        ...commonOpts,
+        temporalityPreference: 1, // DELTA — required by Grafana Cloud Mimir
+      }),
       exportIntervalMillis: 30_000,
     }),
     logRecordProcessors: [
-      new BatchLogRecordProcessor(new OTLPLogExporter(logExporterOptions)),
+      new BatchLogRecordProcessor(new OTLPLogExporter({
+        url: `${endpoint}/v1/logs`,
+        ...commonOpts,
+      })),
     ],
     instrumentations: [
       getNodeAutoInstrumentations({

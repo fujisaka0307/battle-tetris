@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
 import { logger } from '../lib/logger.js';
+import { withAsyncSpan } from '../lib/tracing.js';
 
 const TENANT_ID = process.env.AZURE_TENANT_ID ?? '';
 const CLIENT_ID = process.env.AZURE_CLIENT_ID ?? '';
@@ -31,29 +32,41 @@ export interface TokenPayload {
  * 検証失敗時は null を返す。
  */
 export async function verifyToken(token: string): Promise<TokenPayload | null> {
-  try {
-    const decoded = jwt.decode(token, { complete: true });
-    if (!decoded) return null;
+  return withAsyncSpan('jwtAuth.verifyToken', {}, async (span) => {
+    try {
+      const decoded = jwt.decode(token, { complete: true });
+      if (!decoded) {
+        span.addEvent('decode_failed');
+        return null;
+      }
 
-    const signingKey = await getSigningKey(decoded.header);
+      const signingKey = await getSigningKey(decoded.header);
 
-    const payload = jwt.verify(token, signingKey, {
-      audience: CLIENT_ID,
-      issuer: `https://login.microsoftonline.com/${TENANT_ID}/v2.0`,
-      algorithms: ['RS256'],
-    }) as jwt.JwtPayload;
+      const payload = jwt.verify(token, signingKey, {
+        audience: CLIENT_ID,
+        issuer: `https://login.microsoftonline.com/${TENANT_ID}/v2.0`,
+        algorithms: ['RS256'],
+      }) as jwt.JwtPayload;
 
-    const enterpriseId = payload[CLAIM];
-    if (typeof enterpriseId !== 'string' || !enterpriseId) return null;
+      const enterpriseId = payload[CLAIM];
+      if (typeof enterpriseId !== 'string' || !enterpriseId) {
+        span.addEvent('claim_missing', { claim: CLAIM });
+        return null;
+      }
 
-    return {
-      enterpriseId,
-      oid: typeof payload.oid === 'string' ? payload.oid : undefined,
-    };
-  } catch (err) {
-    logger.warn({ err }, 'JWT verification failed');
-    return null;
-  }
+      span.setAttribute('auth.enterprise_id', enterpriseId);
+      span.addEvent('token_verified');
+      return {
+        enterpriseId,
+        oid: typeof payload.oid === 'string' ? payload.oid : undefined,
+      };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      span.addEvent('verification_failed', { 'error.message': error.message });
+      logger.warn({ err }, 'JWT verification failed');
+      return null;
+    }
+  });
 }
 
 /**

@@ -120,13 +120,17 @@ export class AiPlayer {
     // LLM で配置決定を試みる
     if (this.bedrockClient.isAvailable()) {
       try {
-        placement = await this.bedrockClient.findPlacement(
+        const result = await this.bedrockClient.findPlacement(
           this.engine.getBoardAsText(),
           currentPiece,
           nextPieces,
           this.engine.garbage.pending(),
           this.config.temperature,
         );
+        if (result) {
+          placement = result.placement;
+          this.engine.callbacks.onAiThinking?.(result.prompt, result.response, result.model);
+        }
       } catch {
         // フォールバック
       }

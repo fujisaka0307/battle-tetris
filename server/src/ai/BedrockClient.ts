@@ -16,6 +16,13 @@ export interface BedrockPlacement {
   rotation: number;
 }
 
+export interface BedrockResult {
+  placement: BedrockPlacement;
+  prompt: string;
+  response: string;
+  model: string;
+}
+
 export type ModelTier = 'haiku' | 'sonnet' | 'claude';
 
 // テトリミノ名マッピング
@@ -84,7 +91,7 @@ export class BedrockClient {
     nextPieces: TetrominoType[],
     pendingGarbage: number,
     temperature: number,
-  ): Promise<BedrockPlacement | null> {
+  ): Promise<BedrockResult | null> {
     if (!this.client) return null;
 
     const pieceName = PIECE_NAMES[currentPiece] ?? '?';
@@ -138,7 +145,12 @@ Respond with ONLY a JSON object: {"col": <number>, "rotation": <number>}`;
         const col = parseInt(match[1], 10);
         const rotation = parseInt(match[2], 10);
         if (col >= 0 && col <= 9 && rotation >= 0 && rotation <= 3) {
-          return { col, rotation };
+          return {
+            placement: { col, rotation },
+            prompt,
+            response: text,
+            model: this.modelId,
+          };
         }
       }
 

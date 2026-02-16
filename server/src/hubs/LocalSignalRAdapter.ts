@@ -28,7 +28,7 @@ import { GameHub, type HubConnection } from './GameHub.js';
 import { ClientEvents, RoomStatus } from '@battle-tetris/shared';
 import { verifyToken, extractToken } from '../middleware/jwtAuth.js';
 import { logger, createLogger } from '../lib/logger.js';
-import { trace, SpanKind } from '@opentelemetry/api';
+import { trace, SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import {
   activeConnectionsGauge,
   wsMessagesReceived,
@@ -311,19 +311,29 @@ export class LocalSignalRAdapter implements HubConnection {
     wsMessagesReceived.add(1, { 'ws.message.type': target ?? 'unknown' });
 
     const tracer = trace.getTracer('battle-tetris-server');
-    const span = tracer.startSpan(`ws.invoke ${target}`, {
+    tracer.startActiveSpan(`ws.invoke ${target}`, {
       kind: SpanKind.SERVER,
       attributes: {
         'ws.target': target ?? 'unknown',
         'ws.connection_id': connectionId,
       },
+    }, (span) => {
+      try {
+        this.dispatchInvocation(connectionId, target, args);
+        span.setStatus({ code: SpanStatusCode.OK });
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+        span.recordException(error);
+        span.setAttribute('error.type', error.constructor.name);
+        span.setAttribute('error.message', error.message);
+        if (error.stack) {
+          span.setAttribute('error.stack', error.stack);
+        }
+      } finally {
+        span.end();
+      }
     });
-
-    try {
-      this.dispatchInvocation(connectionId, target, args);
-    } finally {
-      span.end();
-    }
   }
 
   private dispatchInvocation(connectionId: string, target: string | undefined, args: unknown[]): void {

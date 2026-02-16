@@ -20,6 +20,7 @@ import type {
   GameResultPayload,
   RematchAcceptedPayload,
   OpponentDisconnectedPayload,
+  AiThinkingPayload,
   ErrorPayload,
   WaitingRoomListUpdatedPayload,
 } from '@battle-tetris/shared';
@@ -46,6 +47,7 @@ export interface SignalREventHandlers {
   onRematchAccepted?: (payload: RematchAcceptedPayload) => void;
   onOpponentDisconnected?: (payload: OpponentDisconnectedPayload) => void;
   onOpponentReconnected?: () => void;
+  onAiThinking?: (payload: AiThinkingPayload) => void;
   onWaitingRoomListUpdated?: (payload: WaitingRoomListUpdatedPayload) => void;
   onError?: (payload: ErrorPayload) => void;
   onConnectionStateChanged?: (state: ConnectionState) => void;
@@ -263,6 +265,10 @@ export class SignalRClient {
 
     this.connection.on(ServerEvents.OpponentReconnected, () => {
       this.handlers.onOpponentReconnected?.();
+    });
+
+    this.connection.on(ServerEvents.AiThinking, (payload: AiThinkingPayload) => {
+      this.handlers.onAiThinking?.(payload);
     });
 
     this.connection.on(ServerEvents.WaitingRoomListUpdated, (payload: WaitingRoomListUpdatedPayload) => {
