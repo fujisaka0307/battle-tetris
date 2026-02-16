@@ -12,6 +12,11 @@ test.describe('本番スモークテスト', () => {
 
   test('トップページUIが動作すること', async ({ page }) => {
     await page.goto('/');
+    // Handle test login if shown (SKIP_AUTH mode)
+    const testLoginBtn = page.getByTestId('test-login-btn');
+    if (await testLoginBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await testLoginBtn.click();
+    }
     await expect(page.getByTestId('create-room-btn')).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId('create-room-btn')).toBeEnabled();
   });

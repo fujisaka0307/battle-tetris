@@ -119,6 +119,20 @@ export class LocalSignalRAdapter implements HubConnection {
             },
           ],
         });
+      } else if (process.env.SKIP_AUTH === 'true') {
+        // SKIP_AUTH mode: assign test enterprise ID for E2E testing
+        const connectionId = `conn-${this.nextConnectionId++}`;
+        this.connectionUsers.set(connectionId, `test-player-${connectionId}@dxc.com`);
+        res.json({
+          connectionId,
+          negotiateVersion: 1,
+          availableTransports: [
+            {
+              transport: 'WebSockets',
+              transferFormats: ['Text'],
+            },
+          ],
+        });
       } else {
         // No token — allow for dev/test but mark as unauthenticated
         const connectionId = `conn-${this.nextConnectionId++}`;
@@ -151,6 +165,8 @@ export class LocalSignalRAdapter implements HubConnection {
           if (result) {
             this.connectionUsers.set(connectionId, result.enterpriseId);
           }
+        } else if (process.env.SKIP_AUTH === 'true') {
+          this.connectionUsers.set(connectionId, `test-player-${connectionId}@dxc.com`);
         }
       }
 

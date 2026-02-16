@@ -182,4 +182,33 @@ describe('ResultPage', () => {
     expect(screen.getByTestId('result-lines')).toHaveTextContent('0');
     expect(screen.getByTestId('result-level')).toHaveTextContent('0');
   });
+
+  it('onRematchAccepted でロビーにナビゲートされること', async () => {
+    renderResultPage();
+
+    const { act } = await import('@testing-library/react');
+    act(() => {
+      signalRHandlers.onRematchAccepted?.({ roomId: 'REMATCH1' });
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/lobby/REMATCH1');
+    expect(useGameStore.getState().gameState).toBe(GameState.Idle);
+    expect(useBattleStore.getState().result).toBeNull();
+  });
+
+  it('onOpponentDisconnected でトップにナビゲートされること', async () => {
+    useGameStore.getState().setGameState(GameState.Playing);
+    useGameStore.getState().updateStats(500, 2, 10);
+    renderResultPage();
+
+    const { act } = await import('@testing-library/react');
+    act(() => {
+      signalRHandlers.onOpponentDisconnected?.();
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(usePlayerStore.getState().enterpriseId).toBe('');
+    expect(useGameStore.getState().gameState).toBe(GameState.Idle);
+    expect(useBattleStore.getState().result).toBeNull();
+  });
 });

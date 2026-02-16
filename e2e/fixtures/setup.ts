@@ -30,11 +30,17 @@ export const test = base.extend<{
 
 /**
  * トップページに遷移してボタンが利用可能になるまで待つヘルパー。
- * 認証は VITE_SKIP_AUTH=true で自動バイパスされる。
+ * SKIP_AUTH モードではテストログインボタンをクリックしてからトップページへ進む。
+ * ボタンが enabled になるまで待つ（SignalR接続完了を保証する）。
  */
 export async function setupPlayer(page: Page): Promise<void> {
   await page.goto('/');
-  await page.getByTestId('create-room-btn').waitFor({ state: 'visible', timeout: 10000 });
+  // SKIP_AUTH mode: click the test login button if shown
+  const testLoginBtn = page.getByTestId('test-login-btn');
+  if (await testLoginBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await testLoginBtn.click();
+  }
+  await expect(page.getByTestId('create-room-btn')).toBeEnabled({ timeout: 10000 });
 }
 
 /**

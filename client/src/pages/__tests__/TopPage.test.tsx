@@ -268,4 +268,77 @@ describe('TopPage', () => {
 
     expect(screen.getByTestId('join-room-btn')).toBeDisabled();
   });
+
+  // === 待機ルームリスト + handleJoinFromList テスト ===
+
+  it('onWaitingRoomListUpdated で待機ルームリストが表示されること', async () => {
+    (signalRClient as any).state = 'connected';
+    renderTopPage();
+
+    // Trigger handleCreateRoom to register handlers including onWaitingRoomListUpdated
+    await userEvent.click(screen.getByTestId('create-room-btn'));
+
+    act(() => {
+      capturedHandlers.onWaitingRoomListUpdated?.({
+        rooms: [
+          { roomId: 'ROOM01', creatorEnterpriseId: 'alice@dxc.com' },
+          { roomId: 'ROOM02', creatorEnterpriseId: 'bob@dxc.com' },
+        ],
+      });
+    });
+
+    expect(screen.getByTestId('waiting-room-list')).toBeInTheDocument();
+    const roomIds = screen.getAllByTestId('waiting-room-id');
+    expect(roomIds).toHaveLength(2);
+    expect(roomIds[0]).toHaveTextContent('ROOM01');
+    expect(roomIds[1]).toHaveTextContent('ROOM02');
+
+    const creators = screen.getAllByTestId('waiting-room-creator');
+    expect(creators[0]).toHaveTextContent('alice@dxc.com');
+    expect(creators[1]).toHaveTextContent('bob@dxc.com');
+  });
+
+  it('待機ルームの参加ボタンクリックで JoinRoom が呼ばれること', async () => {
+    (signalRClient as any).state = 'connected';
+    renderTopPage();
+
+    // Register handlers and show waiting rooms
+    await userEvent.click(screen.getByTestId('create-room-btn'));
+
+    act(() => {
+      capturedHandlers.onWaitingRoomListUpdated?.({
+        rooms: [{ roomId: 'TARGET1', creatorEnterpriseId: 'carol@dxc.com' }],
+      });
+    });
+
+    // Click the join button in the waiting room list
+    await userEvent.click(screen.getByTestId('waiting-room-join-btn'));
+
+    expect(signalRClient.sendJoinRoom).toHaveBeenCalledWith('TARGET1');
+  });
+
+  it('handleJoinFromList の onOpponentJoined でロビーにナビゲートされること', async () => {
+    (signalRClient as any).state = 'connected';
+    renderTopPage();
+
+    // Register handlers and show waiting rooms
+    await userEvent.click(screen.getByTestId('create-room-btn'));
+
+    act(() => {
+      capturedHandlers.onWaitingRoomListUpdated?.({
+        rooms: [{ roomId: 'JOIN01', creatorEnterpriseId: 'dave@dxc.com' }],
+      });
+    });
+
+    // Click the join button
+    await userEvent.click(screen.getByTestId('waiting-room-join-btn'));
+
+    // Fire onOpponentJoined handler set by handleJoinFromList
+    act(() => {
+      capturedHandlers.onOpponentJoined?.({ enterpriseId: 'dave@dxc.com' });
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/lobby/JOIN01');
+    expect(usePlayerStore.getState().opponentEnterpriseId).toBe('dave@dxc.com');
+  });
 });

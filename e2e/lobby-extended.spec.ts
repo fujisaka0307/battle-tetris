@@ -19,12 +19,16 @@ test.describe('ロビー — 拡張テスト', () => {
     await expect(playerAPage.getByTestId('waiting-text')).toBeVisible({ timeout: 10000 });
   });
 
-  test('認証なしでロビーURL直接アクセスするとトップへリダイレクトされること', async ({
+  test('認証なしでロビーURL直接アクセスするとログインページへリダイレクトされること', async ({
     page,
   }) => {
     await page.goto('/lobby/ABC123');
-    await page.waitForURL('/', { timeout: 5000 });
-    await expect(page.getByTestId('create-room-btn')).toBeVisible();
+    // In SKIP_AUTH mode, unauthenticated users are redirected to login page
+    const testLoginBtn = page.getByTestId('test-login-btn');
+    const loginBtn = page.getByTestId('login-btn');
+    const hasTestLogin = await testLoginBtn.isVisible({ timeout: 5000 }).catch(() => false);
+    const hasLogin = await loginBtn.isVisible({ timeout: 1000 }).catch(() => false);
+    expect(hasTestLogin || hasLogin).toBeTruthy();
   });
 
   test('片方のみReadyではカウントダウンが始まらないこと', async ({ playerAPage, playerBPage }) => {
