@@ -62,24 +62,23 @@ test.describe('ランダムマッチ エッジケース', () => {
     const playerCPage = await contextC.newPage();
 
     // A immediately random matches with C
-    await randomMatchToLobby(playerAPage, playerCPage, 'Alice2', 'Charlie');
+    await randomMatchToLobby(playerAPage, playerCPage);
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Charlie', { timeout: 5000 });
-    await expect(playerCPage.getByTestId('opponent-name')).toHaveText('Alice2', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerCPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     await contextC.close();
   });
 
-  test('BE-3: 同じニックネームの2人がランダムマッチ → 正常にマッチ', async ({
+  test('BE-3: 2人がランダムマッチ → 正常にマッチ', async ({
     playerAPage,
     playerBPage,
   }) => {
-    // Both use the same nickname
-    await randomMatchToLobby(playerAPage, playerBPage, 'SameName', 'SameName');
+    await randomMatchToLobby(playerAPage, playerBPage);
 
-    // Both should see opponent name (same name)
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('SameName', { timeout: 5000 });
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('SameName', { timeout: 5000 });
+    // Both should see opponent name
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
   });
 
   test('BE-4: ランダムマッチ → ロビーで両者の roomId が一致すること', async ({

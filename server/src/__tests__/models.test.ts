@@ -12,7 +12,7 @@ describe('Player', () => {
   it('生成時のデフォルト状態が正しいこと', () => {
     const p = new Player('conn-1', 'Alice');
     expect(p.connectionId).toBe('conn-1');
-    expect(p.nickname).toBe('Alice');
+    expect(p.enterpriseId).toBe('Alice');
     expect(p.isReady).toBe(false);
     expect(p.isConnected).toBe(true);
   });
@@ -59,7 +59,7 @@ describe('Room', () => {
     const room = createRoom();
     expect(room.roomId).toBe('ABC123');
     expect(room.status).toBe(RoomStatus.Waiting);
-    expect(room.player1?.nickname).toBe('Alice');
+    expect(room.player1?.enterpriseId).toBe('Alice');
     expect(room.player2).toBeNull();
     expect(room.seed).toBeNull();
     expect(room.isFull()).toBe(false);
@@ -69,7 +69,7 @@ describe('Room', () => {
     const room = createRoom();
     const p2 = new Player('conn-2', 'Bob');
     room.join(p2);
-    expect(room.player2?.nickname).toBe('Bob');
+    expect(room.player2?.enterpriseId).toBe('Bob');
     expect(room.isFull()).toBe(true);
   });
 
@@ -81,15 +81,15 @@ describe('Room', () => {
 
   it('getPlayer で connectionId からプレイヤーを取得できること', () => {
     const room = createRoom();
-    expect(room.getPlayer('conn-1')?.nickname).toBe('Alice');
+    expect(room.getPlayer('conn-1')?.enterpriseId).toBe('Alice');
     expect(room.getPlayer('conn-999')).toBeNull();
   });
 
   it('getOpponent で対戦相手を取得できること', () => {
     const room = createRoom();
     room.join(new Player('conn-2', 'Bob'));
-    expect(room.getOpponent('conn-1')?.nickname).toBe('Bob');
-    expect(room.getOpponent('conn-2')?.nickname).toBe('Alice');
+    expect(room.getOpponent('conn-1')?.enterpriseId).toBe('Bob');
+    expect(room.getOpponent('conn-2')?.enterpriseId).toBe('Alice');
   });
 
   it('areBothReady が正しく判定されること', () => {
@@ -152,7 +152,7 @@ describe('Room', () => {
     room.player1 = null;
     const p = new Player('conn-new', 'NewPlayer');
     room.join(p);
-    expect(room.player1!.nickname).toBe('NewPlayer');
+    expect(room.player1!.enterpriseId).toBe('NewPlayer');
     expect(room.player2).toBeNull();
   });
 
@@ -176,7 +176,7 @@ describe('Room', () => {
   it('getPlayer で player2 側の connectionId を指定して取得できること', () => {
     const room = createRoom();
     room.join(new Player('conn-2', 'Bob'));
-    expect(room.getPlayer('conn-2')?.nickname).toBe('Bob');
+    expect(room.getPlayer('conn-2')?.enterpriseId).toBe('Bob');
   });
 
   it('areBothReady で player1 が null の場合に false を返すこと', () => {

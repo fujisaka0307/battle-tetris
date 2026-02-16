@@ -11,15 +11,15 @@ describe('usePlayerStore', () => {
 
   it('初期状態が正しいこと', () => {
     const state = usePlayerStore.getState();
-    expect(state.nickname).toBe('');
+    expect(state.enterpriseId).toBe('');
     expect(state.roomId).toBeNull();
     expect(state.connectionState).toBe('disconnected');
-    expect(state.opponentNickname).toBeNull();
+    expect(state.opponentEnterpriseId).toBeNull();
   });
 
-  it('setNickname で値が更新されること', () => {
-    usePlayerStore.getState().setNickname('Alice');
-    expect(usePlayerStore.getState().nickname).toBe('Alice');
+  it('setEnterpriseId で値が更新されること', () => {
+    usePlayerStore.getState().setEnterpriseId('alice@dxc.com');
+    expect(usePlayerStore.getState().enterpriseId).toBe('alice@dxc.com');
   });
 
   it('setRoomId で値が更新されること', () => {
@@ -32,25 +32,25 @@ describe('usePlayerStore', () => {
     expect(usePlayerStore.getState().connectionState).toBe('connected');
   });
 
-  it('setOpponentNickname で値が更新されること', () => {
-    usePlayerStore.getState().setOpponentNickname('Bob');
-    expect(usePlayerStore.getState().opponentNickname).toBe('Bob');
+  it('setOpponentEnterpriseId で値が更新されること', () => {
+    usePlayerStore.getState().setOpponentEnterpriseId('bob@dxc.com');
+    expect(usePlayerStore.getState().opponentEnterpriseId).toBe('bob@dxc.com');
   });
 
   it('reset で初期状態に戻ること', () => {
     const store = usePlayerStore.getState();
-    store.setNickname('Alice');
+    store.setEnterpriseId('alice@dxc.com');
     store.setRoomId('XYZ');
     store.setConnectionState('connected');
-    store.setOpponentNickname('Bob');
+    store.setOpponentEnterpriseId('bob@dxc.com');
 
     store.reset();
 
     const state = usePlayerStore.getState();
-    expect(state.nickname).toBe('');
+    expect(state.enterpriseId).toBe('');
     expect(state.roomId).toBeNull();
     expect(state.connectionState).toBe('disconnected');
-    expect(state.opponentNickname).toBeNull();
+    expect(state.opponentEnterpriseId).toBeNull();
   });
 });
 

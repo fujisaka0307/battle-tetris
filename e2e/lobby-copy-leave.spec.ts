@@ -1,27 +1,27 @@
-import { test, expect, createRoom, enterNickname } from './fixtures/setup';
+import { test, expect, createRoom, setupPlayer } from './fixtures/setup';
 
 test.describe('ロビーUI詳細', () => {
   test('ルームIDの横にCopyボタンが表示されること', async ({ playerAPage }) => {
-    await createRoom(playerAPage, 'Alice');
+    await createRoom(playerAPage);
 
     await expect(playerAPage.getByTestId('copy-btn')).toBeVisible();
   });
 
   test('退出ボタンでトップページに戻ること', async ({ playerAPage }) => {
-    await createRoom(playerAPage, 'Alice');
+    await createRoom(playerAPage);
 
     await playerAPage.getByTestId('leave-btn').click();
     await playerAPage.waitForURL('/', { timeout: 5000 });
-    await expect(playerAPage.getByTestId('nickname-input')).toBeVisible();
+    await expect(playerAPage.getByTestId('create-room-btn')).toBeVisible();
   });
 
   test('ランダムマッチ→Ready→対戦画面の完全フロー', async ({ playerAPage, playerBPage }) => {
     // Player A requests random match
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
     // Player B requests random match
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
     // Both should be navigated to lobby
@@ -29,8 +29,8 @@ test.describe('ロビーUI詳細', () => {
     await playerBPage.waitForURL(/\/lobby\//, { timeout: 10000 });
 
     // Both should see each other
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('Alice', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     // Both players click Ready
     await playerAPage.getByTestId('ready-btn').click();

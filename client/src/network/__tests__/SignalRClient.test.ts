@@ -197,22 +197,22 @@ describe('SignalRClient', () => {
   });
 
   describe('send methods', () => {
-    it('sendCreateRoom が正しいイベントとペイロードで送信すること', async () => {
+    it('sendCreateRoom が引数なしで送信すること', async () => {
       const client = new SignalRClient();
       await client.connect('http://localhost/hub');
 
-      client.sendCreateRoom('Alice');
+      client.sendCreateRoom();
 
-      expect(currentMockConn!.send).toHaveBeenCalledWith('CreateRoom', { nickname: 'Alice' });
+      expect(currentMockConn!.send).toHaveBeenCalledWith('CreateRoom');
     });
 
-    it('sendJoinRoom が正しく送信すること', async () => {
+    it('sendJoinRoom が roomId のみで送信すること', async () => {
       const client = new SignalRClient();
       await client.connect('http://localhost/hub');
 
-      client.sendJoinRoom('Bob', 'ABC123');
+      client.sendJoinRoom('ABC123');
 
-      expect(currentMockConn!.send).toHaveBeenCalledWith('JoinRoom', { nickname: 'Bob', roomId: 'ABC123' });
+      expect(currentMockConn!.send).toHaveBeenCalledWith('JoinRoom', { roomId: 'ABC123' });
     });
 
     it('sendPlayerReady がペイロードなしで送信すること', async () => {
@@ -235,19 +235,19 @@ describe('SignalRClient', () => {
 
     it('未接続時に send が呼ばれないこと', () => {
       const client = new SignalRClient();
-      client.sendCreateRoom('Alice');
+      client.sendCreateRoom();
       expect(client.state).toBe('disconnected');
     });
 
     // === C1 カバレッジ追加テスト ===
 
-    it('sendJoinRandomMatch が正しく送信すること', async () => {
+    it('sendJoinRandomMatch が引数なしで送信すること', async () => {
       const client = new SignalRClient();
       await client.connect('http://localhost/hub');
 
-      client.sendJoinRandomMatch('Dave');
+      client.sendJoinRandomMatch();
 
-      expect(currentMockConn!.send).toHaveBeenCalledWith('JoinRandomMatch', { nickname: 'Dave' });
+      expect(currentMockConn!.send).toHaveBeenCalledWith('JoinRandomMatch');
     });
 
     it('sendLinesCleared が正しく送信すること', async () => {
@@ -283,7 +283,7 @@ describe('SignalRClient', () => {
       // Change state to something other than Connected
       currentMockConn!.state = 'Disconnected';
 
-      client.sendCreateRoom('Alice');
+      client.sendCreateRoom();
 
       expect(currentMockConn!.send).not.toHaveBeenCalled();
     });
@@ -349,9 +349,9 @@ describe('SignalRClient', () => {
       client.setHandlers({ onOpponentJoined });
 
       await client.connect('http://localhost/hub');
-      currentMockConn!._emit('OpponentJoined', { nickname: 'Bob' });
+      currentMockConn!._emit('OpponentJoined', { enterpriseId: 'bob@dxc.com' });
 
-      expect(onOpponentJoined).toHaveBeenCalledWith({ nickname: 'Bob' });
+      expect(onOpponentJoined).toHaveBeenCalledWith({ enterpriseId: 'bob@dxc.com' });
     });
 
     it('MatchFound イベントでハンドラが呼ばれること', async () => {
@@ -360,9 +360,9 @@ describe('SignalRClient', () => {
       client.setHandlers({ onMatchFound });
 
       await client.connect('http://localhost/hub');
-      currentMockConn!._emit('MatchFound', { roomId: 'R1', opponentNickname: 'Eve' });
+      currentMockConn!._emit('MatchFound', { roomId: 'R1', opponentEnterpriseId: 'eve@dxc.com' });
 
-      expect(onMatchFound).toHaveBeenCalledWith({ roomId: 'R1', opponentNickname: 'Eve' });
+      expect(onMatchFound).toHaveBeenCalledWith({ roomId: 'R1', opponentEnterpriseId: 'eve@dxc.com' });
     });
 
     it('BothReady イベントでハンドラが呼ばれること', async () => {
@@ -451,8 +451,8 @@ describe('SignalRClient', () => {
       // Emit all events without handlers
       expect(() => {
         currentMockConn!._emit('RoomCreated', { roomId: 'X' });
-        currentMockConn!._emit('OpponentJoined', { nickname: 'Bob' });
-        currentMockConn!._emit('MatchFound', { roomId: 'Y', opponentNickname: 'Z' });
+        currentMockConn!._emit('OpponentJoined', { enterpriseId: 'bob@dxc.com' });
+        currentMockConn!._emit('MatchFound', { roomId: 'Y', opponentEnterpriseId: 'z@dxc.com' });
         currentMockConn!._emit('BothReady', { seed: 1, countdown: 3 });
         currentMockConn!._emit('GameStart', { seed: 1 });
         currentMockConn!._emit('OpponentFieldUpdate', { field: [[]], score: 0, lines: 0, level: 0 });

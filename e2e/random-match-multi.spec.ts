@@ -1,4 +1,4 @@
-import { test, expect, enterNickname, playToGameOver } from './fixtures/setup';
+import { test, expect, setupPlayer, playToGameOver } from './fixtures/setup';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -12,13 +12,13 @@ test.describe('ランダムマッチ複数人', () => {
     const playerCPage = await contextC.newPage();
 
     // All three request random match
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerCPage, 'Charlie');
+    await setupPlayer(playerCPage);
     await playerCPage.getByTestId('random-match-btn').click();
 
     // Wait for matchmaking
@@ -63,10 +63,10 @@ test.describe('ランダムマッチ複数人', () => {
     const playerDPage = await contextD.newPage();
 
     // Prepare all four players first
-    await enterNickname(playerAPage, 'Alice');
-    await enterNickname(playerBPage, 'Bob');
-    await enterNickname(playerCPage, 'Charlie');
-    await enterNickname(playerDPage, 'Diana');
+    await setupPlayer(playerAPage);
+    await setupPlayer(playerBPage);
+    await setupPlayer(playerCPage);
+    await setupPlayer(playerDPage);
 
     // Click random match with small delays to allow server processing
     await playerAPage.getByTestId('random-match-btn').click();
@@ -115,7 +115,7 @@ test.describe('ランダムマッチ複数人', () => {
     const playerCPage = await contextC.newPage();
 
     // A enters random match queue
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
     // Wait a moment, then A cancels (goes back to top)
@@ -130,10 +130,10 @@ test.describe('ランダムマッチ複数人', () => {
     await playerAPage.waitForURL('/', { timeout: 5000 });
 
     // B and C enter random match queue
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerCPage, 'Charlie');
+    await setupPlayer(playerCPage);
     await playerCPage.getByTestId('random-match-btn').click();
 
     // B and C should be matched (not A)
@@ -160,7 +160,7 @@ test.describe('ランダムマッチ複数人', () => {
     const contextGhost = await browser.newContext();
     const ghostPage = await contextGhost.newPage();
 
-    await enterNickname(ghostPage, 'Ghost');
+    await setupPlayer(ghostPage);
     await ghostPage.getByTestId('random-match-btn').click();
     await ghostPage.waitForTimeout(2000);
 
@@ -171,10 +171,10 @@ test.describe('ランダムマッチ複数人', () => {
     await playerAPage.waitForTimeout(5000);
 
     // Alice and Bob enter random match — should match each other (not Ghost)
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
     // A and B should match with each other
@@ -191,10 +191,10 @@ test.describe('ランダムマッチ複数人', () => {
     browser,
   }) => {
     // First match via random
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
     await playerAPage.waitForURL(/\/lobby\//, { timeout: 10000 });
@@ -222,17 +222,17 @@ test.describe('ランダムマッチ複数人', () => {
     const contextC = await browser.newContext();
     const playerCPage = await contextC.newPage();
 
-    await enterNickname(playerAPage, 'Alice2');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerCPage, 'Charlie');
+    await setupPlayer(playerCPage);
     await playerCPage.getByTestId('random-match-btn').click();
 
     await playerAPage.waitForURL(/\/lobby\//, { timeout: 10000 });
     await playerCPage.waitForURL(/\/lobby\//, { timeout: 10000 });
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Charlie', { timeout: 5000 });
-    await expect(playerCPage.getByTestId('opponent-name')).toHaveText('Alice2', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerCPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     await contextC.close();
   });

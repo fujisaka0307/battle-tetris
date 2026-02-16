@@ -18,16 +18,16 @@ test.describe('複数ルーム同時対戦', () => {
     const playerDPage = await contextD.newPage();
 
     // Create two rooms
-    const roomId1 = await createRoom(playerAPage, 'Alice');
-    const roomId2 = await createRoom(playerCPage, 'Charlie');
+    const roomId1 = await createRoom(playerAPage);
+    const roomId2 = await createRoom(playerCPage);
 
     // Join both rooms
-    await joinRoom(playerBPage, 'Bob', roomId1);
-    await joinRoom(playerDPage, 'Diana', roomId2);
+    await joinRoom(playerBPage, roomId1);
+    await joinRoom(playerDPage, roomId2);
 
     // Verify pairings
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
-    await expect(playerCPage.getByTestId('opponent-name')).toHaveText('Diana', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerCPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     // Both rooms: Ready
     await playerAPage.getByTestId('ready-btn').click();
@@ -77,13 +77,13 @@ test.describe('複数ルーム同時対戦', () => {
     const playerDPage = await contextD.newPage();
 
     // Create and start two rooms
-    const roomId1 = await createRoom(playerAPage, 'Alice');
-    const roomId2 = await createRoom(playerCPage, 'Charlie');
-    await joinRoom(playerBPage, 'Bob', roomId1);
-    await joinRoom(playerDPage, 'Diana', roomId2);
+    const roomId1 = await createRoom(playerAPage);
+    const roomId2 = await createRoom(playerCPage);
+    await joinRoom(playerBPage, roomId1);
+    await joinRoom(playerDPage, roomId2);
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
-    await expect(playerCPage.getByTestId('opponent-name')).toHaveText('Diana', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerCPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     // Both rooms: Ready and Battle
     await playerAPage.getByTestId('ready-btn').click();
@@ -129,13 +129,13 @@ test.describe('複数ルーム同時対戦', () => {
     const playerDPage = await contextD.newPage();
 
     // Create and start two rooms
-    const roomId1 = await createRoom(playerAPage, 'Alice');
-    const roomId2 = await createRoom(playerCPage, 'Charlie');
-    await joinRoom(playerBPage, 'Bob', roomId1);
-    await joinRoom(playerDPage, 'Diana', roomId2);
+    const roomId1 = await createRoom(playerAPage);
+    const roomId2 = await createRoom(playerCPage);
+    await joinRoom(playerBPage, roomId1);
+    await joinRoom(playerDPage, roomId2);
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
-    await expect(playerCPage.getByTestId('opponent-name')).toHaveText('Diana', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerCPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     await playerAPage.getByTestId('ready-btn').click();
     await playerBPage.getByTestId('ready-btn').click();

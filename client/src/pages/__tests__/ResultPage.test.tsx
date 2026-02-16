@@ -47,7 +47,7 @@ describe('ResultPage', () => {
     usePlayerStore.getState().reset();
     useGameStore.getState().reset();
     useBattleStore.getState().reset();
-    usePlayerStore.getState().setNickname('Alice');
+    usePlayerStore.getState().setEnterpriseId('alice@dxc.com');
   });
 
   it('敗北時に「LOSE」が表示されること', () => {
@@ -123,7 +123,7 @@ describe('ResultPage', () => {
     renderResultPage();
     await userEvent.click(screen.getByTestId('go-top-btn'));
 
-    expect(usePlayerStore.getState().nickname).toBe('');
+    expect(usePlayerStore.getState().enterpriseId).toBe('');
     expect(useGameStore.getState().gameState).toBe(GameState.Idle);
     expect(useBattleStore.getState().result).toBeNull();
   });

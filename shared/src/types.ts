@@ -50,7 +50,7 @@ export enum RoomStatus {
 /** プレイヤー情報 */
 export interface PlayerInfo {
   connectionId: string;
-  nickname: string;
+  enterpriseId: string;
   isReady: boolean;
   isConnected: boolean;
 }

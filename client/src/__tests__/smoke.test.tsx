@@ -2,6 +2,18 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from '../App';
 
+// Mock useAuth
+vi.mock('../auth/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    enterpriseId: 'test@dxc.com',
+    login: vi.fn(),
+    logout: vi.fn(),
+    getToken: vi.fn().mockResolvedValue('test-token'),
+  }),
+}));
+
 // Mock SignalR client
 vi.mock('../network/SignalRClient', () => ({
   signalRClient: {
@@ -9,6 +21,8 @@ vi.mock('../network/SignalRClient', () => ({
     connect: vi.fn().mockResolvedValue(undefined),
     setHandlers: vi.fn(),
     sendCreateRoom: vi.fn(),
+    sendSubscribeRoomList: vi.fn(),
+    sendUnsubscribeRoomList: vi.fn(),
   },
 }));
 

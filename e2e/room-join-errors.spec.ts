@@ -1,9 +1,8 @@
-import { test, expect, createRoom, joinRoom } from './fixtures/setup';
+import { test, expect, createRoom, joinRoom, setupPlayer } from './fixtures/setup';
 
 test.describe('ルーム参加 — エラー系', () => {
   test('存在しないルームIDでエラーが表示されること', async ({ playerAPage }) => {
-    await playerAPage.goto('/');
-    await playerAPage.getByTestId('nickname-input').fill('Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('room-id-input').fill('ZZZZZZ');
     await playerAPage.getByTestId('join-room-btn').click();
 
@@ -15,14 +14,13 @@ test.describe('ルーム参加 — エラー系', () => {
     playerBPage,
     browser,
   }) => {
-    const roomId = await createRoom(playerAPage, 'Alice');
-    await joinRoom(playerBPage, 'Bob', roomId);
+    const roomId = await createRoom(playerAPage);
+    await joinRoom(playerBPage, roomId);
 
     // 3人目
     const context3 = await browser.newContext();
     const playerCPage = await context3.newPage();
-    await playerCPage.goto('/');
-    await playerCPage.getByTestId('nickname-input').fill('Charlie');
+    await setupPlayer(playerCPage);
     await playerCPage.getByTestId('room-id-input').fill(roomId);
     await playerCPage.getByTestId('join-room-btn').click();
 

@@ -3,6 +3,18 @@ import { render, screen } from '@testing-library/react';
 import App from '../../App';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 
+// Mock useAuth
+vi.mock('../../auth/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    enterpriseId: 'test@dxc.com',
+    login: vi.fn(),
+    logout: vi.fn(),
+    getToken: vi.fn().mockResolvedValue('test-token'),
+  }),
+}));
+
 // Mock SignalR client
 vi.mock('../../network/SignalRClient', () => ({
   signalRClient: {
@@ -18,6 +30,8 @@ vi.mock('../../network/SignalRClient', () => ({
     sendLinesCleared: vi.fn(),
     sendGameOver: vi.fn(),
     sendFieldUpdate: vi.fn(),
+    sendSubscribeRoomList: vi.fn(),
+    sendUnsubscribeRoomList: vi.fn(),
   },
 }));
 

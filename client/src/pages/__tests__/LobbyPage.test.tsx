@@ -53,7 +53,7 @@ describe('LobbyPage', () => {
     signalRHandlers = {};
     usePlayerStore.getState().reset();
     useGameStore.getState().reset();
-    usePlayerStore.getState().setNickname('Alice');
+    usePlayerStore.getState().setEnterpriseId('alice@dxc.com');
   });
 
   afterEach(() => {
@@ -74,14 +74,14 @@ describe('LobbyPage', () => {
     renderLobbyPage();
 
     act(() => {
-      signalRHandlers.onOpponentJoined?.({ nickname: 'Bob' });
+      signalRHandlers.onOpponentJoined?.({ enterpriseId: 'bob@dxc.com' });
     });
 
-    expect(screen.getByTestId('opponent-name')).toHaveTextContent('Bob');
+    expect(screen.getByTestId('opponent-name')).toHaveTextContent('bob@dxc.com');
   });
 
   it('Ready ボタンクリックで PlayerReady が送信されること', async () => {
-    usePlayerStore.getState().setOpponentNickname('Bob');
+    usePlayerStore.getState().setOpponentEnterpriseId('bob@dxc.com');
     renderLobbyPage();
 
     const readyBtn = screen.getByTestId('ready-btn');
@@ -101,7 +101,7 @@ describe('LobbyPage', () => {
     expect(screen.getByTestId('countdown')).toHaveTextContent('3');
   });
 
-  it('ニックネーム未設定でリダイレクトされること', () => {
+  it('enterpriseId 未設定でリダイレクトされること', () => {
     usePlayerStore.getState().reset();
     renderLobbyPage();
 
@@ -135,9 +135,9 @@ describe('LobbyPage', () => {
     renderLobbyPage();
 
     act(() => {
-      signalRHandlers.onOpponentJoined?.({ nickname: 'Bob' });
+      signalRHandlers.onOpponentJoined?.({ enterpriseId: 'bob@dxc.com' });
     });
-    expect(screen.getByTestId('opponent-name')).toHaveTextContent('Bob');
+    expect(screen.getByTestId('opponent-name')).toHaveTextContent('bob@dxc.com');
 
     act(() => {
       signalRHandlers.onBothReady?.({ seed: 42, countdown: 3 });
@@ -178,7 +178,7 @@ describe('LobbyPage', () => {
   });
 
   it('Ready 後に "相手の準備を待っています" テキストが表示されること', async () => {
-    usePlayerStore.getState().setOpponentNickname('Bob');
+    usePlayerStore.getState().setOpponentEnterpriseId('bob@dxc.com');
     renderLobbyPage();
 
     await userEvent.click(screen.getByTestId('ready-btn'));

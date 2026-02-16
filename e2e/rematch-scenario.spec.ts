@@ -69,6 +69,6 @@ test.describe('リマッチシナリオ', () => {
 
     // Player A should be redirected to top (opponent disconnected handler)
     await playerAPage.waitForURL('/', { timeout: 10000 });
-    await expect(playerAPage.getByTestId('nickname-input')).toBeVisible();
+    await expect(playerAPage.getByTestId('create-room-btn')).toBeVisible();
   });
 });

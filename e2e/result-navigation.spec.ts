@@ -7,7 +7,7 @@ test.describe('リザルト — 画面遷移', () => {
 
     await playerAPage.getByTestId('go-top-btn').click();
     await playerAPage.waitForURL('/', { timeout: 5000 });
-    await expect(playerAPage.getByTestId('nickname-input')).toBeVisible();
+    await expect(playerAPage.getByTestId('create-room-btn')).toBeVisible();
   });
 
   test('再戦ボタンで相手にリマッチ通知が表示されること', async ({ playerAPage, playerBPage }) => {

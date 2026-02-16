@@ -10,10 +10,9 @@ test.describe('本番スモークテスト', () => {
     await expect(page.getByText('Battle Tetris')).toBeVisible({ timeout: 10000 });
   });
 
-  test('ニックネーム入力UIが動作すること', async ({ page }) => {
+  test('トップページUIが動作すること', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByTestId('nickname-input')).toBeVisible();
-    await page.getByTestId('nickname-input').fill('SmokeTest');
+    await expect(page.getByTestId('create-room-btn')).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId('create-room-btn')).toBeEnabled();
   });
 

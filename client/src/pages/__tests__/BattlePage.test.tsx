@@ -129,7 +129,7 @@ describe('BattlePage', () => {
     usePlayerStore.getState().reset();
     useGameStore.getState().reset();
     useBattleStore.getState().reset();
-    usePlayerStore.getState().setNickname('Alice');
+    usePlayerStore.getState().setEnterpriseId('alice@dxc.com');
     useGameStore.getState().setSeed(42);
     mockEngineInstance.state = GameState.Playing;
     mockEngineInstance.score = 0;
@@ -155,7 +155,7 @@ describe('BattlePage', () => {
     expect(screen.getByTestId('scoreboard')).toBeInTheDocument();
   });
 
-  it('ニックネーム未設定でリダイレクトされること', () => {
+  it('enterpriseId 未設定でリダイレクトされること', () => {
     usePlayerStore.getState().reset();
     renderBattlePage();
     expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
@@ -238,18 +238,18 @@ describe('BattlePage', () => {
     expect(bar.querySelector('.garbage-bar-fill')).not.toBeInTheDocument();
   });
 
-  it('opponentNickname が null の場合に "Opponent" が表示されること', () => {
-    usePlayerStore.getState().setOpponentNickname(null);
+  it('opponentEnterpriseId が null の場合に "Opponent" が表示されること', () => {
+    usePlayerStore.getState().setOpponentEnterpriseId(null);
     renderBattlePage();
 
     expect(screen.getByText('Opponent')).toBeInTheDocument();
   });
 
-  it('opponentNickname が設定されている場合にその名前が表示されること', () => {
-    usePlayerStore.getState().setOpponentNickname('Bob');
+  it('opponentEnterpriseId が設定されている場合にその名前が表示されること', () => {
+    usePlayerStore.getState().setOpponentEnterpriseId('bob@dxc.com');
     renderBattlePage();
 
-    expect(screen.getByText('Bob')).toBeInTheDocument();
+    expect(screen.getByText('bob@dxc.com')).toBeInTheDocument();
   });
 
   it('アンマウント時に cancelAnimationFrame が呼ばれること', () => {

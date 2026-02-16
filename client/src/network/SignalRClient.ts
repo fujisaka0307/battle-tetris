@@ -85,16 +85,22 @@ export class SignalRClient {
   /**
    * SignalR Hub に接続する。
    */
-  async connect(url: string): Promise<void> {
+  async connect(url: string, accessTokenFactory?: () => Promise<string>): Promise<void> {
     if (this.connection) {
       await this.disconnect();
     }
 
-    this.connection = new HubConnectionBuilder()
-      .withUrl(url)
+    const builder = new HubConnectionBuilder()
       .withAutomaticReconnect([0, 1000, 2000, 5000, 10000, 30000])
-      .configureLogging(LogLevel.Warning)
-      .build();
+      .configureLogging(LogLevel.Warning);
+
+    if (accessTokenFactory) {
+      builder.withUrl(url, { accessTokenFactory });
+    } else {
+      builder.withUrl(url);
+    }
+
+    this.connection = builder.build();
 
     this.setupEventListeners();
     this.setupLifecycleHooks();
@@ -130,16 +136,16 @@ export class SignalRClient {
   // Client → Server: Send methods
   // ---------------------------------------------------------------------------
 
-  sendCreateRoom(nickname: string): void {
-    this.invoke(ClientEvents.CreateRoom, { nickname });
+  sendCreateRoom(): void {
+    this.invoke(ClientEvents.CreateRoom);
   }
 
-  sendJoinRoom(nickname: string, roomId: string): void {
-    this.invoke(ClientEvents.JoinRoom, { nickname, roomId });
+  sendJoinRoom(roomId: string): void {
+    this.invoke(ClientEvents.JoinRoom, { roomId });
   }
 
-  sendJoinRandomMatch(nickname: string): void {
-    this.invoke(ClientEvents.JoinRandomMatch, { nickname });
+  sendJoinRandomMatch(): void {
+    this.invoke(ClientEvents.JoinRandomMatch);
   }
 
   sendPlayerReady(): void {

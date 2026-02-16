@@ -17,8 +17,6 @@ import {
   GARBAGE_TABLE,
   SPEED_TABLE_MS,
   getDropInterval,
-  NICKNAME_MIN_LENGTH,
-  NICKNAME_MAX_LENGTH,
   ROOM_ID_LENGTH,
 } from '../constants';
 
@@ -130,13 +128,6 @@ describe('getDropInterval', () => {
     const fastest = SPEED_TABLE_MS[SPEED_TABLE_MS.length - 1];
     expect(getDropInterval(100)).toBe(fastest);
     expect(getDropInterval(999)).toBe(fastest);
-  });
-});
-
-describe('Nickname constants', () => {
-  it('min length is 1, max length is 16', () => {
-    expect(NICKNAME_MIN_LENGTH).toBe(1);
-    expect(NICKNAME_MAX_LENGTH).toBe(16);
   });
 });
 

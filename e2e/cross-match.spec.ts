@@ -3,7 +3,7 @@ import {
   expect,
   createRoom,
   joinRoom,
-  enterNickname,
+  setupPlayer,
   playToGameOver,
 } from './fixtures/setup';
 
@@ -14,10 +14,10 @@ test.describe('ルーム↔ランダムマッチ横断', () => {
     browser,
   }) => {
     // Game 1: Room-based match
-    const roomId = await createRoom(playerAPage, 'Alice');
-    await joinRoom(playerBPage, 'Bob', roomId);
+    const roomId = await createRoom(playerAPage);
+    await joinRoom(playerBPage, roomId);
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     await playerAPage.getByTestId('ready-btn').click();
     await playerBPage.getByTestId('ready-btn').click();
@@ -38,18 +38,18 @@ test.describe('ルーム↔ランダムマッチ横断', () => {
     const contextC = await browser.newContext();
     const playerCPage = await contextC.newPage();
 
-    await enterNickname(playerAPage, 'Alice2');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerCPage, 'Charlie');
+    await setupPlayer(playerCPage);
     await playerCPage.getByTestId('random-match-btn').click();
 
     // Should be matched
     await playerAPage.waitForURL(/\/lobby\//, { timeout: 10000 });
     await playerCPage.waitForURL(/\/lobby\//, { timeout: 10000 });
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Charlie', { timeout: 5000 });
-    await expect(playerCPage.getByTestId('opponent-name')).toHaveText('Alice2', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerCPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     await contextC.close();
   });
@@ -60,10 +60,10 @@ test.describe('ルーム↔ランダムマッチ横断', () => {
     browser,
   }) => {
     // Game 1: Random match
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
     await playerAPage.waitForURL(/\/lobby\//, { timeout: 10000 });
@@ -90,11 +90,11 @@ test.describe('ルーム↔ランダムマッチ横断', () => {
     const contextD = await browser.newContext();
     const playerDPage = await contextD.newPage();
 
-    const newRoomId = await createRoom(playerAPage, 'Alice3');
-    await joinRoom(playerDPage, 'Diana', newRoomId);
+    const newRoomId = await createRoom(playerAPage);
+    await joinRoom(playerDPage, newRoomId);
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Diana', { timeout: 5000 });
-    await expect(playerDPage.getByTestId('opponent-name')).toHaveText('Alice3', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerDPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     await contextD.close();
   });
@@ -104,24 +104,24 @@ test.describe('ルーム↔ランダムマッチ横断', () => {
     playerBPage,
   }) => {
     // A creates room and waits
-    await createRoom(playerAPage, 'Alice');
+    await createRoom(playerAPage);
 
     // A decides to leave and try random match instead
     await playerAPage.getByTestId('leave-btn').click();
     await playerAPage.waitForURL('/', { timeout: 5000 });
 
     // A and B do random match
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
     // Should match successfully
     await playerAPage.waitForURL(/\/lobby\//, { timeout: 10000 });
     await playerBPage.waitForURL(/\/lobby\//, { timeout: 10000 });
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('Alice', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
   });
 });

@@ -1,7 +1,7 @@
 import {
   test,
   expect,
-  enterNickname,
+  setupPlayer,
   randomMatchToLobby,
   randomMatchToBattle,
   playToGameOver,
@@ -35,10 +35,10 @@ test.describe('ランダムマッチ 切断テスト', () => {
     const playerBContext = await browser.newContext();
     const playerBPage = await playerBContext.newPage();
 
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
     await playerAPage.waitForURL(/\/lobby\//, { timeout: 10000 });
@@ -102,6 +102,6 @@ test.describe('ランダムマッチ 切断テスト', () => {
 
     // Player A should be redirected to top (opponent disconnected handler)
     await playerAPage.waitForURL('/', { timeout: 10000 });
-    await expect(playerAPage.getByTestId('nickname-input')).toBeVisible();
+    await expect(playerAPage.getByTestId('create-room-btn')).toBeVisible();
   });
 });

@@ -11,6 +11,6 @@ test.describe('404 — ページ未検出', () => {
     await page.goto('/this-page-does-not-exist');
     await page.getByTestId('go-home-btn').click();
     await page.waitForURL('/', { timeout: 5000 });
-    await expect(page.getByTestId('nickname-input')).toBeVisible();
+    await expect(page.getByTestId('create-room-btn')).toBeVisible();
   });
 });

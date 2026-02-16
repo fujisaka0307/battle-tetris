@@ -9,6 +9,7 @@ import { GameHub, HubConnection } from '../hubs/GameHub';
 function createHub() {
   const mockConnection: HubConnection = {
     sendToClient: vi.fn(),
+    getEnterpriseId: vi.fn(),
   };
   const hub = new GameHub(mockConnection);
   return { hub, mock: mockConnection };
@@ -25,11 +26,28 @@ function getAllSentEvents(mock: HubConnection, event: string) {
   return calls.filter(([, ev]) => ev === event);
 }
 
+/** Helper: configure mock to return enterpriseId for a connectionId */
+function mockEnterpriseId(mock: HubConnection, connectionId: string, enterpriseId: string) {
+  (mock.getEnterpriseId as any).mockImplementation((connId: string) => {
+    if (connId === connectionId) return enterpriseId;
+    // Fall through to previous implementation
+    return undefined;
+  });
+}
+
+/** Helper: configure mock to return enterpriseIds for multiple connections */
+function mockEnterpriseIds(mock: HubConnection, mapping: Record<string, string>) {
+  (mock.getEnterpriseId as any).mockImplementation((connId: string) => {
+    return mapping[connId];
+  });
+}
+
 /** Helper: ルーム作成→参加→両者Ready→Playing 状態のセットアップ */
 function setupPlayingRoom(hub: GameHub, mock: HubConnection) {
-  hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+  mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob' });
+  hub.handleCreateRoom('conn-1');
   const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
-  hub.handleJoinRoom('conn-2', { nickname: 'Bob', roomId });
+  hub.handleJoinRoom('conn-2', { roomId });
   hub.handlePlayerReady('conn-1');
   hub.handlePlayerReady('conn-2');
   return roomId;
@@ -37,9 +55,10 @@ function setupPlayingRoom(hub: GameHub, mock: HubConnection) {
 
 /** Helper: ルーム作成→参加 (Waiting状態) */
 function setupWaitingRoom(hub: GameHub, mock: HubConnection) {
-  hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+  mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob' });
+  hub.handleCreateRoom('conn-1');
   const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
-  hub.handleJoinRoom('conn-2', { nickname: 'Bob', roomId });
+  hub.handleJoinRoom('conn-2', { roomId });
   return roomId;
 }
 
@@ -51,28 +70,22 @@ describe('GameHub', () => {
   describe('CreateRoom', () => {
     it('正常な CreateRoom → RoomCreated フローが動くこと', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleCreateRoom('conn-1');
 
       const sent = getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated);
       expect(sent).toBeDefined();
       expect((sent![2] as any).roomId).toHaveLength(6);
     });
 
-    it('不正ペイロードで Error が返ること', () => {
+    it('enterpriseId が取得できない場合に UNAUTHORIZED Error が返ること', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', {}); // missing nickname
+      // getEnterpriseId returns undefined by default
+      hub.handleCreateRoom('conn-1');
 
       const sent = getSentEvent(mock, 'conn-1', ServerEvents.Error);
       expect(sent).toBeDefined();
-    });
-
-    it('禁止ニックネームで Error が返ること', () => {
-      const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'admin' });
-
-      const sent = getSentEvent(mock, 'conn-1', ServerEvents.Error);
-      expect(sent).toBeDefined();
-      expect((sent![2] as any).code).toBe(ErrorCodes.INVALID_NICKNAME);
+      expect((sent![2] as any).code).toBe(ErrorCodes.UNAUTHORIZED);
     });
   });
 
@@ -83,13 +96,14 @@ describe('GameHub', () => {
   describe('JoinRoom', () => {
     it('正常な JoinRoom で OpponentJoined が両者に送られること', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob' });
+      hub.handleCreateRoom('conn-1');
 
       // Get room ID
       const createCall = getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated);
       const roomId = (createCall![2] as any).roomId;
 
-      hub.handleJoinRoom('conn-2', { nickname: 'Bob', roomId });
+      hub.handleJoinRoom('conn-2', { roomId });
 
       // Both should receive OpponentJoined
       const events = getAllSentEvents(mock, ServerEvents.OpponentJoined);
@@ -98,7 +112,8 @@ describe('GameHub', () => {
 
     it('存在しないルームIDで Error が返ること', () => {
       const { hub, mock } = createHub();
-      hub.handleJoinRoom('conn-1', { nickname: 'Alice', roomId: 'ZZZZZZ' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleJoinRoom('conn-1', { roomId: 'ZZZZZZ' });
 
       const sent = getSentEvent(mock, 'conn-1', ServerEvents.Error);
       expect(sent).toBeDefined();
@@ -107,11 +122,12 @@ describe('GameHub', () => {
 
     it('満員ルームで Error が返ること', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob', 'conn-3': 'Charlie' });
+      hub.handleCreateRoom('conn-1');
       const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
-      hub.handleJoinRoom('conn-2', { nickname: 'Bob', roomId });
+      hub.handleJoinRoom('conn-2', { roomId });
 
-      hub.handleJoinRoom('conn-3', { nickname: 'Charlie', roomId });
+      hub.handleJoinRoom('conn-3', { roomId });
       const sent = getSentEvent(mock, 'conn-3', ServerEvents.Error);
       expect(sent).toBeDefined();
       expect((sent![2] as any).code).toBe(ErrorCodes.ROOM_FULL);
@@ -119,23 +135,22 @@ describe('GameHub', () => {
 
     it('不正ペイロードで Error が返ること', () => {
       const { hub, mock } = createHub();
-      hub.handleJoinRoom('conn-1', {}); // missing nickname and roomId
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleJoinRoom('conn-1', {}); // missing roomId
 
       const sent = getSentEvent(mock, 'conn-1', ServerEvents.Error);
       expect(sent).toBeDefined();
-      expect((sent![2] as any).code).toBe(ErrorCodes.INVALID_NICKNAME);
+      expect((sent![2] as any).code).toBe(ErrorCodes.INVALID_PAYLOAD);
     });
 
-    it('禁止ニックネームで Error が返ること', () => {
+    it('enterpriseId が取得できない場合に UNAUTHORIZED Error が返ること', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
-      const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
-
-      hub.handleJoinRoom('conn-2', { nickname: 'admin', roomId });
+      // getEnterpriseId returns undefined by default
+      hub.handleJoinRoom('conn-2', { roomId: 'ABCDEF' });
 
       const sent = getSentEvent(mock, 'conn-2', ServerEvents.Error);
       expect(sent).toBeDefined();
-      expect((sent![2] as any).code).toBe(ErrorCodes.INVALID_NICKNAME);
+      expect((sent![2] as any).code).toBe(ErrorCodes.UNAUTHORIZED);
     });
   });
 
@@ -146,40 +161,34 @@ describe('GameHub', () => {
   describe('JoinRandomMatch', () => {
     it('2人で MatchFound が両者に送られること', () => {
       const { hub, mock } = createHub();
-      hub.handleJoinRandomMatch('conn-1', { nickname: 'Alice' });
-      hub.handleJoinRandomMatch('conn-2', { nickname: 'Bob' });
+      mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob' });
+      hub.handleJoinRandomMatch('conn-1');
+      hub.handleJoinRandomMatch('conn-2');
 
       const events = getAllSentEvents(mock, ServerEvents.MatchFound);
       expect(events.length).toBe(2);
 
       const p1Event = getSentEvent(mock, 'conn-1', ServerEvents.MatchFound);
-      expect((p1Event![2] as any).opponentNickname).toBe('Bob');
+      expect((p1Event![2] as any).opponentEnterpriseId).toBe('Bob');
     });
 
     it('1人では MatchFound が送られないこと', () => {
       const { hub, mock } = createHub();
-      hub.handleJoinRandomMatch('conn-1', { nickname: 'Alice' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleJoinRandomMatch('conn-1');
 
       const events = getAllSentEvents(mock, ServerEvents.MatchFound);
       expect(events.length).toBe(0);
     });
 
-    it('不正ペイロードで Error が返ること', () => {
+    it('enterpriseId が取得できない場合に UNAUTHORIZED Error が返ること', () => {
       const { hub, mock } = createHub();
-      hub.handleJoinRandomMatch('conn-1', {}); // missing nickname
+      // getEnterpriseId returns undefined by default
+      hub.handleJoinRandomMatch('conn-1');
 
       const sent = getSentEvent(mock, 'conn-1', ServerEvents.Error);
       expect(sent).toBeDefined();
-      expect((sent![2] as any).code).toBe(ErrorCodes.INVALID_NICKNAME);
-    });
-
-    it('禁止ニックネームで Error が返ること', () => {
-      const { hub, mock } = createHub();
-      hub.handleJoinRandomMatch('conn-1', { nickname: 'system' });
-
-      const sent = getSentEvent(mock, 'conn-1', ServerEvents.Error);
-      expect(sent).toBeDefined();
-      expect((sent![2] as any).code).toBe(ErrorCodes.INVALID_NICKNAME);
+      expect((sent![2] as any).code).toBe(ErrorCodes.UNAUTHORIZED);
     });
   });
 
@@ -190,9 +199,10 @@ describe('GameHub', () => {
   describe('PlayerReady', () => {
     function setupRoomWithTwoPlayers() {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob' });
+      hub.handleCreateRoom('conn-1');
       const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
-      hub.handleJoinRoom('conn-2', { nickname: 'Bob', roomId });
+      hub.handleJoinRoom('conn-2', { roomId });
       return { hub, mock, roomId };
     }
 
@@ -229,7 +239,8 @@ describe('GameHub', () => {
     it('ルーム内にプレイヤーが見つからない場合に何もしないこと', () => {
       const { hub, mock } = createHub();
       // ルームを作成してから、player1 を手動で null にして getPlayer が null を返す状態を作る
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleCreateRoom('conn-1');
       const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
       const room = hub.getRoomManager().getRoom(roomId)!;
       room.player1 = null;
@@ -280,7 +291,8 @@ describe('GameHub', () => {
     it('対戦相手がいない場合は何もしないこと', () => {
       const { hub, mock } = createHub();
       // ルームを作成するが参加者は1人だけ
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleCreateRoom('conn-1');
       const callsBefore = (mock.sendToClient as any).mock.calls.length;
       const field = Array.from({ length: 20 }, () => Array(10).fill(0));
       hub.handleFieldUpdate('conn-1', { field, score: 100, lines: 2, level: 0 });
@@ -386,7 +398,8 @@ describe('GameHub', () => {
     it('対戦相手がいない場合は何もしないこと', () => {
       const { hub, mock } = createHub();
       // ルームを作成するが参加者は1人だけ
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleCreateRoom('conn-1');
       const callsBefore = (mock.sendToClient as any).mock.calls.length;
       hub.handleRequestRematch('conn-1');
       const callsAfter = (mock.sendToClient as any).mock.calls.length;
@@ -467,7 +480,8 @@ describe('GameHub', () => {
 
     it('対戦相手がいないルームからの退出でも正常にルームが削除されること', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleCreateRoom('conn-1');
       const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
 
       hub.handleLeaveRoom('conn-1');
@@ -492,9 +506,10 @@ describe('GameHub', () => {
   describe('onDisconnected', () => {
     it('対戦中の切断で相手に OpponentDisconnected が送られること', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob' });
+      hub.handleCreateRoom('conn-1');
       const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
-      hub.handleJoinRoom('conn-2', { nickname: 'Bob', roomId });
+      hub.handleJoinRoom('conn-2', { roomId });
       hub.handlePlayerReady('conn-1');
       hub.handlePlayerReady('conn-2');
 
@@ -506,13 +521,14 @@ describe('GameHub', () => {
 
     it('マッチメイキング待機中の切断でキューから削除されること', () => {
       const { hub, mock } = createHub();
-      hub.handleJoinRandomMatch('conn-1', { nickname: 'Alice' });
+      mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob' });
+      hub.handleJoinRandomMatch('conn-1');
 
       // 切断する
       hub.handleDisconnected('conn-1');
 
       // 別のプレイヤーが参加してもマッチしないことを確認
-      hub.handleJoinRandomMatch('conn-2', { nickname: 'Bob' });
+      hub.handleJoinRandomMatch('conn-2');
       const events = getAllSentEvents(mock, ServerEvents.MatchFound);
       expect(events.length).toBe(0);
     });
@@ -538,7 +554,8 @@ describe('GameHub', () => {
 
     it('Waiting 状態で対戦相手がいない場合の切断でも正常に処理されること', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleCreateRoom('conn-1');
 
       const _callsBefore = (mock.sendToClient as any).mock.calls.length;
       hub.handleDisconnected('conn-1');
@@ -566,7 +583,8 @@ describe('GameHub', () => {
 
     it('切断で player.disconnect() が呼ばれること', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleCreateRoom('conn-1');
       const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
       const room = hub.getRoomManager().getRoom(roomId)!;
 
@@ -577,7 +595,8 @@ describe('GameHub', () => {
 
     it('ルーム内にプレイヤーが見つからない場合に disconnect が呼ばれないこと', () => {
       const { hub, mock } = createHub();
-      hub.handleCreateRoom('conn-1', { nickname: 'Alice' });
+      mockEnterpriseId(mock, 'conn-1', 'Alice');
+      hub.handleCreateRoom('conn-1');
       const roomId = (getSentEvent(mock, 'conn-1', ServerEvents.RoomCreated)![2] as any).roomId;
       const room = hub.getRoomManager().getRoom(roomId)!;
 

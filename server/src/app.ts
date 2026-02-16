@@ -19,7 +19,7 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'"],
       fontSrc: ["'self'"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", 'https://login.microsoftonline.com'],
       imgSrc: ["'self'", 'data:', 'blob:'],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],

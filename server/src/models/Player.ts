@@ -4,13 +4,13 @@
  */
 export class Player {
   connectionId: string;
-  nickname: string;
+  enterpriseId: string;
   isReady: boolean;
   isConnected: boolean;
 
-  constructor(connectionId: string, nickname: string) {
+  constructor(connectionId: string, enterpriseId: string) {
     this.connectionId = connectionId;
-    this.nickname = nickname;
+    this.enterpriseId = enterpriseId;
     this.isReady = false;
     this.isConnected = true;
   }

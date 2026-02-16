@@ -11,10 +11,10 @@ test.describe('切断テスト（拡張）', () => {
     const playerBContext = await browser.newContext();
     const playerBPage = await playerBContext.newPage();
 
-    const roomId = await createRoom(playerAPage, 'Alice');
-    await joinRoom(playerBPage, 'Bob', roomId);
+    const roomId = await createRoom(playerAPage);
+    await joinRoom(playerBPage, roomId);
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     await playerAPage.getByTestId('ready-btn').click();
     await playerBPage.getByTestId('ready-btn').click();
@@ -46,10 +46,10 @@ test.describe('切断テスト（拡張）', () => {
     const playerBContext = await browser.newContext();
     const playerBPage = await playerBContext.newPage();
 
-    const roomId = await createRoom(playerAPage, 'Alice');
-    await joinRoom(playerBPage, 'Bob', roomId);
+    const roomId = await createRoom(playerAPage);
+    await joinRoom(playerBPage, roomId);
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     // Close playerB's entire browser context
     await playerBContext.close();
