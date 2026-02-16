@@ -34,11 +34,12 @@ describe('ServerEvents', () => {
     expect(ServerEvents.OpponentDisconnected).toBe('OpponentDisconnected');
     expect(ServerEvents.OpponentReconnected).toBe('OpponentReconnected');
     expect(ServerEvents.WaitingRoomListUpdated).toBe('WaitingRoomListUpdated');
+    expect(ServerEvents.AiThinking).toBe('AiThinking');
     expect(ServerEvents.Error).toBe('Error');
   });
 
-  it('has exactly 13 events', () => {
-    expect(Object.keys(ServerEvents)).toHaveLength(13);
+  it('has exactly 14 events', () => {
+    expect(Object.keys(ServerEvents)).toHaveLength(14);
   });
 });
 

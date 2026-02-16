@@ -85,7 +85,7 @@ function collectMetrics(results) {
     const status = result.status || '';
 
     // Unit tests
-    if (parentSuite === 'unit tests' || parentSuite === 'Unit Tests') {
+    if (parentSuite === 'ユニットテスト' || parentSuite === 'unit tests' || parentSuite === 'Unit Tests') {
       ci.unitTests.total++;
       if (status === 'passed') ci.unitTests.passed++;
       else if (status === 'failed' || status === 'broken') ci.unitTests.failed++;
