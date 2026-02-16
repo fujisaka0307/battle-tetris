@@ -37,10 +37,11 @@ const PIECE_NAMES: Record<TetrominoType, string> = {
 };
 
 // モデルIDのデフォルト値
+// ap-northeast-1 では us. プレフィックスなしのモデルIDを使用
 const DEFAULT_MODELS: Record<ModelTier, string> = {
-  haiku:  'us.anthropic.claude-3-5-haiku-20241022-v1:0',
-  sonnet: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
-  claude: 'us.anthropic.claude-3-opus-20240229-v1:0',
+  haiku:  'anthropic.claude-3-5-haiku-20241022-v1:0',
+  sonnet: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+  claude: 'anthropic.claude-3-opus-20240229-v1:0',
 };
 
 /**
