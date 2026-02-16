@@ -10,7 +10,10 @@ permissions:
   contents: write
 
 jobs:
-  lint-and-test:
+  # ---------------------------------------------------------------------------
+  # Install — npm ci + node_modules cache save
+  # ---------------------------------------------------------------------------
+  install:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,16 +22,99 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
+
+      - name: Restore node_modules cache
+        id: cache-nm
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
+        if: steps.cache-nm.outputs.cache-hit != 'true'
         run: npm ci
+
+  # ---------------------------------------------------------------------------
+  # Lint
+  # ---------------------------------------------------------------------------
+  lint:
+    runs-on: ubuntu-latest
+    needs: install
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
 
       - name: Lint
         run: npx eslint . --max-warnings 0
 
+  # ---------------------------------------------------------------------------
+  # Build shared — produces shared-dist artifact
+  # ---------------------------------------------------------------------------
+  build-shared:
+    runs-on: ubuntu-latest
+    needs: install
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
       - name: Build shared
         run: npm run build -w shared
+
+      - name: Upload shared dist
+        uses: actions/upload-artifact@v6
+        with:
+          name: shared-dist
+          path: shared/dist/
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # Typecheck — shared, client, server (sequential in one job)
+  # ---------------------------------------------------------------------------
+  typecheck:
+    runs-on: ubuntu-latest
+    needs: build-shared
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Download shared dist
+        uses: actions/download-artifact@v7
+        with:
+          name: shared-dist
+          path: shared/dist/
 
       - name: Typecheck shared
         run: npm run typecheck -w shared
@@ -39,44 +125,12 @@ jobs:
       - name: Typecheck server
         run: npm run typecheck -w server
 
-      - name: Test shared
-        run: npm run test -w shared -- --coverage
-
-      - name: Test client
-        run: npm run test -w client -- --coverage
-
-      - name: Test server
-        run: npm run test -w server -- --coverage
-
-      - name: Build
-        run: npm run build
-
-      - name: Upload Allure results (unit tests)
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: allure-results-unit
-          path: allure-results/
-          retention-days: 5
-          if-no-files-found: warn
-
-      - name: Upload coverage reports
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: coverage-reports
-          path: |
-            shared/coverage/lcov.info
-            client/coverage/lcov.info
-            server/coverage/lcov.info
-          retention-days: 5
-          if-no-files-found: warn
-
   # ---------------------------------------------------------------------------
-  # P1: npm audit — dependency vulnerability scanning
+  # Test shared — does not depend on shared build
   # ---------------------------------------------------------------------------
-  npm-audit:
+  test-shared:
     runs-on: ubuntu-latest
+    needs: install
 
     steps:
       - uses: actions/checkout@v6
@@ -84,10 +138,294 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Test shared
+        run: npm run test -w shared -- --coverage
+
+      - name: Upload Allure results (unit-shared)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: allure-results-unit-shared
+          path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Upload coverage (shared)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-shared
+          path: shared/coverage/lcov.info
+          retention-days: 5
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # Test client — needs shared dist
+  # ---------------------------------------------------------------------------
+  test-client:
+    runs-on: ubuntu-latest
+    needs: build-shared
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Download shared dist
+        uses: actions/download-artifact@v7
+        with:
+          name: shared-dist
+          path: shared/dist/
+
+      - name: Test client
+        run: npm run test -w client -- --coverage
+
+      - name: Upload Allure results (unit-client)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: allure-results-unit-client
+          path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Upload coverage (client)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-client
+          path: client/coverage/lcov.info
+          retention-days: 5
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # Test server — needs shared dist
+  # ---------------------------------------------------------------------------
+  test-server:
+    runs-on: ubuntu-latest
+    needs: build-shared
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Download shared dist
+        uses: actions/download-artifact@v7
+        with:
+          name: shared-dist
+          path: shared/dist/
+
+      - name: Test server
+        run: npm run test -w server -- --coverage
+
+      - name: Upload Allure results (unit-server)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: allure-results-unit-server
+          path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Upload coverage (server)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-server
+          path: server/coverage/lcov.info
+          retention-days: 5
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # Build client — needs shared dist
+  # ---------------------------------------------------------------------------
+  build-client:
+    runs-on: ubuntu-latest
+    needs: build-shared
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Download shared dist
+        uses: actions/download-artifact@v7
+        with:
+          name: shared-dist
+          path: shared/dist/
+
+      - name: Build client
+        run: npm run build -w client
+        env:
+          VITE_SKIP_AUTH: 'true'
+
+      - name: Upload client dist
+        uses: actions/upload-artifact@v6
+        with:
+          name: client-dist
+          path: client/dist/
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # Build server — needs shared dist
+  # ---------------------------------------------------------------------------
+  build-server:
+    runs-on: ubuntu-latest
+    needs: build-shared
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Download shared dist
+        uses: actions/download-artifact@v7
+        with:
+          name: shared-dist
+          path: shared/dist/
+
+      - name: Build server
+        run: npm run build -w server
+
+      - name: Upload server dist
+        uses: actions/upload-artifact@v6
+        with:
+          name: server-dist
+          path: server/dist/
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # E2E — Playwright tests (dev server mode, needs shared dist only)
+  # ---------------------------------------------------------------------------
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build-shared
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Download shared dist
+        uses: actions/download-artifact@v7
+        with:
+          name: shared-dist
+          path: shared/dist/
+
+      - name: Get Playwright version
+        id: pw-version
+        run: echo "version=$(npx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Playwright browsers cache
+        id: cache-pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ steps.pw-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.cache-pw.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+
+      - name: Install Playwright system dependencies
+        run: npx playwright install-deps chromium
+
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          VITE_SKIP_AUTH: 'true'
+          SKIP_AUTH: 'true'
+
+      - uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload Allure results (e2e)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: allure-results-e2e
+          path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # npm audit — dependency vulnerability scanning
+  # ---------------------------------------------------------------------------
+  npm-audit:
+    runs-on: ubuntu-latest
+    needs: install
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
 
       - name: Run npm audit and generate Allure results
         run: node scripts/npm-audit-to-allure.mjs
@@ -102,9 +440,12 @@ jobs:
           retention-days: 5
           if-no-files-found: warn
 
+  # ---------------------------------------------------------------------------
+  # SonarCloud — code quality & coverage analysis
+  # ---------------------------------------------------------------------------
   sonarcloud:
     runs-on: ubuntu-latest
-    needs: lint-and-test
+    needs: [test-shared, test-client, test-server]
 
     steps:
       - uses: actions/checkout@v6
@@ -114,12 +455,24 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
 
-      - name: Download coverage reports
+      - name: Download coverage (shared)
         uses: actions/download-artifact@v7
         with:
-          name: coverage-reports
+          name: coverage-shared
+          path: shared/coverage/
+
+      - name: Download coverage (client)
+        uses: actions/download-artifact@v7
+        with:
+          name: coverage-client
+          path: client/coverage/
+
+      - name: Download coverage (server)
+        uses: actions/download-artifact@v7
+        with:
+          name: coverage-server
+          path: server/coverage/
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
@@ -147,225 +500,49 @@ jobs:
           retention-days: 5
           if-no-files-found: warn
 
-  e2e:
-    runs-on: ubuntu-latest
-    needs: lint-and-test
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build shared
-        run: npm run build -w shared
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run E2E tests
-        run: npx playwright test
-        env:
-          VITE_SKIP_AUTH: 'true'
-          SKIP_AUTH: 'true'
-
-      - uses: actions/upload-artifact@v6
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 14
-
-      - name: Upload Allure results (e2e)
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: allure-results-e2e
-          path: allure-results/
-          retention-days: 5
-          if-no-files-found: warn
-
-  # ---------------------------------------------------------------------------
-  # P2: OWASP ZAP — Dynamic Application Security Testing
-  # ---------------------------------------------------------------------------
-  zap-scan:
-    runs-on: ubuntu-latest
-    needs: lint-and-test
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build shared
-        run: npm run build -w shared
-
-      - name: Build client
-        run: npm run build -w client
-        env:
-          VITE_SKIP_AUTH: 'true'
-
-      - name: Build server
-        run: npm run build -w server
-
-      - name: Start server (静的ファイル配信 + API)
-        run: node server/dist/index.js &
-        env:
-          PORT: 4000
-          NODE_ENV: production
-
-      - name: Wait for server
-        run: |
-          for i in $(seq 1 30); do
-            curl -s http://localhost:4000/health > /dev/null && break
-            sleep 1
-          done
-
-      - name: OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.14.0
-        with:
-          target: 'http://localhost:4000'
-          allow_issue_writing: false
-        continue-on-error: true
-
-      - name: Convert ZAP results to Allure
-        if: ${{ !cancelled() }}
-        run: |
-          if [ -f report_json.json ]; then
-            node scripts/zap-to-allure.mjs report_json.json
-          else
-            echo "No ZAP report found, generating empty results"
-            mkdir -p allure-results/zap
-          fi
-
-      - name: Upload ZAP report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: zap-report
-          path: report_json.json
-          retention-days: 14
-          if-no-files-found: ignore
-
-      - name: Upload Allure results (ZAP)
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: allure-results-zap
-          path: allure-results/
-          retention-days: 5
-          if-no-files-found: warn
-
-  # ---------------------------------------------------------------------------
-  # P2: Lighthouse CI — Performance, Accessibility, SEO monitoring
-  # ---------------------------------------------------------------------------
-  lighthouse:
-    runs-on: ubuntu-latest
-    needs: lint-and-test
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build shared
-        run: npm run build -w shared
-
-      - name: Build client
-        run: npm run build -w client
-        env:
-          VITE_SKIP_AUTH: 'true'
-
-      - name: Build server
-        run: npm run build -w server
-
-      - name: Start server (静的ファイル配信 + API)
-        run: node server/dist/index.js &
-        env:
-          PORT: 4000
-          NODE_ENV: production
-
-      - name: Wait for server
-        run: |
-          for i in $(seq 1 30); do
-            curl -s http://localhost:4000/health > /dev/null && break
-            sleep 1
-          done
-
-      - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli
-
-      - name: Run Lighthouse CI
-        run: lhci collect --url=http://localhost:4000 --numberOfRuns=3
-        continue-on-error: true
-
-      - name: Convert Lighthouse results to Allure
-        if: ${{ !cancelled() }}
-        run: |
-          LHCI_DIR=".lighthouseci"
-          if [ -d "$LHCI_DIR" ]; then
-            LHR_FILE=$(ls "$LHCI_DIR"/lhr-*.json 2>/dev/null | head -1)
-            if [ -n "$LHR_FILE" ]; then
-              node scripts/lighthouse-to-allure.mjs "$LHR_FILE"
-            else
-              echo "No Lighthouse result files found"
-            fi
-          else
-            echo "No .lighthouseci directory found"
-          fi
-
-      - name: Upload Lighthouse results
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: lighthouse-report
-          path: .lighthouseci/
-          retention-days: 14
-          if-no-files-found: ignore
-
-      - name: Upload Allure results (Lighthouse)
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: allure-results-lighthouse
-          path: allure-results/
-          retention-days: 5
-          if-no-files-found: warn
-
   # ---------------------------------------------------------------------------
   # Unified Allure Report — aggregates ALL quality & security results
   # ---------------------------------------------------------------------------
   allure-report:
     runs-on: ubuntu-latest
-    needs: [lint-and-test, e2e, sonarcloud, npm-audit, zap-scan, lighthouse]
+    needs:
+      - lint
+      - typecheck
+      - test-shared
+      - test-client
+      - test-server
+      - build-client
+      - build-server
+      - e2e
+      - npm-audit
+      - sonarcloud
     if: ${{ !cancelled() }}
 
     steps:
-      - name: Download unit test Allure results
+      - name: Download Allure results (unit-shared)
         uses: actions/download-artifact@v7
+        continue-on-error: true
         with:
-          name: allure-results-unit
+          name: allure-results-unit-shared
+          path: allure-results/
+
+      - name: Download Allure results (unit-client)
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          name: allure-results-unit-client
+          path: allure-results/
+
+      - name: Download Allure results (unit-server)
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          name: allure-results-unit-server
           path: allure-results/
 
       - name: Download E2E Allure results
         uses: actions/download-artifact@v7
+        continue-on-error: true
         with:
           name: allure-results-e2e
           path: allure-results/
@@ -396,20 +573,6 @@ jobs:
         continue-on-error: true
         with:
           name: allure-results-gitleaks
-          path: allure-results/
-
-      - name: Download ZAP Allure results
-        uses: actions/download-artifact@v7
-        continue-on-error: true
-        with:
-          name: allure-results-zap
-          path: allure-results/
-
-      - name: Download Lighthouse Allure results
-        uses: actions/download-artifact@v7
-        continue-on-error: true
-        with:
-          name: allure-results-lighthouse
           path: allure-results/
 
       - name: Flatten allure results

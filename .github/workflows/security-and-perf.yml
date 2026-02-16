@@ -1,0 +1,200 @@
+name: Security & Performance (Nightly)
+
+on:
+  schedule:
+    # 毎日 JST 3:00 (UTC 18:00) に実行
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  security-and-perf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Restore node_modules cache
+        id: cache-nm
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Build shared
+        run: npm run build -w shared
+
+      - name: Build client
+        run: npm run build -w client
+        env:
+          VITE_SKIP_AUTH: 'true'
+
+      - name: Build server
+        run: npm run build -w server
+
+      - name: Start server (静的ファイル配信 + API)
+        run: node server/dist/index.js &
+        env:
+          PORT: 4000
+          NODE_ENV: production
+
+      - name: Wait for server
+        run: |
+          for i in $(seq 1 30); do
+            curl -s http://localhost:4000/health > /dev/null && break
+            sleep 1
+          done
+
+      # --- ZAP ---
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: 'http://localhost:4000'
+          allow_issue_writing: false
+        continue-on-error: true
+
+      - name: Convert ZAP results to Allure
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f report_json.json ]; then
+            node scripts/zap-to-allure.mjs report_json.json
+          else
+            echo "No ZAP report found, generating empty results"
+            mkdir -p allure-results/zap
+          fi
+
+      - name: Upload ZAP report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: zap-report
+          path: report_json.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # --- Lighthouse ---
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse CI
+        run: lhci collect --url=http://localhost:4000 --numberOfRuns=3
+        continue-on-error: true
+
+      - name: Convert Lighthouse results to Allure
+        if: ${{ !cancelled() }}
+        run: |
+          LHCI_DIR=".lighthouseci"
+          if [ -d "$LHCI_DIR" ]; then
+            LHR_FILE=$(ls "$LHCI_DIR"/lhr-*.json 2>/dev/null | head -1)
+            if [ -n "$LHR_FILE" ]; then
+              node scripts/lighthouse-to-allure.mjs "$LHR_FILE"
+            else
+              echo "No Lighthouse result files found"
+            fi
+          else
+            echo "No .lighthouseci directory found"
+          fi
+
+      - name: Upload Lighthouse results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # --- Allure upload ---
+      - name: Upload Allure results (security-and-perf)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: allure-results-security-and-perf
+          path: allure-results/
+          retention-days: 5
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # Allure Report — publish security & perf results to GitHub Pages
+  # ---------------------------------------------------------------------------
+  allure-report:
+    runs-on: ubuntu-latest
+    needs: security-and-perf
+    if: ${{ !cancelled() }}
+
+    steps:
+      - name: Download security-and-perf Allure results
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          name: allure-results-security-and-perf
+          path: allure-results/
+
+      - name: Flatten allure results
+        run: |
+          find allure-results -mindepth 2 -type f -exec mv {} allure-results/ \;
+          find allure-results -mindepth 1 -type d -empty -delete
+
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: scripts
+          path: repo
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Generate Security Dashboard summary
+        run: node repo/scripts/security-summary-to-allure.mjs allure-results
+        env:
+          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
+          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+          DEFECTDOJO_ENGAGEMENT_ID: ${{ secrets.DEFECTDOJO_ENGAGEMENT_ID }}
+
+      - name: Load Allure report history
+        uses: actions/checkout@v6
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Collect metrics for dashboard history
+        run: |
+          EXISTING=""
+          if [ -f gh-pages/metrics-history.json ]; then
+            EXISTING="gh-pages/metrics-history.json"
+          fi
+          node repo/scripts/collect-metrics.mjs allure-results "$EXISTING"
+
+      - name: Generate Allure report
+        uses: simple-elf/allure-report-action@v1.13
+        with:
+          allure_results: allure-results
+          allure_report: allure-report
+          gh_pages: gh-pages
+          allure_history: allure-history
+          subfolder: nightly
+
+      - name: Fix allure-history permissions
+        run: sudo chown -R $(whoami) allure-history || true
+
+      - name: Include metrics history in published output
+        run: cp metrics-history.json allure-history/metrics-history.json
+
+      - name: Publish Allure report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+          destination_dir: nightly
