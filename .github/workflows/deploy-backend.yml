@@ -58,7 +58,6 @@ jobs:
           package: server-deploy.zip
 
       - name: Configure Bedrock AI settings
-        if: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK != '' }}
         uses: azure/appservice-settings@v1
         with:
           app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
