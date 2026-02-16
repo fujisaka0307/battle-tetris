@@ -25,6 +25,7 @@ export default defineConfig({
         '**/random-match*.spec.ts',
         '**/cross-match*.spec.ts',
         '**/disconnect-battle*.spec.ts',
+        /production-smoke/,
       ],
     },
     // disconnect-battle は切断タイムアウト依存のため独立実行（チェーンをブロックしない）
