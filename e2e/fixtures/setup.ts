@@ -30,10 +30,15 @@ export const test = base.extend<{
 
 /**
  * トップページに遷移してボタンが利用可能になるまで待つヘルパー。
- * 認証は VITE_SKIP_AUTH=true で自動バイパスされる。
+ * SKIP_AUTH モードではテストログインボタンをクリックしてからトップページへ進む。
  */
 export async function setupPlayer(page: Page): Promise<void> {
   await page.goto('/');
+  // SKIP_AUTH mode: click the test login button if shown
+  const testLoginBtn = page.getByTestId('test-login-btn');
+  if (await testLoginBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await testLoginBtn.click();
+  }
   await page.getByTestId('create-room-btn').waitFor({ state: 'visible', timeout: 10000 });
 }
 

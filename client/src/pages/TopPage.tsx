@@ -27,11 +27,12 @@ export default function TopPage() {
     const promise = (async () => {
       try {
         const url = import.meta.env.VITE_SIGNALR_URL || '/hub';
-        const tokenFactory = async () => {
-          const token = await getToken();
-          return token ?? '';
-        };
-        await signalRClient.connect(url, tokenFactory);
+        const token = await getToken();
+        if (token) {
+          await signalRClient.connect(url, async () => token);
+        } else {
+          await signalRClient.connect(url);
+        }
         return true;
       } catch {
         setError('サーバーに接続できませんでした');

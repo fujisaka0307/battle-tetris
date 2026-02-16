@@ -1,6 +1,6 @@
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
-import { useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { loginRequest } from './msalConfig';
 
 const SKIP_AUTH = import.meta.env.VITE_SKIP_AUTH === 'true';
@@ -71,13 +71,18 @@ function useMsalAuth(): AuthState {
   };
 }
 
-const skipAuthState: AuthState = {
-  isAuthenticated: true,
-  isLoading: false,
-  enterpriseId: TEST_ENTERPRISE_ID,
-  login: async () => {},
-  logout: async () => {},
-  getToken: async () => 'test-token',
-};
+function useSkipAuth(): AuthState {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const login = useCallback(async () => setIsAuthenticated(true), []);
+  const logout = useCallback(async () => setIsAuthenticated(false), []);
+  return {
+    isAuthenticated,
+    isLoading: false,
+    enterpriseId: isAuthenticated ? TEST_ENTERPRISE_ID : null,
+    login,
+    logout,
+    getToken: async () => null,
+  };
+}
 
-export const useAuth: () => AuthState = SKIP_AUTH ? () => skipAuthState : useMsalAuth;
+export const useAuth: () => AuthState = SKIP_AUTH ? useSkipAuth : useMsalAuth;

@@ -172,6 +172,7 @@ jobs:
         run: npx playwright test
         env:
           VITE_SKIP_AUTH: 'true'
+          SKIP_AUTH: 'true'
 
       - uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}

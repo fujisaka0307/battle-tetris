@@ -1,5 +1,7 @@
 import { useAuth } from '../auth/useAuth';
 
+const SKIP_AUTH = import.meta.env.VITE_SKIP_AUTH === 'true';
+
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
 
@@ -13,17 +15,28 @@ export default function LoginPage() {
 
       <div className="top-section" style={{ textAlign: 'center' }}>
         <p className="top-label" style={{ marginBottom: '1.5rem' }}>
-          DXC SSO でログインしてください
+          {SKIP_AUTH ? 'テストモードでログインしてください' : 'DXC SSO でログインしてください'}
         </p>
-        <button
-          onClick={login}
-          disabled={isLoading}
-          className="mode-btn mode-btn--cyan"
-          data-testid="login-btn"
-          style={{ fontSize: '1.1rem', padding: '0.8rem 2rem' }}
-        >
-          {isLoading ? 'ログイン中...' : 'DXC SSO でログイン'}
-        </button>
+        {SKIP_AUTH ? (
+          <button
+            onClick={login}
+            className="mode-btn mode-btn--cyan"
+            data-testid="test-login-btn"
+            style={{ fontSize: '1.1rem', padding: '0.8rem 2rem' }}
+          >
+            テストログイン
+          </button>
+        ) : (
+          <button
+            onClick={login}
+            disabled={isLoading}
+            className="mode-btn mode-btn--cyan"
+            data-testid="login-btn"
+            style={{ fontSize: '1.1rem', padding: '0.8rem 2rem' }}
+          >
+            {isLoading ? 'ログイン中...' : 'DXC SSO でログイン'}
+          </button>
+        )}
       </div>
     </div>
   );
