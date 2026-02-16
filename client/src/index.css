@@ -807,17 +807,21 @@
 /* ---- Dashboard nav link (on TopPage) ---- */
 
 .dashboard-nav-link {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.3);
   border-radius: 10px;
-  padding: 0.5rem 1rem;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.85rem;
+  padding: 0.6rem 1.25rem;
+  color: #00e5ff;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  letter-spacing: 0.05em;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 .dashboard-nav-link:hover {
-  color: #00e5ff;
-  border-color: rgba(0, 229, 255, 0.3);
+  background: rgba(0, 229, 255, 0.15);
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 2px 12px rgba(0, 229, 255, 0.15);
 }
