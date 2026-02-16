@@ -23,6 +23,23 @@ export default function LobbyPage() {
     }
   }, [enterpriseId, navigate]);
 
+  const startCountdown = useCallback((seconds: number) => {
+    setCountdown(seconds);
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          if (countdownRef.current) {
+            clearInterval(countdownRef.current);
+            countdownRef.current = null;
+          }
+          navigate(`/battle/${roomId}`);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [navigate, roomId]);
+
   // Register SignalR handlers for lobby
   useEffect(() => {
     signalRClient.setHandlers({
@@ -45,29 +62,19 @@ export default function LobbyPage() {
       onError: () => {},
     });
 
+    // AI対戦: BothReadyがページ遷移前に届いていた場合、保存済みカウントダウンで開始
+    const pending = useGameStore.getState().pendingCountdown;
+    if (pending !== null) {
+      useGameStore.getState().setPendingCountdown(null);
+      startCountdown(pending);
+    }
+
     return () => {
       if (countdownRef.current) {
         clearInterval(countdownRef.current);
       }
     };
-  }, [setOpponentEnterpriseId]);
-
-  const startCountdown = useCallback((seconds: number) => {
-    setCountdown(seconds);
-    countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev === null || prev <= 1) {
-          if (countdownRef.current) {
-            clearInterval(countdownRef.current);
-            countdownRef.current = null;
-          }
-          navigate(`/battle/${roomId}`);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [navigate, roomId]);
+  }, [setOpponentEnterpriseId, startCountdown]);
 
   const handleReady = useCallback(() => {
     setIsReady(true);

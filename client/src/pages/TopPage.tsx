@@ -4,6 +4,7 @@ import { ROOM_ID_LENGTH } from '@battle-tetris/shared';
 import type { WaitingRoomInfo } from '@battle-tetris/shared';
 import { signalRClient } from '../network/SignalRClient';
 import { usePlayerStore } from '../stores/usePlayerStore';
+import { useGameStore } from '../stores/useGameStore';
 import { useAuth } from '../auth/useAuth';
 
 export default function TopPage() {
@@ -154,6 +155,13 @@ export default function TopPage() {
       onRoomCreated: (payload) => {
         setRoomId(payload.roomId);
         navigate(`/lobby/${payload.roomId}`);
+      },
+      onOpponentJoined: (payload) => {
+        usePlayerStore.getState().setOpponentEnterpriseId(payload.enterpriseId);
+      },
+      onBothReady: (payload) => {
+        useGameStore.getState().setSeed(payload.seed);
+        useGameStore.getState().setPendingCountdown(payload.countdown);
       },
       onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
       onError: (payload) => setError(payload.message),
