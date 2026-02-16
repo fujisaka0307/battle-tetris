@@ -155,44 +155,6 @@ describe('GameHub', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // JoinRandomMatch → MatchFound
-  // ---------------------------------------------------------------------------
-
-  describe('JoinRandomMatch', () => {
-    it('2人で MatchFound が両者に送られること', () => {
-      const { hub, mock } = createHub();
-      mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob' });
-      hub.handleJoinRandomMatch('conn-1');
-      hub.handleJoinRandomMatch('conn-2');
-
-      const events = getAllSentEvents(mock, ServerEvents.MatchFound);
-      expect(events.length).toBe(2);
-
-      const p1Event = getSentEvent(mock, 'conn-1', ServerEvents.MatchFound);
-      expect((p1Event![2] as any).opponentEnterpriseId).toBe('Bob');
-    });
-
-    it('1人では MatchFound が送られないこと', () => {
-      const { hub, mock } = createHub();
-      mockEnterpriseId(mock, 'conn-1', 'Alice');
-      hub.handleJoinRandomMatch('conn-1');
-
-      const events = getAllSentEvents(mock, ServerEvents.MatchFound);
-      expect(events.length).toBe(0);
-    });
-
-    it('enterpriseId が取得できない場合に UNAUTHORIZED Error が返ること', () => {
-      const { hub, mock } = createHub();
-      // getEnterpriseId returns undefined by default
-      hub.handleJoinRandomMatch('conn-1');
-
-      const sent = getSentEvent(mock, 'conn-1', ServerEvents.Error);
-      expect(sent).toBeDefined();
-      expect((sent![2] as any).code).toBe(ErrorCodes.UNAUTHORIZED);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
   // PlayerReady → BothReady
   // ---------------------------------------------------------------------------
 
@@ -517,20 +479,6 @@ describe('GameHub', () => {
 
       const sent = getSentEvent(mock, 'conn-2', ServerEvents.OpponentDisconnected);
       expect(sent).toBeDefined();
-    });
-
-    it('マッチメイキング待機中の切断でキューから削除されること', () => {
-      const { hub, mock } = createHub();
-      mockEnterpriseIds(mock, { 'conn-1': 'Alice', 'conn-2': 'Bob' });
-      hub.handleJoinRandomMatch('conn-1');
-
-      // 切断する
-      hub.handleDisconnected('conn-1');
-
-      // 別のプレイヤーが参加してもマッチしないことを確認
-      hub.handleJoinRandomMatch('conn-2');
-      const events = getAllSentEvents(mock, ServerEvents.MatchFound);
-      expect(events.length).toBe(0);
     });
 
     it('ルームに参加していない場合は何もしないこと', () => {

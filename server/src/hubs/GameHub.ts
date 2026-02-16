@@ -6,7 +6,6 @@ import {
 } from '@battle-tetris/shared';
 import type { WaitingRoomInfo } from '@battle-tetris/shared';
 import { RoomManager } from '../services/RoomManager.js';
-import { MatchmakingService } from '../services/MatchmakingService.js';
 import { GameSessionManager } from '../services/GameSessionManager.js';
 import { Player } from '../models/Player.js';
 import {
@@ -37,14 +36,12 @@ export interface HubConnection {
 
 export class GameHub {
   private readonly roomManager: RoomManager;
-  private readonly matchmaking: MatchmakingService;
   private readonly sessionManager: GameSessionManager;
   private readonly hub: HubConnection;
   private readonly roomListSubscribers = new Set<string>();
 
   constructor(hub: HubConnection) {
     this.roomManager = new RoomManager();
-    this.matchmaking = new MatchmakingService(this.roomManager);
     this.sessionManager = new GameSessionManager(this.roomManager);
     this.hub = hub;
 
@@ -136,30 +133,6 @@ export class GameHub {
     }
 
     this.broadcastWaitingRoomList();
-  }
-
-  handleJoinRandomMatch(connectionId: string): void {
-    const enterpriseId = this.hub.getEnterpriseId(connectionId);
-    if (!enterpriseId) {
-      this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
-      return;
-    }
-
-    const player = new Player(connectionId, enterpriseId);
-    const result = this.matchmaking.enqueue(player);
-
-    if (result) {
-      // Match found — notify both players
-      this.hub.sendToClient(result.player1.connectionId, ServerEvents.MatchFound, {
-        roomId: result.room.roomId,
-        opponentEnterpriseId: result.player2.enterpriseId,
-      });
-      this.hub.sendToClient(result.player2.connectionId, ServerEvents.MatchFound, {
-        roomId: result.room.roomId,
-        opponentEnterpriseId: result.player1.enterpriseId,
-      });
-    }
-    // If no match yet, player waits in queue
   }
 
   handlePlayerReady(connectionId: string): void {
@@ -333,9 +306,6 @@ export class GameHub {
   handleDisconnected(connectionId: string): void {
     // Remove from room list subscribers
     this.roomListSubscribers.delete(connectionId);
-
-    // Remove from matchmaking queue
-    this.matchmaking.dequeue(connectionId);
 
     const room = this.roomManager.getRoomByConnectionId(connectionId);
     if (!room) return;

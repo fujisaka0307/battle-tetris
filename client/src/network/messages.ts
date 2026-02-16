@@ -13,7 +13,6 @@ export type {
   LinesClearedPayload,
   RoomCreatedPayload,
   OpponentJoinedPayload,
-  MatchFoundPayload,
   BothReadyPayload,
   GameStartPayload,
   OpponentFieldUpdatePayload,

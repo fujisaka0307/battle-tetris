@@ -5,7 +5,6 @@ describe('ClientEvents', () => {
   it('defines all client-to-server event names', () => {
     expect(ClientEvents.CreateRoom).toBe('CreateRoom');
     expect(ClientEvents.JoinRoom).toBe('JoinRoom');
-    expect(ClientEvents.JoinRandomMatch).toBe('JoinRandomMatch');
     expect(ClientEvents.PlayerReady).toBe('PlayerReady');
     expect(ClientEvents.FieldUpdate).toBe('FieldUpdate');
     expect(ClientEvents.LinesCleared).toBe('LinesCleared');
@@ -16,8 +15,8 @@ describe('ClientEvents', () => {
     expect(ClientEvents.UnsubscribeRoomList).toBe('UnsubscribeRoomList');
   });
 
-  it('has exactly 11 events', () => {
-    expect(Object.keys(ClientEvents)).toHaveLength(11);
+  it('has exactly 10 events', () => {
+    expect(Object.keys(ClientEvents)).toHaveLength(10);
   });
 });
 
@@ -25,7 +24,6 @@ describe('ServerEvents', () => {
   it('defines all server-to-client event names', () => {
     expect(ServerEvents.RoomCreated).toBe('RoomCreated');
     expect(ServerEvents.OpponentJoined).toBe('OpponentJoined');
-    expect(ServerEvents.MatchFound).toBe('MatchFound');
     expect(ServerEvents.BothReady).toBe('BothReady');
     expect(ServerEvents.GameStart).toBe('GameStart');
     expect(ServerEvents.OpponentFieldUpdate).toBe('OpponentFieldUpdate');
@@ -39,8 +37,8 @@ describe('ServerEvents', () => {
     expect(ServerEvents.Error).toBe('Error');
   });
 
-  it('has exactly 14 events', () => {
-    expect(Object.keys(ServerEvents)).toHaveLength(14);
+  it('has exactly 13 events', () => {
+    expect(Object.keys(ServerEvents)).toHaveLength(13);
   });
 });
 

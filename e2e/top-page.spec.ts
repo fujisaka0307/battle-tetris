@@ -9,6 +9,5 @@ test.describe('トップページ', () => {
   test('トップページが表示されボタンが有効であること', async ({ page }) => {
     await setupPlayer(page);
     await expect(page.getByTestId('create-room-btn')).toBeEnabled();
-    await expect(page.getByTestId('random-match-btn')).toBeEnabled();
   });
 });

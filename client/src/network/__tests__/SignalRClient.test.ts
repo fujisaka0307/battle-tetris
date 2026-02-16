@@ -241,15 +241,6 @@ describe('SignalRClient', () => {
 
     // === C1 カバレッジ追加テスト ===
 
-    it('sendJoinRandomMatch が引数なしで送信すること', async () => {
-      const client = new SignalRClient();
-      await client.connect('http://localhost/hub');
-
-      client.sendJoinRandomMatch();
-
-      expect(currentMockConn!.send).toHaveBeenCalledWith('JoinRandomMatch');
-    });
-
     it('sendLinesCleared が正しく送信すること', async () => {
       const client = new SignalRClient();
       await client.connect('http://localhost/hub');
@@ -354,17 +345,6 @@ describe('SignalRClient', () => {
       expect(onOpponentJoined).toHaveBeenCalledWith({ enterpriseId: 'bob@dxc.com' });
     });
 
-    it('MatchFound イベントでハンドラが呼ばれること', async () => {
-      const onMatchFound = vi.fn();
-      const client = new SignalRClient();
-      client.setHandlers({ onMatchFound });
-
-      await client.connect('http://localhost/hub');
-      currentMockConn!._emit('MatchFound', { roomId: 'R1', opponentEnterpriseId: 'eve@dxc.com' });
-
-      expect(onMatchFound).toHaveBeenCalledWith({ roomId: 'R1', opponentEnterpriseId: 'eve@dxc.com' });
-    });
-
     it('BothReady イベントでハンドラが呼ばれること', async () => {
       const onBothReady = vi.fn();
       const client = new SignalRClient();
@@ -452,7 +432,6 @@ describe('SignalRClient', () => {
       expect(() => {
         currentMockConn!._emit('RoomCreated', { roomId: 'X' });
         currentMockConn!._emit('OpponentJoined', { enterpriseId: 'bob@dxc.com' });
-        currentMockConn!._emit('MatchFound', { roomId: 'Y', opponentEnterpriseId: 'z@dxc.com' });
         currentMockConn!._emit('BothReady', { seed: 1, countdown: 3 });
         currentMockConn!._emit('GameStart', { seed: 1 });
         currentMockConn!._emit('OpponentFieldUpdate', { field: [[]], score: 0, lines: 0, level: 0 });

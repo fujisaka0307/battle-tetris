@@ -4,7 +4,6 @@ test.describe('トップページ — バリデーション', () => {
   test('トップページにEnterprise IDが表示されてボタンが有効であること', async ({ page }) => {
     await setupPlayer(page);
     await expect(page.getByTestId('create-room-btn')).toBeEnabled();
-    await expect(page.getByTestId('random-match-btn')).toBeEnabled();
   });
 
   test('ルームID未入力で参加ボタンが無効であること', async ({ page }) => {

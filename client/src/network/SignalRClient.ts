@@ -13,7 +13,6 @@ import type {
   FieldUpdatePayload,
   RoomCreatedPayload,
   OpponentJoinedPayload,
-  MatchFoundPayload,
   BothReadyPayload,
   GameStartPayload,
   OpponentFieldUpdatePayload,
@@ -38,7 +37,6 @@ export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'rec
 export interface SignalREventHandlers {
   onRoomCreated?: (payload: RoomCreatedPayload) => void;
   onOpponentJoined?: (payload: OpponentJoinedPayload) => void;
-  onMatchFound?: (payload: MatchFoundPayload) => void;
   onBothReady?: (payload: BothReadyPayload) => void;
   onGameStart?: (payload: GameStartPayload) => void;
   onOpponentFieldUpdate?: (payload: OpponentFieldUpdatePayload) => void;
@@ -144,10 +142,6 @@ export class SignalRClient {
     this.invoke(ClientEvents.JoinRoom, { roomId });
   }
 
-  sendJoinRandomMatch(): void {
-    this.invoke(ClientEvents.JoinRandomMatch);
-  }
-
   sendPlayerReady(): void {
     this.invoke(ClientEvents.PlayerReady);
   }
@@ -229,10 +223,6 @@ export class SignalRClient {
 
     this.connection.on(ServerEvents.OpponentJoined, (payload: OpponentJoinedPayload) => {
       this.handlers.onOpponentJoined?.(payload);
-    });
-
-    this.connection.on(ServerEvents.MatchFound, (payload: MatchFoundPayload) => {
-      this.handlers.onMatchFound?.(payload);
     });
 
     this.connection.on(ServerEvents.BothReady, (payload: BothReadyPayload) => {

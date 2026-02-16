@@ -29,7 +29,6 @@ vi.mock('../../network/SignalRClient', () => ({
     }),
     sendCreateRoom: vi.fn(),
     sendJoinRoom: vi.fn(),
-    sendJoinRandomMatch: vi.fn(),
     sendSubscribeRoomList: vi.fn(),
     sendUnsubscribeRoomList: vi.fn(),
   },
@@ -76,11 +75,6 @@ describe('TopPage', () => {
     expect(screen.getByTestId('create-room-btn')).toBeInTheDocument();
   });
 
-  it('ランダムマッチボタンが表示されること', () => {
-    renderTopPage();
-    expect(screen.getByTestId('random-match-btn')).toBeInTheDocument();
-  });
-
   it('ルーム作成ボタンクリックで SignalR の CreateRoom が呼ばれること', async () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
@@ -98,15 +92,6 @@ describe('TopPage', () => {
     await userEvent.click(screen.getByTestId('join-room-btn'));
 
     expect(signalRClient.sendJoinRoom).toHaveBeenCalledWith('ABC123');
-  });
-
-  it('ランダムマッチボタンで JoinRandomMatch が呼ばれること', async () => {
-    (signalRClient as any).state = 'connected';
-    renderTopPage();
-
-    await userEvent.click(screen.getByTestId('random-match-btn'));
-
-    expect(signalRClient.sendJoinRandomMatch).toHaveBeenCalledWith();
   });
 
   // === C1 カバレッジ追加テスト ===
@@ -182,36 +167,6 @@ describe('TopPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/lobby/ABC123');
   });
 
-  it('onMatchFound ハンドラでロビーにナビゲートされること', async () => {
-    (signalRClient as any).state = 'connected';
-    renderTopPage();
-
-    await userEvent.click(screen.getByTestId('random-match-btn'));
-
-    act(() => {
-      capturedHandlers.onMatchFound?.({
-        roomId: 'MATCH1',
-        opponentEnterpriseId: 'dave@dxc.com',
-      });
-    });
-
-    expect(mockNavigate).toHaveBeenCalledWith('/lobby/MATCH1');
-    expect(usePlayerStore.getState().opponentEnterpriseId).toBe('dave@dxc.com');
-  });
-
-  it('ランダムマッチの onError でエラーが表示されること', async () => {
-    (signalRClient as any).state = 'connected';
-    renderTopPage();
-
-    await userEvent.click(screen.getByTestId('random-match-btn'));
-
-    act(() => {
-      capturedHandlers.onError?.({ message: 'マッチングに失敗しました' });
-    });
-
-    expect(screen.getByTestId('error-message')).toHaveTextContent('マッチングに失敗しました');
-  });
-
   it('JoinRoom 接続失敗でエラーメッセージが表示されること', async () => {
     (signalRClient as any).state = 'disconnected';
     (signalRClient.connect as any).mockRejectedValue(new Error('fail'));
@@ -219,19 +174,6 @@ describe('TopPage', () => {
 
     await userEvent.type(screen.getByTestId('room-id-input'), 'ABC123');
     await userEvent.click(screen.getByTestId('join-room-btn'));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('error-message')).toBeInTheDocument();
-    });
-    (signalRClient.connect as any).mockResolvedValue(undefined);
-  });
-
-  it('ランダムマッチ接続失敗でエラーメッセージが表示されること', async () => {
-    (signalRClient as any).state = 'disconnected';
-    (signalRClient.connect as any).mockRejectedValue(new Error('fail'));
-    renderTopPage();
-
-    await userEvent.click(screen.getByTestId('random-match-btn'));
 
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toBeInTheDocument();

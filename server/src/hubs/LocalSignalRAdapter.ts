@@ -272,9 +272,6 @@ export class LocalSignalRAdapter implements HubConnection {
       case ClientEvents.JoinRoom:
         this.gameHub.handleJoinRoom(connectionId, args[0]);
         break;
-      case ClientEvents.JoinRandomMatch:
-        this.gameHub.handleJoinRandomMatch(connectionId);
-        break;
       case ClientEvents.PlayerReady:
         this.gameHub.handlePlayerReady(connectionId);
         break;

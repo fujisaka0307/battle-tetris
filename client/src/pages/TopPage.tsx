@@ -125,25 +125,6 @@ export default function TopPage() {
     signalRClient.sendJoinRoom(roomId.toUpperCase());
   }, [roomId, roomIdValid, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
-  const handleRandomMatch = useCallback(async () => {
-    setError('');
-
-    if (!(await ensureConnected())) return;
-
-    signalRClient.setHandlers({
-      onMatchFound: (payload) => {
-        setRoomId(payload.roomId);
-        usePlayerStore.getState().setOpponentEnterpriseId(payload.opponentEnterpriseId);
-        navigate(`/lobby/${payload.roomId}`);
-      },
-      onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
-      onError: (payload) => setError(payload.message),
-    });
-
-    subscribeIfNeeded();
-    signalRClient.sendJoinRandomMatch();
-  }, [ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
-
   const handleJoinFromList = useCallback(async (targetRoomId: string) => {
     setError('');
 
@@ -234,22 +215,6 @@ export default function TopPage() {
           </div>
         </div>
 
-        {/* カード3 — ランダムマッチ */}
-        <div className="mode-card mode-card--purple">
-          <span className="mode-card-icon" aria-hidden="true">🎲</span>
-          <div className="mode-card-body">
-            <p className="mode-card-title">すぐ あそぶ！</p>
-            <p className="mode-card-desc">だれかと すぐ たいせんできるよ</p>
-          </div>
-          <button
-            onClick={handleRandomMatch}
-            disabled={!isReady || isConnecting}
-            className="mode-btn mode-btn--purple"
-            data-testid="random-match-btn"
-          >
-            さがす
-          </button>
-        </div>
       </div>
 
       {/* ---- 待機中ルームリスト ---- */}

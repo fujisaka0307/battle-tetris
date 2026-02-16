@@ -8,7 +8,6 @@ import type { Field, LoserReason } from './types.js';
 export const ClientEvents = {
   CreateRoom: 'CreateRoom',
   JoinRoom: 'JoinRoom',
-  JoinRandomMatch: 'JoinRandomMatch',
   PlayerReady: 'PlayerReady',
   FieldUpdate: 'FieldUpdate',
   LinesCleared: 'LinesCleared',
@@ -23,7 +22,6 @@ export const ClientEvents = {
 export const ServerEvents = {
   RoomCreated: 'RoomCreated',
   OpponentJoined: 'OpponentJoined',
-  MatchFound: 'MatchFound',
   BothReady: 'BothReady',
   GameStart: 'GameStart',
   OpponentFieldUpdate: 'OpponentFieldUpdate',
@@ -42,7 +40,6 @@ export const ServerEvents = {
 // =============================================================================
 
 // CreateRoom: no payload (enterprise ID from JWT)
-// JoinRandomMatch: no payload (enterprise ID from JWT)
 
 export interface JoinRoomPayload {
   roomId: string;
@@ -77,11 +74,6 @@ export interface RoomCreatedPayload {
 
 export interface OpponentJoinedPayload {
   enterpriseId: string;
-}
-
-export interface MatchFoundPayload {
-  roomId: string;
-  opponentEnterpriseId: string;
 }
 
 export interface BothReadyPayload {
