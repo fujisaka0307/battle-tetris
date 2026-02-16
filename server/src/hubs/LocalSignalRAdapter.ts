@@ -109,6 +109,24 @@ export class LocalSignalRAdapter implements HubConnection {
   setup(app: Express, server: HttpServer): void {
     // SignalR ネゴシエーションエンドポイント
     app.post('/hub/negotiate', async (req: Request, res: Response) => {
+      if (process.env.SKIP_AUTH === 'true') {
+        // SKIP_AUTH mode: assign test enterprise ID for E2E testing
+        const connectionId = `conn-${this.nextConnectionId++}`;
+        this.connectionUsers.set(connectionId, `test-player-${connectionId}@dxc.com`);
+        logger.info({ connectionId }, 'Negotiate: SKIP_AUTH mode');
+        res.json({
+          connectionId,
+          negotiateVersion: 1,
+          availableTransports: [
+            {
+              transport: 'WebSockets',
+              transferFormats: ['Text'],
+            },
+          ],
+        });
+        return;
+      }
+
       const token = extractToken(req.headers.authorization);
       if (token) {
         const result = await verifyToken(token);
@@ -120,21 +138,6 @@ export class LocalSignalRAdapter implements HubConnection {
         const connectionId = `conn-${this.nextConnectionId++}`;
         this.connectionUsers.set(connectionId, result.enterpriseId);
         logger.info({ connectionId, enterpriseId: result.enterpriseId }, 'Negotiate: authenticated');
-        res.json({
-          connectionId,
-          negotiateVersion: 1,
-          availableTransports: [
-            {
-              transport: 'WebSockets',
-              transferFormats: ['Text'],
-            },
-          ],
-        });
-      } else if (process.env.SKIP_AUTH === 'true') {
-        // SKIP_AUTH mode: assign test enterprise ID for E2E testing
-        const connectionId = `conn-${this.nextConnectionId++}`;
-        this.connectionUsers.set(connectionId, `test-player-${connectionId}@dxc.com`);
-        logger.info({ connectionId }, 'Negotiate: SKIP_AUTH mode');
         res.json({
           connectionId,
           negotiateVersion: 1,
@@ -172,14 +175,16 @@ export class LocalSignalRAdapter implements HubConnection {
 
       // JWT auth via access_token query param (if not already authenticated at negotiate)
       if (!this.connectionUsers.has(connectionId)) {
-        const queryToken = url.searchParams.get('access_token');
-        if (queryToken) {
-          const result = await verifyToken(queryToken);
-          if (result) {
-            this.connectionUsers.set(connectionId, result.enterpriseId);
-          }
-        } else if (process.env.SKIP_AUTH === 'true') {
+        if (process.env.SKIP_AUTH === 'true') {
           this.connectionUsers.set(connectionId, `test-player-${connectionId}@dxc.com`);
+        } else {
+          const queryToken = url.searchParams.get('access_token');
+          if (queryToken) {
+            const result = await verifyToken(queryToken);
+            if (result) {
+              this.connectionUsers.set(connectionId, result.enterpriseId);
+            }
+          }
         }
       }
 
