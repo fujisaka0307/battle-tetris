@@ -195,8 +195,8 @@ export class GameHub {
           // AI負け
           this.sessionManager.handleGameOver(roomId, aiConnectionId);
         },
-        onAiThinking: (prompt, response, model) => {
-          this.hub.sendToClient(connectionId, ServerEvents.AiThinking, { prompt, response, model });
+        onAiThinking: (prompt, response, model, modelTier, temperature, seq) => {
+          this.hub.sendToClient(connectionId, ServerEvents.AiThinking, { prompt, response, model, modelTier, temperature, seq });
         },
       });
 
@@ -413,18 +413,17 @@ export class GameHub {
         this.sessionManager.endSession(room.roomId);
         room.resetForRematch();
 
-        // Both ready again
-        if (room.player1) room.player1.setReady();
-        if (room.player2) room.player2.setReady();
-
-        const seed = this.sessionManager.startSession(room);
-        span.setAttribute('game.seed', seed);
-
         // Find AI connection and restart
         const aiConnId = this.isAiConnection(opponent.connectionId) ? opponent.connectionId : connectionId;
         const humanConnId = aiConnId === opponent.connectionId ? connectionId : opponent.connectionId;
 
         if (this.isAiConnection(aiConnId)) {
+          // AI game restarts immediately — set both ready and start session
+          if (room.player1) room.player1.setReady();
+          if (room.player2) room.player2.setReady();
+
+          const seed = this.sessionManager.startSession(room);
+          span.setAttribute('game.seed', seed);
           // Recreate AI player with new seed
           this.stopAiIfExists(aiConnId);
           const aiLevel = this.getAiLevel(aiConnId);
@@ -443,8 +442,8 @@ export class GameHub {
             onGameOver: () => {
               this.sessionManager.handleGameOver(room.roomId, aiConnId);
             },
-            onAiThinking: (prompt, response, model) => {
-              this.hub.sendToClient(humanConnId, ServerEvents.AiThinking, { prompt, response, model });
+            onAiThinking: (prompt, response, model, modelTier, temperature, seq) => {
+              this.hub.sendToClient(humanConnId, ServerEvents.AiThinking, { prompt, response, model, modelTier, temperature, seq });
             },
           });
 

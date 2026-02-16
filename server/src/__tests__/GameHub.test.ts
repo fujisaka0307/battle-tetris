@@ -394,7 +394,7 @@ describe('GameHub', () => {
       expect(accepted[1][2]).toEqual({ roomId });
     });
 
-    it('両者のリマッチ要求でルームが Playing 状態に遷移すること', () => {
+    it('両者のリマッチ要求でルームが waiting 状態に戻ること（ロビーで再度 Ready が必要）', () => {
       const { hub, mock } = createHub();
       setupPlayingRoom(hub, mock);
       hub.handleGameOver('conn-1');
@@ -403,7 +403,7 @@ describe('GameHub', () => {
       hub.handleRequestRematch('conn-2');
 
       const room = hub.getRoomManager().getRoomByConnectionId('conn-1');
-      expect(room?.status).toBe('playing');
+      expect(room?.status).toBe('waiting');
     });
   });
 
