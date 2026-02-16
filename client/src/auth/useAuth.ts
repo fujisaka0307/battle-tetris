@@ -29,17 +29,17 @@ function useMsalAuth(): AuthState {
 
   const login = useCallback(async () => {
     try {
-      await instance.loginPopup(loginRequest);
+      await instance.loginRedirect(loginRequest);
     } catch {
-      // User cancelled or error
+      // Redirect will navigate away; errors are rare
     }
   }, [instance]);
 
   const logout = useCallback(async () => {
     try {
-      await instance.logoutPopup();
+      await instance.logoutRedirect();
     } catch {
-      // Error during logout
+      // Redirect will navigate away; errors are rare
     }
   }, [instance]);
 

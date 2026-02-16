@@ -16,7 +16,10 @@ if (SKIP_AUTH) {
   );
 } else {
   const msalInstance = new PublicClientApplication(msalConfig);
-  msalInstance.initialize().then(() => {
+  msalInstance.initialize().then(async () => {
+    // リダイレクト方式で戻ってきた場合のトークンを処理
+    await msalInstance.handleRedirectPromise();
+
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <MsalProvider instance={msalInstance}>
