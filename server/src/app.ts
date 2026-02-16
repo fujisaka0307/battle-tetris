@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -16,9 +17,9 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      styleSrc: ["'self'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      connectSrc: ["'self'", 'ws:', 'wss:'],
+      connectSrc: ["'self'"],
       imgSrc: ["'self'", 'data:', 'blob:'],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
@@ -29,6 +30,9 @@ app.use(helmet({
   // クリックジャッキング防止
   frameguard: { action: 'deny' },
 }));
+
+// テキスト圧縮（gzip / brotli）
+app.use(compression());
 
 // CORS
 app.use(cors({

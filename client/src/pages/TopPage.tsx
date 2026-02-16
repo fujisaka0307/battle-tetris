@@ -219,7 +219,6 @@ export default function TopPage() {
             disabled={!nicknameValid || isConnecting}
             className="mode-btn mode-btn--cyan"
             data-testid="create-room-btn"
-            aria-label="ルームを作成する"
           >
             つくる
           </button>
@@ -240,14 +239,13 @@ export default function TopPage() {
                 placeholder="へやID (6もじ)"
                 className="top-room-input"
                 data-testid="room-id-input"
-                aria-label="ルームIDを入力"
+                aria-label="へやID"
               />
               <button
                 onClick={handleJoinRoom}
                 disabled={!nicknameValid || !roomIdValid || isConnecting}
                 className="mode-btn mode-btn--green mode-btn--small"
                 data-testid="join-room-btn"
-                aria-label="ルームに参加する"
               >
                 はいる
               </button>
@@ -267,7 +265,6 @@ export default function TopPage() {
             disabled={!nicknameValid || isConnecting}
             className="mode-btn mode-btn--purple"
             data-testid="random-match-btn"
-            aria-label="ランダムマッチを開始する"
           >
             さがす
           </button>
@@ -298,7 +295,6 @@ export default function TopPage() {
                   disabled={!nicknameValid || isConnecting}
                   className="mode-btn mode-btn--green mode-btn--small"
                   data-testid="waiting-room-join-btn"
-                  aria-label={`${room.creatorNickname}のルームに参加`}
                 >
                   はいる
                 </button>

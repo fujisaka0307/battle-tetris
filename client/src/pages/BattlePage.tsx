@@ -176,9 +176,9 @@ export default function BattlePage() {
 
   return (
     <div className="battle-container">
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+      <div className="battle-layout">
         {/* Left sidebar: HOLD + STATS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '120px' }}>
+        <div className="battle-sidebar">
           {/* HOLD panel */}
           <div className="game-panel">
             <div className="game-panel-label">Hold</div>
@@ -186,7 +186,7 @@ export default function BattlePage() {
               ref={holdCanvasRef}
               width={Renderer.holdWidth}
               height={Renderer.holdHeight}
-              style={{ display: 'block', margin: '0 auto' }}
+              className="panel-canvas"
             />
           </div>
 
@@ -208,13 +208,17 @@ export default function BattlePage() {
         </div>
 
         {/* Center: Garbage bar + Main field */}
-        <div style={{ display: 'flex', gap: '4px', alignItems: 'stretch' }}>
+        <div className="battle-center">
           {/* Garbage bar */}
-          <div className="garbage-bar" data-testid="garbage-bar" style={{ height: Renderer.fieldHeight + 4 }}>
+          <div
+            className="garbage-bar"
+            data-testid="garbage-bar"
+            style={{ '--garbage-bar-h': `${Renderer.fieldHeight + 4}px` } as React.CSSProperties}
+          >
             {pendingGarbage > 0 && (
               <div
                 className="garbage-bar-fill"
-                style={{ height: `${Math.min(pendingGarbage / 20, 1) * 100}%` }}
+                style={{ '--garbage-fill': `${Math.min(pendingGarbage / 20, 1) * 100}%` } as React.CSSProperties}
               />
             )}
           </div>
@@ -231,20 +235,20 @@ export default function BattlePage() {
         </div>
 
         {/* Right sidebar: NEXT */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '120px' }}>
+        <div className="battle-sidebar">
           <div className="game-panel">
             <div className="game-panel-label">Next</div>
             <canvas
               ref={nextCanvasRef}
               width={Renderer.nextQueueWidth}
               height={Renderer.nextQueueHeight}
-              style={{ display: 'block', margin: '0 auto' }}
+              className="panel-canvas"
             />
           </div>
         </div>
 
         {/* Opponent area */}
-        <div className="opponent-panel" style={{ marginLeft: '16px' }}>
+        <div className="opponent-panel">
           <p className="opponent-name">
             {usePlayerStore.getState().opponentNickname ?? 'Opponent'}
           </p>

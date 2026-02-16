@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
 @import 'tailwindcss';
 
 /* ==========================================================================
@@ -384,6 +382,34 @@
 }
 
 /* --------------------------------------------------------------------------
+   バトルレイアウト — インラインスタイルをクラスに移行
+   -------------------------------------------------------------------------- */
+
+.battle-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.battle-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 120px;
+}
+
+.battle-center {
+  display: flex;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.panel-canvas {
+  display: block;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
    Panel — HOLD / NEXT / STATS の共通枠
    -------------------------------------------------------------------------- */
 
@@ -463,7 +489,7 @@
 
 .garbage-bar {
   width: 6px;
-  height: 100%;
+  height: var(--garbage-bar-h, 100%);
   background: rgba(255, 0, 0, 0.08);
   border-radius: 3px;
   position: relative;
@@ -475,6 +501,7 @@
   position: absolute;
   bottom: 0;
   width: 100%;
+  height: var(--garbage-fill, 0%);
   background: linear-gradient(to top, #ff0000, #ff4444);
   box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
   border-radius: 3px;
@@ -487,6 +514,7 @@
 
 .opponent-panel {
   opacity: 0.9;
+  margin-left: 16px;
 }
 
 .opponent-name {

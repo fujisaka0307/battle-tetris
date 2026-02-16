@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@battle-tetris/shared": "*",
+    "@types/compression": "^1.8.1",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "express": "^5.0.1",
     "express-rate-limit": "^8.2.1",
