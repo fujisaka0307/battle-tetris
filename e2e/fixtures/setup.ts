@@ -31,6 +31,7 @@ export const test = base.extend<{
 /**
  * トップページに遷移してボタンが利用可能になるまで待つヘルパー。
  * SKIP_AUTH モードではテストログインボタンをクリックしてからトップページへ進む。
+ * ボタンが enabled になるまで待つ（SignalR接続完了を保証する）。
  */
 export async function setupPlayer(page: Page): Promise<void> {
   await page.goto('/');
@@ -39,7 +40,7 @@ export async function setupPlayer(page: Page): Promise<void> {
   if (await testLoginBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
     await testLoginBtn.click();
   }
-  await page.getByTestId('create-room-btn').waitFor({ state: 'visible', timeout: 10000 });
+  await expect(page.getByTestId('create-room-btn')).toBeEnabled({ timeout: 10000 });
 }
 
 /**

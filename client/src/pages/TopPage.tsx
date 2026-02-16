@@ -14,6 +14,7 @@ export default function TopPage() {
   const [roomId, setRoomId_] = useState('');
   const [error, setError] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [waitingRooms, setWaitingRooms] = useState<WaitingRoomInfo[]>([]);
   const subscribedRef = useRef(false);
   const connectingPromiseRef = useRef<Promise<boolean> | null>(null);
@@ -66,6 +67,7 @@ export default function TopPage() {
         });
         signalRClient.sendSubscribeRoomList();
         subscribedRef.current = true;
+        setIsReady(true);
       }
     };
     connectAndSubscribe();
@@ -195,7 +197,7 @@ export default function TopPage() {
           </div>
           <button
             onClick={handleCreateRoom}
-            disabled={isConnecting}
+            disabled={!isReady || isConnecting}
             className="mode-btn mode-btn--cyan"
             data-testid="create-room-btn"
           >
@@ -222,7 +224,7 @@ export default function TopPage() {
               />
               <button
                 onClick={handleJoinRoom}
-                disabled={!roomIdValid || isConnecting}
+                disabled={!roomIdValid || !isReady || isConnecting}
                 className="mode-btn mode-btn--green mode-btn--small"
                 data-testid="join-room-btn"
               >
@@ -241,7 +243,7 @@ export default function TopPage() {
           </div>
           <button
             onClick={handleRandomMatch}
-            disabled={isConnecting}
+            disabled={!isReady || isConnecting}
             className="mode-btn mode-btn--purple"
             data-testid="random-match-btn"
           >
@@ -271,7 +273,7 @@ export default function TopPage() {
                 </div>
                 <button
                   onClick={() => handleJoinFromList(room.roomId)}
-                  disabled={isConnecting}
+                  disabled={!isReady || isConnecting}
                   className="mode-btn mode-btn--green mode-btn--small"
                   data-testid="waiting-room-join-btn"
                 >

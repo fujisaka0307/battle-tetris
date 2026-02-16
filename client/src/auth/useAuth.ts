@@ -85,6 +85,8 @@ function _setSkipAuth(v: boolean) {
   _skipAuthListeners.forEach((l) => l());
 }
 
+const _nullToken = async (): Promise<string | null> => null;
+
 function useSkipAuth(): AuthState {
   const isAuthenticated = useSyncExternalStore(_skipAuthSubscribe, () => _skipAuthValue);
   const login = useCallback(async () => _setSkipAuth(true), []);
@@ -95,7 +97,7 @@ function useSkipAuth(): AuthState {
     enterpriseId: isAuthenticated ? TEST_ENTERPRISE_ID : null,
     login,
     logout,
-    getToken: async () => null,
+    getToken: _nullToken,
   };
 }
 
