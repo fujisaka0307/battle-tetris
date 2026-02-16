@@ -71,7 +71,7 @@ jobs:
 
           # Build .env file content
           ENV_CONTENT="AWS_BEARER_TOKEN_BEDROCK=$BEDROCK_TOKEN"$'\n'
-          ENV_CONTENT+="AWS_REGION=ap-northeast-1"$'\n'
+          ENV_CONTENT+="AWS_REGION=us-east-1"$'\n'
 
           if [ -n "$GRAFANA_ENDPOINT" ]; then
             ENV_CONTENT+="OTEL_EXPORTER_OTLP_ENDPOINT=$GRAFANA_ENDPOINT"$'\n'

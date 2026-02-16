@@ -36,12 +36,11 @@ const PIECE_NAMES: Record<TetrominoType, string> = {
   [TetrominoType.L]: 'L',
 };
 
-// モデルIDのデフォルト値
-// ap-northeast-1 では us. プレフィックスなしのモデルIDを使用
+// モデルIDのデフォルト値 (Cross-Region Inference Profile — US リージョンで使用)
 const DEFAULT_MODELS: Record<ModelTier, string> = {
-  haiku:  'anthropic.claude-3-5-haiku-20241022-v1:0',
-  sonnet: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-  claude: 'anthropic.claude-3-opus-20240229-v1:0',
+  haiku:  'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+  sonnet: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+  claude: 'us.anthropic.claude-3-opus-20240229-v1:0',
 };
 
 /**
@@ -65,7 +64,7 @@ export class BedrockClient {
 
   constructor(modelId: string) {
     this.modelId = modelId;
-    this.region = process.env.AWS_REGION ?? 'ap-northeast-1';
+    this.region = process.env.AWS_REGION ?? 'us-east-1';
     this.bearerToken = process.env.AWS_BEARER_TOKEN_BEDROCK;
 
     if (this.bearerToken) {
