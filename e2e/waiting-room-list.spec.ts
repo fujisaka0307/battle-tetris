@@ -9,8 +9,7 @@ test.describe('待機中ルームリスト', () => {
     playerBPage,
   }) => {
     // Player B opens top page first (triggers early connection + subscribe)
-    await playerBPage.goto('/');
-    await playerBPage.waitForTimeout(1000);
+    await setupPlayer(playerBPage);
 
     // Player A creates a room
     const roomId = await createRoom(playerAPage);
@@ -61,8 +60,7 @@ test.describe('待機中ルームリスト', () => {
     // Player C opens top page to observe the list
     const contextC = await browser.newContext();
     const playerCPage = await contextC.newPage();
-    await playerCPage.goto('/');
-    await playerCPage.waitForTimeout(1000);
+    await setupPlayer(playerCPage);
 
     // Player A creates a room
     const roomId = await createRoom(playerAPage);
@@ -91,8 +89,7 @@ test.describe('待機中ルームリスト', () => {
     playerBPage,
   }) => {
     // Player B opens top page first
-    await playerBPage.goto('/');
-    await playerBPage.waitForTimeout(1000);
+    await setupPlayer(playerBPage);
 
     // Player A creates a room
     const roomId = await createRoom(playerAPage);
@@ -117,8 +114,7 @@ test.describe('待機中ルームリスト', () => {
     browser,
   }) => {
     // Use a fresh server-like scenario: create and destroy a room to verify it disappears
-    await playerAPage.goto('/');
-    await playerAPage.waitForTimeout(1000);
+    await setupPlayer(playerAPage);
 
     // Create a room with a separate context
     const contextTemp = await browser.newContext();
