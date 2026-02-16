@@ -706,9 +706,9 @@
       }
     },
     {
-      "timestamp": "2026-02-16T13:41:22.390Z",
-      "commit": "58d311a",
-      "runId": "22064721702",
+      "timestamp": "2026-02-16T13:42:15.853Z",
+      "commit": "0019c15",
+      "runId": "22064758297",
       "ci": {
         "unitTests": {
           "total": 535,
@@ -724,7 +724,7 @@
       "quality": {
         "coverage": null,
         "bugs": 0,
-        "codeSmells": 43,
+        "codeSmells": 44,
         "duplication": 0.3,
         "qualityGate": "FAIL"
       },
@@ -746,7 +746,7 @@
         }
       },
       "lighthouse": {
-        "performance": 87,
+        "performance": 88,
         "accessibility": 100,
         "bestPractices": 100,
         "seo": 100
