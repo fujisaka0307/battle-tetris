@@ -17,7 +17,7 @@ import {
 } from '../middleware/validation.js';
 import { createLogger } from '../lib/logger.js';
 import { activeRoomsGauge, rematchTotal } from '../lib/metrics.js';
-import { withSpan, addSpanEvent, recordError } from '../lib/tracing.js';
+import { withSpan } from '../lib/tracing.js';
 import { trace } from '@opentelemetry/api';
 import { AiPlayer } from '../ai/AiPlayer.js';
 
