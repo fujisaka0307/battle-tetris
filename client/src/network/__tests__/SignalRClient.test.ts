@@ -422,6 +422,48 @@ describe('SignalRClient', () => {
       expect(onError).toHaveBeenCalledWith({ code: 10021, message: 'Room not found' });
     });
 
+    it('AiThinking イベントでハンドラが呼ばれること', async () => {
+      const onAiThinking = vi.fn();
+      const client = new SignalRClient();
+      client.setHandlers({ onAiThinking });
+
+      await client.connect('http://localhost/hub');
+      currentMockConn!._emit('AiThinking', {
+        prompt: 'Board text',
+        response: '{"col":3,"rotation":0}',
+        model: 'heuristic (Lv.5)',
+      });
+
+      expect(onAiThinking).toHaveBeenCalledWith({
+        prompt: 'Board text',
+        response: '{"col":3,"rotation":0}',
+        model: 'heuristic (Lv.5)',
+      });
+    });
+
+    it('AiThinking ハンドラが後から setHandlers で変更されても動くこと', async () => {
+      const client = new SignalRClient();
+      client.setHandlers({}); // initially no handler
+
+      await client.connect('http://localhost/hub');
+
+      // Set handler AFTER connect
+      const onAiThinking = vi.fn();
+      client.setHandlers({ onAiThinking });
+
+      currentMockConn!._emit('AiThinking', {
+        prompt: 'test',
+        response: 'resp',
+        model: 'haiku',
+      });
+
+      expect(onAiThinking).toHaveBeenCalledWith({
+        prompt: 'test',
+        response: 'resp',
+        model: 'haiku',
+      });
+    });
+
     it('ハンドラ未設定のイベントでもクラッシュしないこと', async () => {
       const client = new SignalRClient();
       client.setHandlers({}); // No handlers
@@ -441,6 +483,7 @@ describe('SignalRClient', () => {
         currentMockConn!._emit('RematchAccepted', { roomId: 'ABC123' });
         currentMockConn!._emit('OpponentDisconnected', { timeout: 30000 });
         currentMockConn!._emit('OpponentReconnected');
+        currentMockConn!._emit('AiThinking', { prompt: 'x', response: 'y', model: 'z' });
         currentMockConn!._emit('Error', { code: 1, message: 'err' });
       }).not.toThrow();
     });

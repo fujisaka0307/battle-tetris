@@ -353,4 +353,69 @@ describe('BattlePage', () => {
 
     expect(mockEngineInstance.start).toHaveBeenCalled();
   });
+
+  // === AiThinking テスト ===
+
+  it('onAiThinking ハンドラが signalRClient.setHandlers に登録されること', () => {
+    renderBattlePage();
+    expect(signalRHandlers.onAiThinking).toBeDefined();
+  });
+
+  it('onAiThinking ハンドラで aiThinkingLog にエントリが追加されること', () => {
+    renderBattlePage();
+
+    act(() => {
+      signalRHandlers.onAiThinking?.({
+        prompt: 'Board:\n...........',
+        response: '{"col": 3, "rotation": 0}',
+        model: 'heuristic (Lv.5)',
+      });
+    });
+
+    const store = useBattleStore.getState();
+    expect(store.aiThinkingLog).toHaveLength(1);
+    expect(store.aiThinkingLog[0].model).toBe('heuristic (Lv.5)');
+    expect(store.aiThinkingLog[0].response).toBe('{"col": 3, "rotation": 0}');
+    expect(store.aiThinkingLog[0].timestamp).toBeGreaterThan(0);
+  });
+
+  it('onAiThinking 後に AI 思考パネルが表示されること', () => {
+    renderBattlePage();
+
+    act(() => {
+      signalRHandlers.onAiThinking?.({
+        prompt: 'Board:\n...........',
+        response: '{"col": 3, "rotation": 0}',
+        model: 'heuristic (Lv.5)',
+      });
+    });
+
+    expect(screen.getByTestId('ai-thinking-panel')).toBeInTheDocument();
+    expect(screen.getByText('Prompt')).toBeInTheDocument();
+    expect(screen.getByText('{"col": 3, "rotation": 0}')).toBeInTheDocument();
+  });
+
+  it('aiThinkingLog が空の場合に AI 思考パネルが表示されないこと', () => {
+    renderBattlePage();
+    expect(screen.queryByTestId('ai-thinking-panel')).not.toBeInTheDocument();
+  });
+
+  it('複数の AiThinking イベントで最新5件のみ保持されること', () => {
+    renderBattlePage();
+
+    act(() => {
+      for (let i = 0; i < 7; i++) {
+        signalRHandlers.onAiThinking?.({
+          prompt: `prompt-${i}`,
+          response: `response-${i}`,
+          model: `model-${i}`,
+        });
+      }
+    });
+
+    const store = useBattleStore.getState();
+    expect(store.aiThinkingLog).toHaveLength(5);
+    expect(store.aiThinkingLog[0].prompt).toBe('prompt-2');
+    expect(store.aiThinkingLog[4].prompt).toBe('prompt-6');
+  });
 });

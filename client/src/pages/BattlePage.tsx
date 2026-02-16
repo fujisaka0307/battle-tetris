@@ -193,7 +193,9 @@ export default function BattlePage() {
 
   // Auto-scroll AI thinking panel
   useEffect(() => {
-    aiThinkingEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (aiThinkingLog.length > 0) {
+      aiThinkingEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
+    }
   }, [aiThinkingLog]);
 
   if (!enterpriseId) return null;
@@ -294,8 +296,8 @@ export default function BattlePage() {
 
           {aiThinkingLog.length > 0 && (
             <div className="ai-thinking-panel" data-testid="ai-thinking-panel">
-              {aiThinkingLog.map((entry: AiThinkingEntry) => (
-                <div key={entry.timestamp} className="ai-thinking-entry">
+              {aiThinkingLog.map((entry: AiThinkingEntry, idx: number) => (
+                <div key={`${entry.timestamp}-${idx}`} className="ai-thinking-entry">
                   <span className="ai-thinking-model">{entry.model.split('.').pop()}</span>
                   <details className="ai-thinking-prompt">
                     <summary>Prompt</summary>
