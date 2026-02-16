@@ -5,11 +5,22 @@ import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import pinoHttp from 'pino-http';
+import { logger } from './lib/logger.js';
+import { getHealthInfo } from './lib/healthState.js';
 
 const app = express();
 
 // Security: フレームワーク情報を隠蔽
 app.disable('x-powered-by');
+
+// 構造化 HTTP ログ（/health はログ除外）
+app.use(pinoHttp({
+  logger,
+  autoLogging: {
+    ignore: (req) => req.url === '/health',
+  },
+}));
 
 // セキュリティヘッダー（CSP + X-Frame-Options + その他）
 app.use(helmet({
@@ -53,7 +64,7 @@ app.use('/api', apiLimiter);
 app.use(express.json());
 
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json(getHealthInfo());
 });
 
 // 本番環境: クライアント静的ファイルを配信

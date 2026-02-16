@@ -1,6 +1,8 @@
+import './instrumentation.js';
 import { createServer } from 'http';
 import app from './app.js';
 import { LocalSignalRAdapter } from './hubs/LocalSignalRAdapter.js';
+import { logger } from './lib/logger.js';
 
 const PORT = Number(process.env.PORT ?? 4000);
 
@@ -8,8 +10,8 @@ const PORT = Number(process.env.PORT ?? 4000);
 const AZURE_TENANT_ID = process.env.AZURE_TENANT_ID;
 const AZURE_CLIENT_ID = process.env.AZURE_CLIENT_ID;
 if (!AZURE_TENANT_ID || !AZURE_CLIENT_ID) {
-  console.warn(
-    'WARNING: AZURE_TENANT_ID and/or AZURE_CLIENT_ID not set. JWT authentication will reject all tokens.',
+  logger.warn(
+    'AZURE_TENANT_ID and/or AZURE_CLIENT_ID not set. JWT authentication will reject all tokens.',
   );
 }
 
@@ -21,7 +23,7 @@ const adapter = new LocalSignalRAdapter();
 adapter.setup(app, server);
 
 server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-  console.log(`  Health: http://localhost:${PORT}/health`);
-  console.log(`  SignalR Hub: ws://localhost:${PORT}/hub`);
+  logger.info({ port: PORT }, 'Server listening');
+  logger.info({ url: `http://localhost:${PORT}/health` }, 'Health endpoint');
+  logger.info({ url: `ws://localhost:${PORT}/hub` }, 'SignalR Hub endpoint');
 });

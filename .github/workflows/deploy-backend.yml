@@ -56,3 +56,15 @@ jobs:
           app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
           publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
           package: server-deploy.zip
+
+      - name: Configure Grafana OTLP settings
+        if: ${{ secrets.GRAFANA_OTLP_ENDPOINT != '' }}
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
+          app-settings-json: |
+            [
+              { "name": "OTEL_EXPORTER_OTLP_ENDPOINT", "value": "${{ secrets.GRAFANA_OTLP_ENDPOINT }}" },
+              { "name": "OTEL_EXPORTER_OTLP_HEADERS", "value": "Authorization=Basic ${{ secrets.GRAFANA_OTLP_AUTH_HEADER }}" },
+              { "name": "LOG_LEVEL", "value": "info" }
+            ]

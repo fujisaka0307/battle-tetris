@@ -15,8 +15,8 @@ describe('ClientEvents', () => {
     expect(ClientEvents.UnsubscribeRoomList).toBe('UnsubscribeRoomList');
   });
 
-  it('has exactly 10 events', () => {
-    expect(Object.keys(ClientEvents)).toHaveLength(10);
+  it('has exactly 11 events', () => {
+    expect(Object.keys(ClientEvents)).toHaveLength(11);
   });
 });
 

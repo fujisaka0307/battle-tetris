@@ -138,6 +138,10 @@ export class SignalRClient {
     this.invoke(ClientEvents.CreateRoom);
   }
 
+  sendCreateAiRoom(aiLevel: number): void {
+    this.invoke(ClientEvents.CreateAiRoom, { aiLevel });
+  }
+
   sendJoinRoom(roomId: string): void {
     this.invoke(ClientEvents.JoinRoom, { roomId });
   }
@@ -288,7 +292,12 @@ export class SignalRClient {
 
   private updateState(state: ConnectionState): void {
     if (this._state !== state) {
+      const prev = this._state;
       this._state = state;
+      // Lazy import to avoid circular deps during module init
+      import('../lib/gameMetrics').then(({ trackConnectionStateChange }) => {
+        trackConnectionStateChange(prev, state);
+      });
       this.handlers.onConnectionStateChanged?.(state);
     }
   }

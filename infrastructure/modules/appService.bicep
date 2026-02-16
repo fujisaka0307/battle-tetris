@@ -15,6 +15,13 @@ param signalRConnectionString string
 @description('Application Insights connection string.')
 param appInsightsConnectionString string
 
+@description('Grafana Cloud OTLP Gateway endpoint (optional).')
+param grafanaOtlpEndpoint string = ''
+
+@secure()
+@description('Grafana Cloud OTLP auth header value (optional).')
+param grafanaOtlpAuthHeader string = ''
+
 // -----------------------------------------------------------------------------
 // App Service Plan
 // -----------------------------------------------------------------------------
@@ -73,6 +80,18 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
           value: '~22'
+        }
+        {
+          name: 'LOG_LEVEL'
+          value: 'info'
+        }
+        {
+          name: 'OTEL_EXPORTER_OTLP_ENDPOINT'
+          value: grafanaOtlpEndpoint
+        }
+        {
+          name: 'OTEL_EXPORTER_OTLP_HEADERS'
+          value: !empty(grafanaOtlpAuthHeader) ? 'Authorization=Basic ${grafanaOtlpAuthHeader}' : ''
         }
       ]
     }

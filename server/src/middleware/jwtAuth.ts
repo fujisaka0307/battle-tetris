@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
+import { logger } from '../lib/logger.js';
 
 const TENANT_ID = process.env.AZURE_TENANT_ID ?? '';
 const CLIENT_ID = process.env.AZURE_CLIENT_ID ?? '';
@@ -49,7 +50,8 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
       enterpriseId,
       oid: typeof payload.oid === 'string' ? payload.oid : undefined,
     };
-  } catch {
+  } catch (err) {
+    logger.warn({ err }, 'JWT verification failed');
     return null;
   }
 }
