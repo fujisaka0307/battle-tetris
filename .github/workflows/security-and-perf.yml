@@ -57,7 +57,7 @@ jobs:
 
       # --- ZAP ---
       - name: OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'http://localhost:4000'
           allow_issue_writing: false
