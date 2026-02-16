@@ -1,4 +1,3 @@
-import { TetrominoType } from '@battle-tetris/shared';
 import { AiGameEngine } from './AiGameEngine.js';
 import type { AiGameCallbacks } from './AiGameEngine.js';
 import { AiDecisionMaker } from './AiDecisionMaker.js';
@@ -100,11 +99,6 @@ export class AiPlayer {
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
-
-  private getCallbacks(): AiGameCallbacks {
-    // Proxy through existing callbacks
-    return (this.engine as any).callbacks ?? {};
-  }
 
   private async tick(): Promise<void> {
     if (!this.running) return;

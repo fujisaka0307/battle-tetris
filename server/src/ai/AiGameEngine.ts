@@ -1,13 +1,9 @@
 import {
   TetrominoType,
   GameState,
-  FIELD_COLS,
-  FIELD_ROWS,
-  FIELD_ROWS_BUFFER,
   Board,
   BagRandomizer,
   GarbageManager,
-  SHAPES,
   getSpawnPosition,
 } from '@battle-tetris/shared';
 

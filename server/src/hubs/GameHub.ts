@@ -365,7 +365,6 @@ export class GameHub {
       if (this.isAiConnection(aiConnId)) {
         // Recreate AI player with new seed
         this.stopAiIfExists(aiConnId);
-        const aiOldPlayer = this.aiPlayers.get(aiConnId);
         const aiLevel = this.getAiLevel(aiConnId);
         const ai = new AiPlayer(seed, aiLevel);
         this.aiPlayers.set(aiConnId, ai);
