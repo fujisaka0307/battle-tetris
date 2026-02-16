@@ -58,19 +58,27 @@ export function resolveModelId(tier: ModelTier): string {
 export class BedrockClient {
   private client: BedrockRuntimeClient | null = null;
   private readonly modelId: string;
+  private readonly region: string;
+  private readonly bearerToken: string | undefined;
   private _available = true;
 
   constructor(modelId: string) {
     this.modelId = modelId;
+    this.region = process.env.AWS_REGION ?? 'ap-northeast-1';
+    this.bearerToken = process.env.AWS_BEARER_TOKEN_BEDROCK;
 
-    try {
-      this.client = new BedrockRuntimeClient({
-        region: process.env.AWS_REGION ?? 'ap-northeast-1',
-      });
-      logger.info({ region: process.env.AWS_REGION ?? 'ap-northeast-1', modelId }, 'BedrockClient initialized');
-    } catch (err) {
-      logger.warn({ err }, 'BedrockClient initialization failed');
-      this._available = false;
+    if (this.bearerToken) {
+      // ベアラートークン認証 — AWS SDK 不要
+      logger.info({ region: this.region, modelId, auth: 'bearer' }, 'BedrockClient initialized (bearer token)');
+    } else {
+      // 標準 AWS SDK クレデンシャルチェーン
+      try {
+        this.client = new BedrockRuntimeClient({ region: this.region });
+        logger.info({ region: this.region, modelId, auth: 'sdk' }, 'BedrockClient initialized (AWS SDK)');
+      } catch (err) {
+        logger.warn({ err }, 'BedrockClient initialization failed');
+        this._available = false;
+      }
     }
   }
 
@@ -78,6 +86,7 @@ export class BedrockClient {
    * Bedrock が利用可能かどうかを返す。
    */
   isAvailable(): boolean {
+    if (this.bearerToken) return this._available;
     return this.client !== null && this._available;
   }
 
@@ -92,8 +101,6 @@ export class BedrockClient {
     pendingGarbage: number,
     temperature: number,
   ): Promise<BedrockResult | null> {
-    if (!this.client) return null;
-
     const pieceName = PIECE_NAMES[currentPiece] ?? '?';
     const nextNames = nextPieces.map((t) => PIECE_NAMES[t] ?? '?').join(', ');
 
@@ -116,31 +123,25 @@ Rules:
 - The piece will hard-drop from the top
 - Minimize holes and height, maximize line clears`;
 
+    const requestBody = JSON.stringify({
+      anthropic_version: 'bedrock-2023-05-31',
+      max_tokens: 100,
+      temperature,
+      system: systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    });
+
     try {
-      const command = new InvokeModelCommand({
-        modelId: this.modelId,
-        contentType: 'application/json',
-        accept: 'application/json',
-        body: JSON.stringify({
-          anthropic_version: 'bedrock-2023-05-31',
-          max_tokens: 100,
-          temperature,
-          system: systemPrompt,
-          messages: [
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-        }),
-      });
+      const text = this.bearerToken
+        ? await this.invokeWithBearer(requestBody)
+        : await this.invokeWithSdk(requestBody);
 
-      const response = await this.client.send(command);
-      const bodyStr = new TextDecoder().decode(response.body);
-      const body = JSON.parse(bodyStr);
-
-      // Claude の応答からテキストを取得
-      const text = body.content?.[0]?.text ?? '';
+      if (text === null) return null;
 
       // JSON を抽出
       const match = text.match(/\{[^}]*"col"\s*:\s*(\d+)[^}]*"rotation"\s*:\s*(\d+)[^}]*\}/);
@@ -161,9 +162,55 @@ Rules:
       return null;
     } catch (err) {
       logger.warn({ err }, 'Bedrock invocation failed');
-      // Disable after first failure to avoid repeated errors (e.g. no credentials)
       this._available = false;
       return null;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private — AWS SDK ベース
+  // ---------------------------------------------------------------------------
+
+  private async invokeWithSdk(requestBody: string): Promise<string | null> {
+    if (!this.client) return null;
+
+    const command = new InvokeModelCommand({
+      modelId: this.modelId,
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: requestBody,
+    });
+
+    const response = await this.client.send(command);
+    const bodyStr = new TextDecoder().decode(response.body);
+    const body = JSON.parse(bodyStr);
+    return body.content?.[0]?.text ?? '';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private — ベアラートークンベース (fetch)
+  // ---------------------------------------------------------------------------
+
+  private async invokeWithBearer(requestBody: string): Promise<string | null> {
+    const url = `https://bedrock-runtime.${this.region}.amazonaws.com/model/${encodeURIComponent(this.modelId)}/invoke`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${this.bearerToken}`,
+      },
+      body: requestBody,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn({ status: response.status, errorText }, 'Bedrock bearer invocation failed');
+      throw new Error(`Bedrock API returned ${response.status}: ${errorText}`);
+    }
+
+    const body = await response.json();
+    return body.content?.[0]?.text ?? '';
   }
 }

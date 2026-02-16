@@ -57,6 +57,17 @@ jobs:
           publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
           package: server-deploy.zip
 
+      - name: Configure Bedrock AI settings
+        if: secrets.AWS_BEARER_TOKEN_BEDROCK != ''
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
+          app-settings-json: |
+            [
+              { "name": "AWS_BEARER_TOKEN_BEDROCK", "value": "${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}", "slotSetting": false },
+              { "name": "AWS_REGION", "value": "ap-northeast-1", "slotSetting": false }
+            ]
+
       - name: Configure Grafana OTLP settings
         if: vars.GRAFANA_OTLP_ENDPOINT != ''
         uses: azure/appservice-settings@v1
