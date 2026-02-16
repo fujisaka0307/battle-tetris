@@ -369,6 +369,9 @@ describe('BattlePage', () => {
         prompt: 'Board:\n...........',
         response: '{"col": 3, "rotation": 0}',
         model: 'heuristic (Lv.5)',
+        modelTier: 'Heuristic',
+        temperature: 1.0,
+        seq: 1,
       });
     });
 
@@ -387,6 +390,9 @@ describe('BattlePage', () => {
         prompt: 'Board:\n...........',
         response: '{"col": 3, "rotation": 0}',
         model: 'heuristic (Lv.5)',
+        modelTier: 'Heuristic',
+        temperature: 1.0,
+        seq: 1,
       });
     });
 
@@ -409,6 +415,9 @@ describe('BattlePage', () => {
           prompt: `prompt-${i}`,
           response: `response-${i}`,
           model: `model-${i}`,
+          modelTier: 'Haiku',
+          temperature: 0.5,
+          seq: i + 1,
         });
       }
     });

@@ -623,6 +623,19 @@
   border-bottom: none;
 }
 
+.ai-thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.ai-thinking-seq {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+}
+
 .ai-thinking-model {
   display: inline-block;
   font-size: 0.55rem;
@@ -631,8 +644,15 @@
   background: rgba(0, 229, 255, 0.12);
   border-radius: 4px;
   padding: 1px 6px;
-  margin-bottom: 4px;
   letter-spacing: 0.05em;
+}
+
+.ai-thinking-temp {
+  font-size: 0.5rem;
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
 }
 
 .ai-thinking-prompt {

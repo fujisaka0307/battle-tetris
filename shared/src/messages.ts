@@ -132,6 +132,9 @@ export interface AiThinkingPayload {
   prompt: string;
   response: string;
   model: string;
+  modelTier: string;
+  temperature: number;
+  seq: number;
 }
 
 export interface ErrorPayload {
