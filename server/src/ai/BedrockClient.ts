@@ -35,25 +35,20 @@ export class BedrockClient {
   private client: BedrockRuntimeClient | null = null;
   private readonly modelId: string;
   private readonly level: number;
+  private _available = true;
 
   constructor(level: number) {
     this.level = level;
     this.modelId = process.env.BEDROCK_MODEL_ID ?? 'us.anthropic.claude-3-5-haiku-20241022-v1:0';
 
-    const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-
-    if (accessKeyId && secretAccessKey) {
+    try {
       this.client = new BedrockRuntimeClient({
-        region: process.env.AWS_REGION ?? 'us-east-1',
-        credentials: {
-          accessKeyId,
-          secretAccessKey,
-        },
+        region: process.env.AWS_REGION ?? 'ap-northeast-1',
       });
-      logger.info('BedrockClient initialized');
-    } else {
-      logger.warn('AWS credentials not configured, Bedrock unavailable');
+      logger.info({ region: process.env.AWS_REGION ?? 'ap-northeast-1' }, 'BedrockClient initialized');
+    } catch (err) {
+      logger.warn({ err }, 'BedrockClient initialization failed');
+      this._available = false;
     }
   }
 
@@ -61,7 +56,7 @@ export class BedrockClient {
    * Bedrock が利用可能かどうかを返す。
    */
   isAvailable(): boolean {
-    return this.client !== null;
+    return this.client !== null && this._available;
   }
 
   /**
@@ -137,6 +132,8 @@ Respond with ONLY a JSON object: {"col": <number>, "rotation": <number>}`;
       return null;
     } catch (err) {
       logger.warn({ err }, 'Bedrock invocation failed');
+      // Disable after first failure to avoid repeated errors (e.g. no credentials)
+      this._available = false;
       return null;
     }
   }
