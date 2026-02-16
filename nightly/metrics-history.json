@@ -1,0 +1,1461 @@
+{
+  "entries": [
+    {
+      "timestamp": "2026-02-16T09:56:25.418Z",
+      "commit": "9ab0ad7",
+      "runId": "22057714464",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 81,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T09:59:26.414Z",
+      "commit": "0491580",
+      "runId": "22057804682",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 96,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T10:01:16.040Z",
+      "commit": "be76aec",
+      "runId": "22057864740",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 90,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T10:05:14.168Z",
+      "commit": "aef72d1",
+      "runId": "22057996405",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 86,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T10:11:57.458Z",
+      "commit": "4ab7508",
+      "runId": "22058211032",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 83,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T11:33:01.571Z",
+      "commit": "567c276",
+      "runId": "22060752871",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 85,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T11:58:11.851Z",
+      "commit": "f8badc5",
+      "runId": "22061507858",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 81,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T12:09:44.885Z",
+      "commit": "e74bd7f",
+      "runId": "22061836848",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 15,
+          "passed": 11,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 42,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 83,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T12:15:16.328Z",
+      "commit": "fd1952d",
+      "runId": "22062013619",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 42,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 88,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T12:39:23.983Z",
+      "commit": "536fa57",
+      "runId": "22062743879",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 42,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 83,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T12:44:27.619Z",
+      "commit": "c585c6f",
+      "runId": "22062901081",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 90,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T12:59:54.728Z",
+      "commit": "f9ea0af",
+      "runId": "22063330241",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 88,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T13:10:32.357Z",
+      "commit": "248d5b7",
+      "runId": "22063664678",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 89,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T13:11:40.330Z",
+      "commit": "996adc2",
+      "runId": "22063699069",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 66,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T13:24:28.351Z",
+      "commit": "9b97905",
+      "runId": "22064090145",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 14,
+          "passed": 10,
+          "failed": 4
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 43,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 85,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T13:42:15.853Z",
+      "commit": "0019c15",
+      "runId": "22064758297",
+      "ci": {
+        "unitTests": {
+          "total": 535,
+          "passed": 535,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 44,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 88,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T13:51:20.338Z",
+      "commit": "ba405b4",
+      "runId": "22065045231",
+      "ci": {
+        "unitTests": {
+          "total": 535,
+          "passed": 535,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 44,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 84,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T14:27:35.046Z",
+      "commit": "6e79efd",
+      "runId": "22066208225",
+      "ci": {
+        "unitTests": {
+          "total": 535,
+          "passed": 535,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 45,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 47,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T14:29:29.478Z",
+      "commit": "ab6f12c",
+      "runId": "22066275235",
+      "ci": {
+        "unitTests": {
+          "total": 535,
+          "passed": 535,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 45,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 79,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T14:36:21.872Z",
+      "commit": "56d6460",
+      "runId": "22066512533",
+      "ci": {
+        "unitTests": {
+          "total": 535,
+          "passed": 535,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 45,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 85,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T15:08:12.371Z",
+      "commit": "f9ab17e",
+      "runId": "22067562552",
+      "ci": {
+        "unitTests": {
+          "total": 535,
+          "passed": 535,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 45,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 90,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T15:16:32.018Z",
+      "commit": "4e6c8fa",
+      "runId": "22067846639",
+      "ci": {
+        "unitTests": {
+          "total": 535,
+          "passed": 535,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 45,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 96,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    },
+    {
+      "timestamp": "2026-02-16T16:00:29.578Z",
+      "commit": "9464697",
+      "runId": "22069321344",
+      "ci": {
+        "unitTests": {
+          "total": 535,
+          "passed": 535,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 45,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": null,
+        "accessibility": null,
+        "bestPractices": null,
+        "seo": null
+      }
+    },
+    {
+      "timestamp": "2026-02-16T16:21:05.504Z",
+      "commit": "3b64c22",
+      "runId": "22069965615",
+      "ci": {
+        "unitTests": {
+          "total": 550,
+          "passed": 550,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 53,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": null,
+        "accessibility": null,
+        "bestPractices": null,
+        "seo": null
+      }
+    },
+    {
+      "timestamp": "2026-02-16T16:32:27.906Z",
+      "commit": "132f228",
+      "runId": "22070513632",
+      "ci": {
+        "unitTests": {
+          "total": 550,
+          "passed": 550,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 53,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": null,
+        "accessibility": null,
+        "bestPractices": null,
+        "seo": null
+      }
+    },
+    {
+      "timestamp": "2026-02-16T16:37:43.852Z",
+      "commit": "5406fec",
+      "runId": "22070670698",
+      "ci": {
+        "unitTests": {
+          "total": 550,
+          "passed": 550,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 53,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": null,
+        "accessibility": null,
+        "bestPractices": null,
+        "seo": null
+      }
+    },
+    {
+      "timestamp": "2026-02-16T16:41:54.789Z",
+      "commit": "f31ef7d",
+      "runId": "22070794340",
+      "ci": {
+        "unitTests": {
+          "total": 550,
+          "passed": 550,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 53,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": null,
+        "accessibility": null,
+        "bestPractices": null,
+        "seo": null
+      }
+    },
+    {
+      "timestamp": "2026-02-16T16:51:33.383Z",
+      "commit": "2597071",
+      "runId": "22071077060",
+      "ci": {
+        "unitTests": {
+          "total": 550,
+          "passed": 550,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 53,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": null,
+        "accessibility": null,
+        "bestPractices": null,
+        "seo": null
+      }
+    },
+    {
+      "timestamp": "2026-02-16T16:52:47.291Z",
+      "commit": "596cb13",
+      "runId": "22071098351",
+      "ci": {
+        "unitTests": {
+          "total": 550,
+          "passed": 550,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 53,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": null,
+        "accessibility": null,
+        "bestPractices": null,
+        "seo": null
+      }
+    },
+    {
+      "timestamp": "2026-02-16T16:57:23.111Z",
+      "commit": "fe05083",
+      "runId": "22071252784",
+      "ci": {
+        "unitTests": {
+          "total": 550,
+          "passed": 550,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": 0,
+        "codeSmells": 53,
+        "duplication": 0.3,
+        "qualityGate": "FAIL"
+      },
+      "security": {
+        "vulnerabilities": 0,
+        "securityHotspots": 1,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": null,
+        "accessibility": null,
+        "bestPractices": null,
+        "seo": null
+      }
+    },
+    {
+      "timestamp": "2026-02-16T18:16:25.719Z",
+      "commit": "fe05083",
+      "runId": "22073400551",
+      "ci": {
+        "unitTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "e2eTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": null,
+        "codeSmells": null,
+        "duplication": null,
+        "qualityGate": null
+      },
+      "security": {
+        "vulnerabilities": null,
+        "securityHotspots": null,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 3
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 0,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": 90,
+        "accessibility": 100,
+        "bestPractices": 100,
+        "seo": 100
+      }
+    }
+  ]
+}
