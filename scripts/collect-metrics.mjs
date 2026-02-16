@@ -38,6 +38,10 @@ function getLabel(result, labelName) {
   return result.labels?.find((l) => l.name === labelName)?.value || '';
 }
 
+function getAllLabels(result, labelName) {
+  return (result.labels || []).filter((l) => l.name === labelName).map((l) => l.value);
+}
+
 function extractNumber(str) {
   const match = str.match(/:\s*(\d+(?:\.\d+)?)/);
   return match ? parseFloat(match[1]) : null;
@@ -79,20 +83,21 @@ function collectMetrics(results) {
   };
 
   for (const result of results) {
+    const parentSuites = getAllLabels(result, 'parentSuite');
     const parentSuite = getLabel(result, 'parentSuite');
     const suite = getLabel(result, 'suite');
     const name = result.name || '';
     const status = result.status || '';
 
-    // Unit tests
-    if (parentSuite === 'ユニットテスト' || parentSuite === 'unit tests' || parentSuite === 'Unit Tests') {
+    // Unit tests (parentSuite may appear multiple times; check all values)
+    if (parentSuites.some((ps) => ps === 'ユニットテスト' || ps === 'unit tests' || ps === 'Unit Tests')) {
       ci.unitTests.total++;
       if (status === 'passed') ci.unitTests.passed++;
       else if (status === 'failed' || status === 'broken') ci.unitTests.failed++;
     }
 
     // E2E tests
-    if (parentSuite === 'E2Eテスト' || parentSuite.toLowerCase().includes('e2e')) {
+    if (parentSuites.some((ps) => ps === 'E2Eテスト' || ps.toLowerCase().includes('e2e'))) {
       ci.e2eTests.total++;
       if (status === 'passed') ci.e2eTests.passed++;
       else if (status === 'failed' || status === 'broken') ci.e2eTests.failed++;
