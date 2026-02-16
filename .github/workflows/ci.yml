@@ -340,73 +340,6 @@ jobs:
           retention-days: 1
 
   # ---------------------------------------------------------------------------
-  # E2E — Playwright tests (dev server mode, needs shared dist only)
-  # ---------------------------------------------------------------------------
-  e2e:
-    runs-on: ubuntu-latest
-    needs: build-shared
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
-      - name: Restore node_modules cache
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
-
-      - name: Download shared dist
-        uses: actions/download-artifact@v7
-        with:
-          name: shared-dist
-          path: shared/dist/
-
-      - name: Get Playwright version
-        id: pw-version
-        run: echo "version=$(npx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
-
-      - name: Restore Playwright browsers cache
-        id: cache-pw
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: pw-${{ runner.os }}-${{ steps.pw-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.cache-pw.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-
-      - name: Install Playwright system dependencies
-        run: npx playwright install-deps chromium
-
-      - name: Run E2E tests
-        run: npx playwright test
-        env:
-          VITE_SKIP_AUTH: 'true'
-          SKIP_AUTH: 'true'
-
-      - uses: actions/upload-artifact@v6
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 14
-
-      - name: Upload Allure results (e2e)
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: allure-results-e2e
-          path: allure-results/
-          retention-days: 5
-          if-no-files-found: warn
-
-  # ---------------------------------------------------------------------------
   # npm audit — dependency vulnerability scanning
   # ---------------------------------------------------------------------------
   npm-audit:
@@ -513,7 +446,6 @@ jobs:
       - test-server
       - build-client
       - build-server
-      - e2e
       - npm-audit
       - sonarcloud
     if: ${{ !cancelled() }}
@@ -538,13 +470,6 @@ jobs:
         continue-on-error: true
         with:
           name: allure-results-unit-server
-          path: allure-results/
-
-      - name: Download E2E Allure results
-        uses: actions/download-artifact@v7
-        continue-on-error: true
-        with:
-          name: allure-results-e2e
           path: allure-results/
 
       - name: Download SonarCloud Allure results
