@@ -3,7 +3,7 @@ import {
   expect,
   createRoom,
   joinRoom,
-  enterNickname,
+  setupPlayer,
   startBattleAndFinish,
   playToGameOver,
 } from './fixtures/setup';
@@ -24,22 +24,22 @@ test.describe('完全ゲームサイクル', () => {
     await playerBPage.waitForURL('/', { timeout: 10000 });
 
     // Player A creates a new room
-    const newRoomId = await createRoom(playerAPage, 'Alice2');
+    const newRoomId = await createRoom(playerAPage);
 
     // Player B joins the new room
-    await joinRoom(playerBPage, 'Bob2', newRoomId);
+    await joinRoom(playerBPage, newRoomId);
 
     // Verify both are in lobby
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob2', { timeout: 5000 });
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('Alice2', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
   });
 
   test('ランダムマッチ→対戦→結果→トップの完全フロー', async ({ playerAPage, playerBPage }) => {
     // Random match
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
     // Both should be in lobby
@@ -62,10 +62,10 @@ test.describe('完全ゲームサイクル', () => {
     // Go top
     await playerAPage.getByTestId('go-top-btn').click();
     await playerAPage.waitForURL('/', { timeout: 5000 });
-    await expect(playerAPage.getByTestId('nickname-input')).toBeVisible();
+    await expect(playerAPage.getByTestId('create-room-btn')).toBeVisible();
   });
 
-  test('対戦後トップに戻りニックネーム入力が空であること', async ({
+  test('対戦後トップに戻りトップページが正常に表示されること', async ({
     playerAPage,
     playerBPage,
   }) => {
@@ -75,7 +75,7 @@ test.describe('完全ゲームサイクル', () => {
     await playerAPage.getByTestId('go-top-btn').click();
     await playerAPage.waitForURL('/', { timeout: 5000 });
 
-    // Verify nickname input is empty (store was reset)
-    await expect(playerAPage.getByTestId('nickname-input')).toHaveValue('');
+    // Verify top page is displayed with clean state
+    await expect(playerAPage.getByTestId('create-room-btn')).toBeVisible();
   });
 });

@@ -6,6 +6,18 @@ import TopPage from '../TopPage';
 import { signalRClient } from '../../network/SignalRClient';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 
+// Mock useAuth
+vi.mock('../../auth/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    enterpriseId: 'test@dxc.com',
+    login: vi.fn(),
+    logout: vi.fn(),
+    getToken: vi.fn().mockResolvedValue('test-token'),
+  }),
+}));
+
 // Mock SignalR client
 let capturedHandlers: Record<string, (...args: unknown[]) => unknown> = {};
 vi.mock('../../network/SignalRClient', () => ({
@@ -54,59 +66,47 @@ describe('TopPage', () => {
     expect(screen.getByText('Battle Tetris')).toBeInTheDocument();
   });
 
-  it('ニックネーム未入力でボタンが無効化されること', () => {
+  it('Enterprise ID が表示されること', () => {
     renderTopPage();
-    expect(screen.getByTestId('create-room-btn')).toBeDisabled();
-    expect(screen.getByTestId('join-room-btn')).toBeDisabled();
-    expect(screen.getByTestId('random-match-btn')).toBeDisabled();
+    expect(screen.getByTestId('enterprise-id')).toHaveTextContent('test@dxc.com');
   });
 
-  it('ニックネーム入力でルーム作成ボタンが有効化されること', async () => {
+  it('ルーム作成ボタンが表示されること', () => {
     renderTopPage();
-    const input = screen.getByTestId('nickname-input');
-    await userEvent.type(input, 'Alice');
-
-    expect(screen.getByTestId('create-room-btn')).not.toBeDisabled();
-    expect(screen.getByTestId('random-match-btn')).not.toBeDisabled();
+    expect(screen.getByTestId('create-room-btn')).toBeInTheDocument();
   });
 
-  it('17文字以上入力でバリデーションエラーが表示されること', async () => {
+  it('ランダムマッチボタンが表示されること', () => {
     renderTopPage();
-    const input = screen.getByTestId('nickname-input');
-    await userEvent.type(input, 'A'.repeat(17));
-
-    expect(screen.getByTestId('nickname-error')).toBeInTheDocument();
+    expect(screen.getByTestId('random-match-btn')).toBeInTheDocument();
   });
 
   it('ルーム作成ボタンクリックで SignalR の CreateRoom が呼ばれること', async () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Alice');
     await userEvent.click(screen.getByTestId('create-room-btn'));
 
-    expect(signalRClient.sendCreateRoom).toHaveBeenCalledWith('Alice');
+    expect(signalRClient.sendCreateRoom).toHaveBeenCalledWith();
   });
 
   it('ルームID入力 + 参加ボタンで JoinRoom が呼ばれること', async () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Bob');
     await userEvent.type(screen.getByTestId('room-id-input'), 'ABC123');
     await userEvent.click(screen.getByTestId('join-room-btn'));
 
-    expect(signalRClient.sendJoinRoom).toHaveBeenCalledWith('Bob', 'ABC123');
+    expect(signalRClient.sendJoinRoom).toHaveBeenCalledWith('ABC123');
   });
 
   it('ランダムマッチボタンで JoinRandomMatch が呼ばれること', async () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Charlie');
     await userEvent.click(screen.getByTestId('random-match-btn'));
 
-    expect(signalRClient.sendJoinRandomMatch).toHaveBeenCalledWith('Charlie');
+    expect(signalRClient.sendJoinRandomMatch).toHaveBeenCalledWith();
   });
 
   // === C1 カバレッジ追加テスト ===
@@ -115,7 +115,6 @@ describe('TopPage', () => {
     (signalRClient as any).state = 'disconnected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Alice');
     await userEvent.click(screen.getByTestId('create-room-btn'));
 
     expect(signalRClient.connect).toHaveBeenCalled();
@@ -125,7 +124,6 @@ describe('TopPage', () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Alice');
     await userEvent.click(screen.getByTestId('create-room-btn'));
 
     expect(signalRClient.connect).not.toHaveBeenCalled();
@@ -136,7 +134,6 @@ describe('TopPage', () => {
     (signalRClient.connect as any).mockRejectedValue(new Error('fail'));
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Alice');
     await userEvent.click(screen.getByTestId('create-room-btn'));
 
     await waitFor(() => {
@@ -149,7 +146,6 @@ describe('TopPage', () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Alice');
     await userEvent.click(screen.getByTestId('create-room-btn'));
 
     act(() => {
@@ -163,7 +159,6 @@ describe('TopPage', () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Alice');
     await userEvent.click(screen.getByTestId('create-room-btn'));
 
     act(() => {
@@ -177,12 +172,11 @@ describe('TopPage', () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Bob');
     await userEvent.type(screen.getByTestId('room-id-input'), 'ABC123');
     await userEvent.click(screen.getByTestId('join-room-btn'));
 
     act(() => {
-      capturedHandlers.onOpponentJoined?.({ nickname: 'Alice' });
+      capturedHandlers.onOpponentJoined?.({ enterpriseId: 'alice@dxc.com' });
     });
 
     expect(mockNavigate).toHaveBeenCalledWith('/lobby/ABC123');
@@ -192,25 +186,23 @@ describe('TopPage', () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Charlie');
     await userEvent.click(screen.getByTestId('random-match-btn'));
 
     act(() => {
       capturedHandlers.onMatchFound?.({
         roomId: 'MATCH1',
-        opponentNickname: 'Dave',
+        opponentEnterpriseId: 'dave@dxc.com',
       });
     });
 
     expect(mockNavigate).toHaveBeenCalledWith('/lobby/MATCH1');
-    expect(usePlayerStore.getState().opponentNickname).toBe('Dave');
+    expect(usePlayerStore.getState().opponentEnterpriseId).toBe('dave@dxc.com');
   });
 
   it('ランダムマッチの onError でエラーが表示されること', async () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Charlie');
     await userEvent.click(screen.getByTestId('random-match-btn'));
 
     act(() => {
@@ -225,7 +217,6 @@ describe('TopPage', () => {
     (signalRClient.connect as any).mockRejectedValue(new Error('fail'));
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Bob');
     await userEvent.type(screen.getByTestId('room-id-input'), 'ABC123');
     await userEvent.click(screen.getByTestId('join-room-btn'));
 
@@ -240,7 +231,6 @@ describe('TopPage', () => {
     (signalRClient.connect as any).mockRejectedValue(new Error('fail'));
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Charlie');
     await userEvent.click(screen.getByTestId('random-match-btn'));
 
     await waitFor(() => {
@@ -255,18 +245,10 @@ describe('TopPage', () => {
     expect(screen.getByTestId('room-id-input')).toHaveValue('ABC123');
   });
 
-  it('ニックネーム16文字以内ではバリデーションエラーが出ないこと', async () => {
-    renderTopPage();
-    const input = screen.getByTestId('nickname-input');
-    await userEvent.type(input, 'A'.repeat(16));
-    expect(screen.queryByTestId('nickname-error')).not.toBeInTheDocument();
-  });
-
   it('JoinRoom の onError でエラーが表示されること', async () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Bob');
     await userEvent.type(screen.getByTestId('room-id-input'), 'ABC123');
     await userEvent.click(screen.getByTestId('join-room-btn'));
 
@@ -281,8 +263,7 @@ describe('TopPage', () => {
     (signalRClient as any).state = 'connected';
     renderTopPage();
 
-    await userEvent.type(screen.getByTestId('nickname-input'), 'Alice');
-    // Only 3 chars - not valid (needs 6 alphanumeric)
+    // Only 2 chars - not valid (needs 6 alphanumeric)
     await userEvent.type(screen.getByTestId('room-id-input'), 'AB');
 
     expect(screen.getByTestId('join-room-btn')).toBeDisabled();

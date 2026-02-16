@@ -2,31 +2,31 @@ import { create } from 'zustand';
 import type { ConnectionState } from '../network/SignalRClient';
 
 interface PlayerState {
-  nickname: string;
+  enterpriseId: string;
   roomId: string | null;
   connectionState: ConnectionState;
-  opponentNickname: string | null;
+  opponentEnterpriseId: string | null;
 
-  setNickname: (nickname: string) => void;
+  setEnterpriseId: (enterpriseId: string) => void;
   setRoomId: (roomId: string | null) => void;
   setConnectionState: (state: ConnectionState) => void;
-  setOpponentNickname: (nickname: string | null) => void;
+  setOpponentEnterpriseId: (enterpriseId: string | null) => void;
   reset: () => void;
 }
 
 const initialState = {
-  nickname: '',
+  enterpriseId: '',
   roomId: null as string | null,
   connectionState: 'disconnected' as ConnectionState,
-  opponentNickname: null as string | null,
+  opponentEnterpriseId: null as string | null,
 };
 
 export const usePlayerStore = create<PlayerState>((set) => ({
   ...initialState,
 
-  setNickname: (nickname) => set({ nickname }),
+  setEnterpriseId: (enterpriseId) => set({ enterpriseId }),
   setRoomId: (roomId) => set({ roomId }),
   setConnectionState: (connectionState) => set({ connectionState }),
-  setOpponentNickname: (nickname) => set({ opponentNickname: nickname }),
+  setOpponentEnterpriseId: (enterpriseId) => set({ opponentEnterpriseId: enterpriseId }),
   reset: () => set({ ...initialState }),
 }));

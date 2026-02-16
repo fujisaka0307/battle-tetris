@@ -26,6 +26,7 @@ type WebSocket = WS;
 import type { Express, Request, Response } from 'express';
 import { GameHub, type HubConnection } from './GameHub.js';
 import { ClientEvents } from '@battle-tetris/shared';
+import { verifyToken, extractToken } from '../middleware/jwtAuth.js';
 
 // SignalR レコードセパレータ
 const RECORD_SEPARATOR = String.fromCharCode(0x1e);
@@ -59,6 +60,7 @@ export class LocalSignalRAdapter implements HubConnection {
   private wss: any = null;
   private readonly connections = new Map<string, WebSocket>();
   private readonly alive = new Map<string, boolean>();
+  private readonly connectionUsers = new Map<string, string>();
   private gameHub: GameHub;
   private nextConnectionId = 1;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
@@ -83,6 +85,10 @@ export class LocalSignalRAdapter implements HubConnection {
     ws.send(JSON.stringify(message) + RECORD_SEPARATOR);
   }
 
+  getEnterpriseId(connectionId: string): string | undefined {
+    return this.connectionUsers.get(connectionId);
+  }
+
   // ---------------------------------------------------------------------------
   // セットアップ
   // ---------------------------------------------------------------------------
@@ -93,27 +99,60 @@ export class LocalSignalRAdapter implements HubConnection {
    */
   setup(app: Express, server: HttpServer): void {
     // SignalR ネゴシエーションエンドポイント
-    app.post('/hub/negotiate', (req: Request, res: Response) => {
-      const connectionId = `conn-${this.nextConnectionId++}`;
-      res.json({
-        connectionId,
-        negotiateVersion: 1,
-        availableTransports: [
-          {
-            transport: 'WebSockets',
-            transferFormats: ['Text'],
-          },
-        ],
-      });
+    app.post('/hub/negotiate', async (req: Request, res: Response) => {
+      const token = extractToken(req.headers.authorization);
+      if (token) {
+        const result = await verifyToken(token);
+        if (!result) {
+          res.status(401).json({ error: 'Unauthorized' });
+          return;
+        }
+        const connectionId = `conn-${this.nextConnectionId++}`;
+        this.connectionUsers.set(connectionId, result.enterpriseId);
+        res.json({
+          connectionId,
+          negotiateVersion: 1,
+          availableTransports: [
+            {
+              transport: 'WebSockets',
+              transferFormats: ['Text'],
+            },
+          ],
+        });
+      } else {
+        // No token — allow for dev/test but mark as unauthenticated
+        const connectionId = `conn-${this.nextConnectionId++}`;
+        res.json({
+          connectionId,
+          negotiateVersion: 1,
+          availableTransports: [
+            {
+              transport: 'WebSockets',
+              transferFormats: ['Text'],
+            },
+          ],
+        });
+      }
     });
 
     // WebSocket サーバー
     this.wss = new wsModule.Server({ server, path: '/hub' });
 
-    this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+    this.wss.on('connection', async (ws: WebSocket, req: IncomingMessage) => {
       // クエリパラメータから connectionId を取得
       const url = new URL(req.url || '', `http://${req.headers.host}`);
       const connectionId = url.searchParams.get('id') || `conn-${this.nextConnectionId++}`;
+
+      // JWT auth via access_token query param (if not already authenticated at negotiate)
+      if (!this.connectionUsers.has(connectionId)) {
+        const queryToken = url.searchParams.get('access_token');
+        if (queryToken) {
+          const result = await verifyToken(queryToken);
+          if (result) {
+            this.connectionUsers.set(connectionId, result.enterpriseId);
+          }
+        }
+      }
 
       this.connections.set(connectionId, ws);
       this.alive.set(connectionId, true);
@@ -125,12 +164,14 @@ export class LocalSignalRAdapter implements HubConnection {
 
       ws.on('close', () => {
         this.alive.delete(connectionId);
+        this.connectionUsers.delete(connectionId);
         this.gameHub.handleDisconnected(connectionId);
         this.connections.delete(connectionId);
       });
 
       ws.on('error', () => {
         this.alive.delete(connectionId);
+        this.connectionUsers.delete(connectionId);
         this.connections.delete(connectionId);
       });
     });
@@ -141,6 +182,7 @@ export class LocalSignalRAdapter implements HubConnection {
         if (!this.alive.get(connectionId)) {
           this.alive.delete(connectionId);
           this.connections.delete(connectionId);
+          this.connectionUsers.delete(connectionId);
           this.gameHub.handleDisconnected(connectionId);
           ws.terminate();
           continue;
@@ -209,13 +251,13 @@ export class LocalSignalRAdapter implements HubConnection {
 
     switch (target) {
       case ClientEvents.CreateRoom:
-        this.gameHub.handleCreateRoom(connectionId, args[0]);
+        this.gameHub.handleCreateRoom(connectionId);
         break;
       case ClientEvents.JoinRoom:
         this.gameHub.handleJoinRoom(connectionId, args[0]);
         break;
       case ClientEvents.JoinRandomMatch:
-        this.gameHub.handleJoinRandomMatch(connectionId, args[0]);
+        this.gameHub.handleJoinRandomMatch(connectionId);
         break;
       case ClientEvents.PlayerReady:
         this.gameHub.handlePlayerReady(connectionId);

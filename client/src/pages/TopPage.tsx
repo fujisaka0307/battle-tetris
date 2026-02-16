@@ -1,15 +1,16 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { NICKNAME_MIN_LENGTH, NICKNAME_MAX_LENGTH, ROOM_ID_LENGTH } from '@battle-tetris/shared';
+import { ROOM_ID_LENGTH } from '@battle-tetris/shared';
 import type { WaitingRoomInfo } from '@battle-tetris/shared';
 import { signalRClient } from '../network/SignalRClient';
 import { usePlayerStore } from '../stores/usePlayerStore';
+import { useAuth } from '../auth/useAuth';
 
 export default function TopPage() {
   const navigate = useNavigate();
-  const { setNickname: storeNickname, setRoomId } = usePlayerStore();
+  const { setEnterpriseId: storeEnterpriseId, setRoomId } = usePlayerStore();
+  const { enterpriseId, logout, getToken } = useAuth();
 
-  const [nickname, setNickname] = useState('');
   const [roomId, setRoomId_] = useState('');
   const [error, setError] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
@@ -17,16 +18,7 @@ export default function TopPage() {
   const subscribedRef = useRef(false);
   const connectingPromiseRef = useRef<Promise<boolean> | null>(null);
 
-  const nicknameValid =
-    nickname.trim().length >= NICKNAME_MIN_LENGTH &&
-    nickname.trim().length <= NICKNAME_MAX_LENGTH;
-
   const roomIdValid = /^[A-Za-z0-9]{6}$/.test(roomId);
-
-  const nicknameError =
-    nickname.length > NICKNAME_MAX_LENGTH
-      ? `ニックネームは${NICKNAME_MAX_LENGTH}文字以内で入力してください`
-      : '';
 
   const ensureConnected = useCallback(async () => {
     if (signalRClient.state === 'connected') return true;
@@ -35,7 +27,11 @@ export default function TopPage() {
     const promise = (async () => {
       try {
         const url = import.meta.env.VITE_SIGNALR_URL || '/hub';
-        await signalRClient.connect(url);
+        const tokenFactory = async () => {
+          const token = await getToken();
+          return token ?? '';
+        };
+        await signalRClient.connect(url, tokenFactory);
         return true;
       } catch {
         setError('サーバーに接続できませんでした');
@@ -47,7 +43,14 @@ export default function TopPage() {
     })();
     connectingPromiseRef.current = promise;
     return promise;
-  }, []);
+  }, [getToken]);
+
+  // Enterprise ID をストアに保存
+  useEffect(() => {
+    if (enterpriseId) {
+      storeEnterpriseId(enterpriseId);
+    }
+  }, [enterpriseId, storeEnterpriseId]);
 
   // 早期接続とルームリスト購読
   useEffect(() => {
@@ -82,10 +85,7 @@ export default function TopPage() {
   }, []);
 
   const handleCreateRoom = useCallback(async () => {
-    if (!nicknameValid) return;
     setError('');
-    const trimmed = nickname.trim();
-    storeNickname(trimmed);
 
     if (!(await ensureConnected())) return;
 
@@ -99,21 +99,19 @@ export default function TopPage() {
     });
 
     subscribeIfNeeded();
-    signalRClient.sendCreateRoom(trimmed);
-  }, [nickname, nicknameValid, storeNickname, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+    signalRClient.sendCreateRoom();
+  }, [ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
   const handleJoinRoom = useCallback(async () => {
-    if (!nicknameValid || !roomIdValid) return;
+    if (!roomIdValid) return;
     setError('');
-    const trimmed = nickname.trim();
-    storeNickname(trimmed);
 
     if (!(await ensureConnected())) return;
 
     signalRClient.setHandlers({
       onOpponentJoined: (payload) => {
         setRoomId(roomId.toUpperCase());
-        usePlayerStore.getState().setOpponentNickname(payload.nickname);
+        usePlayerStore.getState().setOpponentEnterpriseId(payload.enterpriseId);
         navigate(`/lobby/${roomId.toUpperCase()}`);
       },
       onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
@@ -121,21 +119,18 @@ export default function TopPage() {
     });
 
     subscribeIfNeeded();
-    signalRClient.sendJoinRoom(trimmed, roomId.toUpperCase());
-  }, [nickname, nicknameValid, roomId, roomIdValid, storeNickname, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+    signalRClient.sendJoinRoom(roomId.toUpperCase());
+  }, [roomId, roomIdValid, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
   const handleRandomMatch = useCallback(async () => {
-    if (!nicknameValid) return;
     setError('');
-    const trimmed = nickname.trim();
-    storeNickname(trimmed);
 
     if (!(await ensureConnected())) return;
 
     signalRClient.setHandlers({
       onMatchFound: (payload) => {
         setRoomId(payload.roomId);
-        usePlayerStore.getState().setOpponentNickname(payload.opponentNickname);
+        usePlayerStore.getState().setOpponentEnterpriseId(payload.opponentEnterpriseId);
         navigate(`/lobby/${payload.roomId}`);
       },
       onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
@@ -143,24 +138,18 @@ export default function TopPage() {
     });
 
     subscribeIfNeeded();
-    signalRClient.sendJoinRandomMatch(trimmed);
-  }, [nickname, nicknameValid, storeNickname, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+    signalRClient.sendJoinRandomMatch();
+  }, [ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
   const handleJoinFromList = useCallback(async (targetRoomId: string) => {
-    if (!nicknameValid) {
-      setError('ニックネームを入力してください');
-      return;
-    }
     setError('');
-    const trimmed = nickname.trim();
-    storeNickname(trimmed);
 
     if (!(await ensureConnected())) return;
 
     signalRClient.setHandlers({
       onOpponentJoined: (payload) => {
         setRoomId(targetRoomId);
-        usePlayerStore.getState().setOpponentNickname(payload.nickname);
+        usePlayerStore.getState().setOpponentEnterpriseId(payload.enterpriseId);
         navigate(`/lobby/${targetRoomId}`);
       },
       onWaitingRoomListUpdated: (payload) => setWaitingRooms(payload.rooms),
@@ -168,8 +157,8 @@ export default function TopPage() {
     });
 
     subscribeIfNeeded();
-    signalRClient.sendJoinRoom(trimmed, targetRoomId);
-  }, [nickname, nicknameValid, storeNickname, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+    signalRClient.sendJoinRoom(targetRoomId);
+  }, [ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
 
   return (
     <div className="top-page">
@@ -180,29 +169,18 @@ export default function TopPage() {
         <p className="top-subtitle">オンライン たいせん</p>
       </div>
 
-      {/* ---- ニックネーム ---- */}
-      <div className="top-section">
-        <label htmlFor="nickname" className="top-label">
-          なまえを いれてね
-        </label>
-        <div className="top-nickname-wrapper">
-          <span className="top-nickname-icon" aria-hidden="true">✏️</span>
-          <input
-            id="nickname"
-            type="text"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            maxLength={NICKNAME_MAX_LENGTH + 1}
-            placeholder="ニックネーム"
-            className="top-nickname-input"
-            data-testid="nickname-input"
-          />
-        </div>
-        {nicknameError && (
-          <p className="top-error-inline" data-testid="nickname-error">
-            {nicknameError}
-          </p>
-        )}
+      {/* ---- Enterprise ID バッジ + ログアウト ---- */}
+      <div className="top-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span className="top-enterprise-badge" data-testid="enterprise-id">
+          {enterpriseId}
+        </span>
+        <button
+          onClick={logout}
+          className="top-logout-btn"
+          data-testid="logout-btn"
+        >
+          ログアウト
+        </button>
       </div>
 
       {/* ---- モードカード ---- */}
@@ -216,7 +194,7 @@ export default function TopPage() {
           </div>
           <button
             onClick={handleCreateRoom}
-            disabled={!nicknameValid || isConnecting}
+            disabled={isConnecting}
             className="mode-btn mode-btn--cyan"
             data-testid="create-room-btn"
           >
@@ -243,7 +221,7 @@ export default function TopPage() {
               />
               <button
                 onClick={handleJoinRoom}
-                disabled={!nicknameValid || !roomIdValid || isConnecting}
+                disabled={!roomIdValid || isConnecting}
                 className="mode-btn mode-btn--green mode-btn--small"
                 data-testid="join-room-btn"
               >
@@ -262,7 +240,7 @@ export default function TopPage() {
           </div>
           <button
             onClick={handleRandomMatch}
-            disabled={!nicknameValid || isConnecting}
+            disabled={isConnecting}
             className="mode-btn mode-btn--purple"
             data-testid="random-match-btn"
           >
@@ -287,12 +265,12 @@ export default function TopPage() {
                     {room.roomId}
                   </span>
                   <span className="waiting-card-creator" data-testid="waiting-room-creator">
-                    {room.creatorNickname}
+                    {room.creatorEnterpriseId}
                   </span>
                 </div>
                 <button
                   onClick={() => handleJoinFromList(room.roomId)}
-                  disabled={!nicknameValid || isConnecting}
+                  disabled={isConnecting}
                   className="mode-btn mode-btn--green mode-btn--small"
                   data-testid="waiting-room-join-btn"
                 >

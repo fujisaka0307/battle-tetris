@@ -9,11 +9,8 @@ import { RoomManager } from '../services/RoomManager.js';
 import { MatchmakingService } from '../services/MatchmakingService.js';
 import { GameSessionManager } from '../services/GameSessionManager.js';
 import { Player } from '../models/Player.js';
-import { validateNickname } from '../utils/nicknameFilter.js';
 import {
-  CreateRoomSchema,
   JoinRoomSchema,
-  JoinRandomMatchSchema,
   FieldUpdateSchema,
   LinesClearedSchema,
   validatePayload,
@@ -30,6 +27,8 @@ import {
 export interface HubConnection {
   /** 指定クライアントへイベントを送信 */
   sendToClient(connectionId: string, event: string, payload: unknown): void;
+  /** connectionId から Enterprise ID を取得 */
+  getEnterpriseId(connectionId: string): string | undefined;
 }
 
 // =============================================================================
@@ -81,20 +80,14 @@ export class GameHub {
   // Client → Server handlers
   // ---------------------------------------------------------------------------
 
-  handleCreateRoom(connectionId: string, data: unknown): void {
-    const payload = validatePayload(CreateRoomSchema, data);
-    if (!payload) {
-      this.sendError(connectionId, ErrorCodes.INVALID_NICKNAME, 'Invalid payload');
+  handleCreateRoom(connectionId: string): void {
+    const enterpriseId = this.hub.getEnterpriseId(connectionId);
+    if (!enterpriseId) {
+      this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
       return;
     }
 
-    const validation = validateNickname(payload.nickname);
-    if (!validation.valid) {
-      this.sendError(connectionId, ErrorCodes.INVALID_NICKNAME, validation.error!);
-      return;
-    }
-
-    const player = new Player(connectionId, validation.nickname);
+    const player = new Player(connectionId, enterpriseId);
     const room = this.roomManager.createRoom(player);
 
     this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, {
@@ -105,15 +98,15 @@ export class GameHub {
   }
 
   handleJoinRoom(connectionId: string, data: unknown): void {
-    const payload = validatePayload(JoinRoomSchema, data);
-    if (!payload) {
-      this.sendError(connectionId, ErrorCodes.INVALID_NICKNAME, 'Invalid payload');
+    const enterpriseId = this.hub.getEnterpriseId(connectionId);
+    if (!enterpriseId) {
+      this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
       return;
     }
 
-    const validation = validateNickname(payload.nickname);
-    if (!validation.valid) {
-      this.sendError(connectionId, ErrorCodes.INVALID_NICKNAME, validation.error!);
+    const payload = validatePayload(JoinRoomSchema, data);
+    if (!payload) {
+      this.sendError(connectionId, ErrorCodes.INVALID_PAYLOAD, 'Invalid payload');
       return;
     }
 
@@ -128,48 +121,42 @@ export class GameHub {
       return;
     }
 
-    const player = new Player(connectionId, validation.nickname);
+    const player = new Player(connectionId, enterpriseId);
     this.roomManager.joinRoom(payload.roomId, player);
 
     // Notify both players
     const opponent = room.getOpponent(connectionId);
     if (opponent) {
       this.hub.sendToClient(opponent.connectionId, ServerEvents.OpponentJoined, {
-        nickname: validation.nickname,
+        enterpriseId,
       });
       this.hub.sendToClient(connectionId, ServerEvents.OpponentJoined, {
-        nickname: opponent.nickname,
+        enterpriseId: opponent.enterpriseId,
       });
     }
 
     this.broadcastWaitingRoomList();
   }
 
-  handleJoinRandomMatch(connectionId: string, data: unknown): void {
-    const payload = validatePayload(JoinRandomMatchSchema, data);
-    if (!payload) {
-      this.sendError(connectionId, ErrorCodes.INVALID_NICKNAME, 'Invalid payload');
+  handleJoinRandomMatch(connectionId: string): void {
+    const enterpriseId = this.hub.getEnterpriseId(connectionId);
+    if (!enterpriseId) {
+      this.sendError(connectionId, ErrorCodes.UNAUTHORIZED, 'Unauthorized');
       return;
     }
 
-    const validation = validateNickname(payload.nickname);
-    if (!validation.valid) {
-      this.sendError(connectionId, ErrorCodes.INVALID_NICKNAME, validation.error!);
-      return;
-    }
-
-    const player = new Player(connectionId, validation.nickname);
+    const player = new Player(connectionId, enterpriseId);
     const result = this.matchmaking.enqueue(player);
 
     if (result) {
       // Match found — notify both players
       this.hub.sendToClient(result.player1.connectionId, ServerEvents.MatchFound, {
         roomId: result.room.roomId,
-        opponentNickname: result.player2.nickname,
+        opponentEnterpriseId: result.player2.enterpriseId,
       });
       this.hub.sendToClient(result.player2.connectionId, ServerEvents.MatchFound, {
         roomId: result.room.roomId,
-        opponentNickname: result.player1.nickname,
+        opponentEnterpriseId: result.player1.enterpriseId,
       });
     }
     // If no match yet, player waits in queue
@@ -335,7 +322,7 @@ export class GameHub {
       .filter((r) => r.status === RoomStatus.Waiting && !r.isFull())
       .map((r) => ({
         roomId: r.roomId,
-        creatorNickname: r.player1?.nickname ?? '',
+        creatorEnterpriseId: r.player1?.enterpriseId ?? '',
       }));
   }
 

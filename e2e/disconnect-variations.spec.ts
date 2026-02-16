@@ -1,4 +1,4 @@
-import { test, expect, createRoom, joinRoom, startBattle } from './fixtures/setup';
+import { test, expect, createRoom, joinRoom, setupPlayer, startBattle } from './fixtures/setup';
 
 test.describe('切断バリエーション', () => {
   test('D-2: 対戦中にネットワーク切断→30秒以内に復帰→ゲーム継続', async ({
@@ -52,9 +52,7 @@ test.describe('切断バリエーション', () => {
     const contextNew = await browser.newContext();
     const newPage = await contextNew.newPage();
 
-    await newPage.goto('/');
-    await newPage.waitForTimeout(3000);
-    await newPage.getByTestId('nickname-input').fill('NewPlayer');
+    await setupPlayer(newPage);
     await newPage.getByTestId('create-room-btn').click();
 
     // Server should still work — new room created
@@ -73,10 +71,10 @@ test.describe('切断バリエーション', () => {
     const contextB = await browser.newContext();
     const playerBPage = await contextB.newPage();
 
-    const roomId = await createRoom(playerAPage, 'Alice');
-    await joinRoom(playerBPage, 'Bob', roomId);
+    const roomId = await createRoom(playerAPage);
+    await joinRoom(playerBPage, roomId);
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     // Both click Ready
     await playerAPage.getByTestId('ready-btn').click();

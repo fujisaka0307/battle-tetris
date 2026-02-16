@@ -1,4 +1,4 @@
-import { test, expect, enterNickname, createRoom } from './fixtures/setup';
+import { test, expect, setupPlayer, createRoom } from './fixtures/setup';
 
 // ルームリストは共有サーバー状態に依存するためシリアル実行
 test.describe.configure({ mode: 'serial' });
@@ -13,16 +13,16 @@ test.describe('待機中ルームリスト', () => {
     await playerBPage.waitForTimeout(1000);
 
     // Player A creates a room
-    const roomId = await createRoom(playerAPage, 'Alice');
+    const roomId = await createRoom(playerAPage);
 
     // Player B should see the room in the waiting list
     await expect(playerBPage.getByTestId('waiting-room-list')).toBeVisible({ timeout: 5000 });
 
-    // Find the specific room item containing Alice's room
+    // Find the specific room item containing the room
     const roomItem = playerBPage.getByTestId('waiting-room-item').filter({
       has: playerBPage.getByTestId('waiting-room-id').getByText(roomId),
     });
-    await expect(roomItem.getByTestId('waiting-room-creator')).toHaveText('Alice');
+    await expect(roomItem).toBeVisible();
 
     // Clean up: leave the room
     await playerAPage.getByTestId('leave-btn').click();
@@ -34,15 +34,13 @@ test.describe('待機中ルームリスト', () => {
     playerBPage,
   }) => {
     // Player B opens top page first
-    await playerBPage.goto('/');
-    await playerBPage.waitForTimeout(1000);
+    await setupPlayer(playerBPage);
 
     // Player A creates a room
-    const roomId = await createRoom(playerAPage, 'Alice');
+    const roomId = await createRoom(playerAPage);
 
-    // Player B enters nickname and clicks join from Alice's specific room
+    // Player B clicks join from the specific room in the list
     await expect(playerBPage.getByTestId('waiting-room-list')).toBeVisible({ timeout: 5000 });
-    await playerBPage.getByTestId('nickname-input').fill('Bob');
 
     const roomItem = playerBPage.getByTestId('waiting-room-item').filter({
       has: playerBPage.getByTestId('waiting-room-id').getByText(roomId),
@@ -51,8 +49,8 @@ test.describe('待機中ルームリスト', () => {
 
     // Both should be in lobby
     await playerBPage.waitForURL(/\/lobby\//, { timeout: 10000 });
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('Alice', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
   });
 
   test('G-3: ルーム満員でリストから消える', async ({
@@ -67,7 +65,7 @@ test.describe('待機中ルームリスト', () => {
     await playerCPage.waitForTimeout(1000);
 
     // Player A creates a room
-    const roomId = await createRoom(playerAPage, 'Alice');
+    const roomId = await createRoom(playerAPage);
 
     // Player C should see the waiting room
     await expect(playerCPage.getByTestId('waiting-room-list')).toBeVisible({ timeout: 5000 });
@@ -77,7 +75,7 @@ test.describe('待機中ルームリスト', () => {
     await expect(roomItem).toBeVisible();
 
     // Player B joins the room (room becomes full)
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('room-id-input').fill(roomId);
     await playerBPage.getByTestId('join-room-btn').click();
     await playerBPage.waitForURL(/\/lobby\//, { timeout: 10000 });
@@ -97,7 +95,7 @@ test.describe('待機中ルームリスト', () => {
     await playerBPage.waitForTimeout(1000);
 
     // Player A creates a room
-    const roomId = await createRoom(playerAPage, 'Alice');
+    const roomId = await createRoom(playerAPage);
 
     // Player B sees the room
     await expect(playerBPage.getByTestId('waiting-room-list')).toBeVisible({ timeout: 5000 });
@@ -125,7 +123,7 @@ test.describe('待機中ルームリスト', () => {
     // Create a room with a separate context
     const contextTemp = await browser.newContext();
     const tempPage = await contextTemp.newPage();
-    const roomId = await createRoom(tempPage, 'TempUser');
+    const roomId = await createRoom(tempPage);
 
     // Verify it appears in the list
     const roomItem = playerAPage.getByTestId('waiting-room-item').filter({

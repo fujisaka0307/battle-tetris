@@ -23,7 +23,7 @@ describe('RoomManager', () => {
     const p2 = new Player('conn-2', 'Bob');
     const joined = mgr.joinRoom(room.roomId, p2);
     expect(joined.isFull()).toBe(true);
-    expect(joined.player2?.nickname).toBe('Bob');
+    expect(joined.player2?.enterpriseId).toBe('Bob');
   });
 
   it('満員ルームへの参加が拒否されること', () => {

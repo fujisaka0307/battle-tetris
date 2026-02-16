@@ -22,8 +22,8 @@ describe('MatchmakingService', () => {
     const result = svc.enqueue(new Player('conn-2', 'Bob'));
 
     expect(result).not.toBeNull();
-    expect(result!.player1.nickname).toBe('Alice');
-    expect(result!.player2.nickname).toBe('Bob');
+    expect(result!.player1.enterpriseId).toBe('Alice');
+    expect(result!.player2.enterpriseId).toBe('Bob');
     expect(result!.room.isFull()).toBe(true);
   });
 
@@ -44,8 +44,8 @@ describe('MatchmakingService', () => {
     svc.enqueue(new Player('conn-2', 'Bob'));
     const result = svc.enqueue(new Player('conn-3', 'Charlie'));
     expect(result).not.toBeNull();
-    expect(result!.player1.nickname).toBe('Bob');
-    expect(result!.player2.nickname).toBe('Charlie');
+    expect(result!.player1.enterpriseId).toBe('Bob');
+    expect(result!.player2.enterpriseId).toBe('Charlie');
   });
 
   it('3人追加で1マッチ成立 + 1人待機であること', () => {

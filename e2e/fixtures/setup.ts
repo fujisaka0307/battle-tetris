@@ -29,18 +29,19 @@ export const test = base.extend<{
 });
 
 /**
- * ニックネームを入力してページの準備を行うヘルパー。
+ * トップページに遷移してボタンが利用可能になるまで待つヘルパー。
+ * 認証は VITE_SKIP_AUTH=true で自動バイパスされる。
  */
-export async function enterNickname(page: Page, nickname: string): Promise<void> {
+export async function setupPlayer(page: Page): Promise<void> {
   await page.goto('/');
-  await page.getByTestId('nickname-input').fill(nickname);
+  await page.getByTestId('create-room-btn').waitFor({ state: 'visible', timeout: 10000 });
 }
 
 /**
  * ルームを作成して roomId を返すヘルパー。
  */
-export async function createRoom(page: Page, nickname: string): Promise<string> {
-  await enterNickname(page, nickname);
+export async function createRoom(page: Page): Promise<string> {
+  await setupPlayer(page);
   await page.getByTestId('create-room-btn').click();
 
   // Wait for navigation to lobby
@@ -52,8 +53,8 @@ export async function createRoom(page: Page, nickname: string): Promise<string> 
 /**
  * ルームに参加するヘルパー。
  */
-export async function joinRoom(page: Page, nickname: string, roomId: string): Promise<void> {
-  await enterNickname(page, nickname);
+export async function joinRoom(page: Page, roomId: string): Promise<void> {
+  await setupPlayer(page);
   await page.getByTestId('room-id-input').fill(roomId);
   await page.getByTestId('join-room-btn').click();
 
@@ -65,10 +66,10 @@ export async function joinRoom(page: Page, nickname: string, roomId: string): Pr
  * 両プレイヤーを対戦画面まで進めるヘルパー。
  */
 export async function startBattle(playerAPage: Page, playerBPage: Page): Promise<void> {
-  const roomId = await createRoom(playerAPage, 'Alice');
-  await joinRoom(playerBPage, 'Bob', roomId);
+  const roomId = await createRoom(playerAPage);
+  await joinRoom(playerBPage, roomId);
 
-  await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
+  await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
   await playerAPage.getByTestId('ready-btn').click();
   await playerBPage.getByTestId('ready-btn').click();
@@ -112,12 +113,10 @@ export async function startBattleAndFinish(
 export async function randomMatchToLobby(
   playerAPage: Page,
   playerBPage: Page,
-  nicknameA = 'Alice',
-  nicknameB = 'Bob',
 ): Promise<void> {
-  await enterNickname(playerAPage, nicknameA);
+  await setupPlayer(playerAPage);
   await playerAPage.getByTestId('random-match-btn').click();
-  await enterNickname(playerBPage, nicknameB);
+  await setupPlayer(playerBPage);
   await playerBPage.getByTestId('random-match-btn').click();
   await playerAPage.waitForURL(/\/lobby\//, { timeout: 10000 });
   await playerBPage.waitForURL(/\/lobby\//, { timeout: 10000 });
@@ -131,10 +130,8 @@ export async function randomMatchToLobby(
 export async function randomMatchToBattle(
   playerAPage: Page,
   playerBPage: Page,
-  nicknameA = 'Alice',
-  nicknameB = 'Bob',
 ): Promise<void> {
-  await randomMatchToLobby(playerAPage, playerBPage, nicknameA, nicknameB);
+  await randomMatchToLobby(playerAPage, playerBPage);
   await playerAPage.getByTestId('ready-btn').click();
   await playerBPage.getByTestId('ready-btn').click();
   await playerAPage.waitForURL(/\/battle\//, { timeout: 10000 });

@@ -41,17 +41,11 @@ export const ServerEvents = {
 // Client → Server Payloads
 // =============================================================================
 
-export interface CreateRoomPayload {
-  nickname: string;
-}
+// CreateRoom: no payload (enterprise ID from JWT)
+// JoinRandomMatch: no payload (enterprise ID from JWT)
 
 export interface JoinRoomPayload {
-  nickname: string;
   roomId: string;
-}
-
-export interface JoinRandomMatchPayload {
-  nickname: string;
 }
 
 // PlayerReady: no payload
@@ -82,12 +76,12 @@ export interface RoomCreatedPayload {
 }
 
 export interface OpponentJoinedPayload {
-  nickname: string;
+  enterpriseId: string;
 }
 
 export interface MatchFoundPayload {
   roomId: string;
-  opponentNickname: string;
+  opponentEnterpriseId: string;
 }
 
 export interface BothReadyPayload {
@@ -129,7 +123,7 @@ export interface OpponentDisconnectedPayload {
 
 export interface WaitingRoomInfo {
   roomId: string;
-  creatorNickname: string;
+  creatorEnterpriseId: string;
 }
 
 export interface WaitingRoomListUpdatedPayload {
@@ -148,8 +142,9 @@ export interface ErrorPayload {
 export const ErrorCodes = {
   ROOM_NOT_FOUND: 10021,
   ROOM_FULL: 10030,
-  INVALID_NICKNAME: 10031,
+  INVALID_PAYLOAD: 10031,
   ALREADY_IN_ROOM: 10032,
   NOT_IN_ROOM: 10033,
   GAME_NOT_STARTED: 10034,
+  UNAUTHORIZED: 10040,
 } as const;

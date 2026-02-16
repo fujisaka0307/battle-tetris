@@ -7,34 +7,34 @@ import { useGameStore } from '../stores/useGameStore';
 export default function LobbyPage() {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
-  const nickname = usePlayerStore((s) => s.nickname);
-  const opponentNickname = usePlayerStore((s) => s.opponentNickname);
-  const setOpponentNickname = usePlayerStore((s) => s.setOpponentNickname);
+  const enterpriseId = usePlayerStore((s) => s.enterpriseId);
+  const opponentEnterpriseId = usePlayerStore((s) => s.opponentEnterpriseId);
+  const setOpponentEnterpriseId = usePlayerStore((s) => s.setOpponentEnterpriseId);
 
   const [isReady, setIsReady] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Redirect if no nickname
+  // Redirect if no enterpriseId
   useEffect(() => {
-    if (!nickname) {
+    if (!enterpriseId) {
       navigate('/', { replace: true });
     }
-  }, [nickname, navigate]);
+  }, [enterpriseId, navigate]);
 
   // Register SignalR handlers for lobby
   useEffect(() => {
     signalRClient.setHandlers({
       onOpponentJoined: (payload) => {
-        setOpponentNickname(payload.nickname);
+        setOpponentEnterpriseId(payload.enterpriseId);
       },
       onBothReady: (payload) => {
         useGameStore.getState().setSeed(payload.seed);
         startCountdown(payload.countdown);
       },
       onOpponentDisconnected: () => {
-        setOpponentNickname(null);
+        setOpponentEnterpriseId(null);
         setIsReady(false);
         setCountdown(null);
         if (countdownRef.current) {
@@ -50,7 +50,7 @@ export default function LobbyPage() {
         clearInterval(countdownRef.current);
       }
     };
-  }, [setOpponentNickname]);
+  }, [setOpponentEnterpriseId]);
 
   const startCountdown = useCallback((seconds: number) => {
     setCountdown(seconds);
@@ -88,11 +88,11 @@ export default function LobbyPage() {
   const handleLeave = useCallback(() => {
     signalRClient.sendLeaveRoom();
     usePlayerStore.getState().setRoomId(null);
-    usePlayerStore.getState().setOpponentNickname(null);
+    usePlayerStore.getState().setOpponentEnterpriseId(null);
     navigate('/');
   }, [navigate]);
 
-  if (!nickname) return null;
+  if (!enterpriseId) return null;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
@@ -118,12 +118,12 @@ export default function LobbyPage() {
       {/* Players */}
       <div className="w-full max-w-sm mb-6">
         <div className="flex justify-between items-center py-2 px-4 bg-gray-800 rounded mb-2">
-          <span>{nickname} (あなた)</span>
+          <span>{enterpriseId} (あなた)</span>
           {isReady && <span className="text-green-400 text-sm">READY</span>}
         </div>
         <div className="flex justify-between items-center py-2 px-4 bg-gray-800 rounded">
-          {opponentNickname ? (
-            <span data-testid="opponent-name">{opponentNickname}</span>
+          {opponentEnterpriseId ? (
+            <span data-testid="opponent-name">{opponentEnterpriseId}</span>
           ) : (
             <span className="text-gray-500" data-testid="waiting-text">対戦相手を待っています...</span>
           )}
@@ -144,7 +144,7 @@ export default function LobbyPage() {
 
       {/* Actions */}
       <div className="w-full max-w-sm space-y-3">
-        {opponentNickname && !isReady && countdown === null && (
+        {opponentEnterpriseId && !isReady && countdown === null && (
           <button
             onClick={handleReady}
             className="w-full py-3 bg-green-600 hover:bg-green-500 rounded font-bold transition-colors"

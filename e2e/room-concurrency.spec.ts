@@ -1,11 +1,11 @@
-import { test, expect, createRoom, joinRoom, enterNickname } from './fixtures/setup';
+import { test, expect, createRoom, joinRoom, setupPlayer } from './fixtures/setup';
 
 test.describe('ルーム競合・同時操作', () => {
   test('A-2: 同時にルーム参加を試みる2人 → 1人成功、1人エラー', async ({
     playerAPage,
     browser,
   }) => {
-    const roomId = await createRoom(playerAPage, 'Alice');
+    const roomId = await createRoom(playerAPage);
 
     const contextB = await browser.newContext();
     const playerBPage = await contextB.newPage();
@@ -13,10 +13,10 @@ test.describe('ルーム競合・同時操作', () => {
     const playerCPage = await contextC.newPage();
 
     // B and C prepare to join the same room
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('room-id-input').fill(roomId);
 
-    await enterNickname(playerCPage, 'Charlie');
+    await setupPlayer(playerCPage);
     await playerCPage.getByTestId('room-id-input').fill(roomId);
 
     // Both click join simultaneously
@@ -50,14 +50,14 @@ test.describe('ルーム競合・同時操作', () => {
     playerAPage,
     playerBPage,
   }) => {
-    const roomId = await createRoom(playerAPage, 'Alice');
+    const roomId = await createRoom(playerAPage);
 
     // Creator leaves
     await playerAPage.getByTestId('leave-btn').click();
     await playerAPage.waitForURL('/', { timeout: 5000 });
 
     // Player B tries to join the now-empty room
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('room-id-input').fill(roomId);
     await playerBPage.getByTestId('join-room-btn').click();
 
@@ -74,9 +74,9 @@ test.describe('ルーム競合・同時操作', () => {
 
     // All three create rooms simultaneously
     const [roomIdA, roomIdB, roomIdC] = await Promise.all([
-      createRoom(playerAPage, 'Alice'),
-      createRoom(playerBPage, 'Bob'),
-      createRoom(playerCPage, 'Charlie'),
+      createRoom(playerAPage),
+      createRoom(playerBPage),
+      createRoom(playerCPage),
     ]);
 
     // All room IDs should be different
@@ -101,23 +101,23 @@ test.describe('ルーム競合・同時操作', () => {
     const playerCPage = await contextC.newPage();
 
     // A and C create rooms
-    const roomIdA = await createRoom(playerAPage, 'Alice');
-    const roomIdC = await createRoom(playerCPage, 'Charlie');
+    const roomIdA = await createRoom(playerAPage);
+    const roomIdC = await createRoom(playerCPage);
 
     // B joins A's room
-    await joinRoom(playerBPage, 'Bob', roomIdA);
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
+    await joinRoom(playerBPage, roomIdA);
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     // B leaves A's room
     await playerBPage.getByTestId('leave-btn').click();
     await playerBPage.waitForURL('/', { timeout: 5000 });
 
     // B joins C's room
-    await joinRoom(playerBPage, 'Bob', roomIdC);
+    await joinRoom(playerBPage, roomIdC);
 
     // Verify B and C are matched
-    await expect(playerCPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('Charlie', { timeout: 5000 });
+    await expect(playerCPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     // A should be back to waiting
     await expect(playerAPage.getByTestId('waiting-text')).toBeVisible({ timeout: 10000 });
@@ -125,16 +125,16 @@ test.describe('ルーム競合・同時操作', () => {
     await contextC.close();
   });
 
-  test('A-6: 同じニックネームの2人が同じルームに参加 → 正常動作', async ({
+  test('A-6: 同じEnterprise IDの2人が同じルームに参加 → 正常動作', async ({
     playerAPage,
     playerBPage,
   }) => {
-    const roomId = await createRoom(playerAPage, 'Player1');
-    await joinRoom(playerBPage, 'Player1', roomId);
+    const roomId = await createRoom(playerAPage);
+    await joinRoom(playerBPage, roomId);
 
-    // Both should see the opponent with same nickname
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Player1', { timeout: 5000 });
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('Player1', { timeout: 5000 });
+    // Both should see the opponent
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     // Both should be able to Ready and start
     await playerAPage.getByTestId('ready-btn').click();

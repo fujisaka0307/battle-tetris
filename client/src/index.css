@@ -82,51 +82,33 @@
   letter-spacing: 0.05em;
 }
 
-/* ---- ニックネーム入力 ---- */
+/* ---- Enterprise ID バッジ + ログアウト ---- */
 
-.top-nickname-wrapper {
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: 14px;
-  padding: 0 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.top-nickname-wrapper:focus-within {
-  border-color: #00e5ff;
-  box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.15), 0 0 20px rgba(0, 229, 255, 0.1);
-}
-
-.top-nickname-icon {
-  font-size: 1.4rem;
-  margin-right: 0.75rem;
-  flex-shrink: 0;
-}
-
-.top-nickname-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #fff;
-  font-size: 1.2rem;
-  font-family: 'Noto Sans JP', sans-serif;
-  padding: 0.9rem 0;
+.top-enterprise-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  color: #00e5ff;
   letter-spacing: 0.05em;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
 }
 
-.top-nickname-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+.top-logout-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
 }
 
-.top-error-inline {
+.top-logout-btn:hover {
   color: #ff6b6b;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-  padding-left: 0.25rem;
-  font-weight: 700;
+  border-color: rgba(255, 107, 107, 0.3);
 }
 
 /* ---- モードカード ---- */

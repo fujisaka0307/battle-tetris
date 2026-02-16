@@ -11,7 +11,7 @@ import { useBattleStore } from '../stores/useBattleStore';
 export default function BattlePage() {
   const navigate = useNavigate();
   const { roomId: _roomId } = useParams<{ roomId: string }>();
-  const nickname = usePlayerStore((s) => s.nickname);
+  const enterpriseId = usePlayerStore((s) => s.enterpriseId);
   const seed = useGameStore((s) => s.seed);
   const score = useGameStore((s) => s.score);
   const level = useGameStore((s) => s.level);
@@ -34,12 +34,12 @@ export default function BattlePage() {
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  // Redirect if no nickname or seed
+  // Redirect if no enterpriseId or seed
   useEffect(() => {
-    if (!nickname) {
+    if (!enterpriseId) {
       navigate('/', { replace: true });
     }
-  }, [nickname, navigate]);
+  }, [enterpriseId, navigate]);
 
   // Set up SignalR handlers for battle
   useEffect(() => {
@@ -172,7 +172,7 @@ export default function BattlePage() {
     renderer.drawOpponentField({ grid: opponentField });
   }, [opponentField]);
 
-  if (!nickname) return null;
+  if (!enterpriseId) return null;
 
   return (
     <div className="battle-container">
@@ -250,7 +250,7 @@ export default function BattlePage() {
         {/* Opponent area */}
         <div className="opponent-panel">
           <p className="opponent-name">
-            {usePlayerStore.getState().opponentNickname ?? 'Opponent'}
+            {usePlayerStore.getState().opponentEnterpriseId ?? 'Opponent'}
           </p>
           <div className="opponent-frame">
             <canvas

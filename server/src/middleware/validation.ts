@@ -4,17 +4,8 @@ import { z } from 'zod';
 // Client → Server payload schemas
 // =============================================================================
 
-export const CreateRoomSchema = z.object({
-  nickname: z.string().min(1).max(16),
-});
-
 export const JoinRoomSchema = z.object({
-  nickname: z.string().min(1).max(16),
   roomId: z.string().length(6),
-});
-
-export const JoinRandomMatchSchema = z.object({
-  nickname: z.string().min(1).max(16),
 });
 
 export const FieldUpdateSchema = z.object({

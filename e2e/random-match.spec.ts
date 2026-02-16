@@ -1,13 +1,13 @@
-import { test, expect, enterNickname } from './fixtures/setup';
+import { test, expect, setupPlayer } from './fixtures/setup';
 
 test.describe('ランダムマッチ', () => {
   test('2人がランダムマッチでマッチングされること', async ({ playerAPage, playerBPage }) => {
     // Player A requests random match
-    await enterNickname(playerAPage, 'Alice');
+    await setupPlayer(playerAPage);
     await playerAPage.getByTestId('random-match-btn').click();
 
     // Player B requests random match
-    await enterNickname(playerBPage, 'Bob');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('random-match-btn').click();
 
     // Both should be navigated to lobby
@@ -15,7 +15,7 @@ test.describe('ランダムマッチ', () => {
     await playerBPage.waitForURL(/\/lobby\//, { timeout: 10000 });
 
     // Both should see each other's names
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('Alice', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
   });
 });

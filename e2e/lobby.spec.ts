@@ -2,28 +2,28 @@ import { test, expect, createRoom, joinRoom } from './fixtures/setup';
 
 test.describe('ルーム作成→参加→Readyフロー', () => {
   test('ルーム作成後にルームIDが表示されること', async ({ playerAPage }) => {
-    const roomId = await createRoom(playerAPage, 'Alice');
+    const roomId = await createRoom(playerAPage);
 
     await expect(playerAPage.getByTestId('room-id')).toHaveText(roomId);
     await expect(playerAPage.getByTestId('waiting-text')).toBeVisible();
   });
 
   test('相手が参加するとOpponentJoinedが表示されること', async ({ playerAPage, playerBPage }) => {
-    const roomId = await createRoom(playerAPage, 'Alice');
-    await joinRoom(playerBPage, 'Bob', roomId);
+    const roomId = await createRoom(playerAPage);
+    await joinRoom(playerBPage, roomId);
 
-    // Player A should see Bob's name
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
-    // Player B should see Alice's name
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('Alice', { timeout: 5000 });
+    // Player A should see opponent's name
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    // Player B should see opponent's name
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
   });
 
   test('両者Readyでカウントダウンが開始されること', async ({ playerAPage, playerBPage }) => {
-    const roomId = await createRoom(playerAPage, 'Alice');
-    await joinRoom(playerBPage, 'Bob', roomId);
+    const roomId = await createRoom(playerAPage);
+    await joinRoom(playerBPage, roomId);
 
     // Wait for opponent joined
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     // Both players click Ready
     await playerAPage.getByTestId('ready-btn').click();
@@ -35,10 +35,10 @@ test.describe('ルーム作成→参加→Readyフロー', () => {
   });
 
   test('カウントダウン終了で対戦画面へ遷移すること', async ({ playerAPage, playerBPage }) => {
-    const roomId = await createRoom(playerAPage, 'Alice');
-    await joinRoom(playerBPage, 'Bob', roomId);
+    const roomId = await createRoom(playerAPage);
+    await joinRoom(playerBPage, roomId);
 
-    await expect(playerAPage.getByTestId('opponent-name')).toHaveText('Bob', { timeout: 5000 });
+    await expect(playerAPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     await playerAPage.getByTestId('ready-btn').click();
     await playerBPage.getByTestId('ready-btn').click();

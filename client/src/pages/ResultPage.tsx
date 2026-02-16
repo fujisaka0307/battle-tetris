@@ -7,7 +7,7 @@ import { useBattleStore } from '../stores/useBattleStore';
 
 export default function ResultPage() {
   const navigate = useNavigate();
-  const _nickname = usePlayerStore((s) => s.nickname);
+  const _enterpriseId = usePlayerStore((s) => s.enterpriseId);
   const score = useGameStore((s) => s.score);
   const level = useGameStore((s) => s.level);
   const lines = useGameStore((s) => s.lines);

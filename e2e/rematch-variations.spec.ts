@@ -1,7 +1,7 @@
 import {
   test,
   expect,
-  enterNickname,
+  setupPlayer,
   startBattleAndFinish,
   playToGameOver,
 } from './fixtures/setup';
@@ -76,7 +76,7 @@ test.describe('リマッチバリエーション', () => {
 
     // Player A should be redirected to top (opponent left)
     await playerAPage.waitForURL('/', { timeout: 10000 });
-    await expect(playerAPage.getByTestId('nickname-input')).toBeVisible();
+    await expect(playerAPage.getByTestId('create-room-btn')).toBeVisible();
   });
 
   test('F-4: リマッチ拒否後にルーム作成で別の相手と対戦', async ({
@@ -97,19 +97,19 @@ test.describe('リマッチバリエーション', () => {
     const contextC = await browser.newContext();
     const playerCPage = await contextC.newPage();
 
-    await enterNickname(playerBPage, 'Bob2');
+    await setupPlayer(playerBPage);
     await playerBPage.getByTestId('create-room-btn').click();
     await playerBPage.waitForURL(/\/lobby\//, { timeout: 10000 });
     const newRoomId = playerBPage.url().split('/lobby/')[1];
 
-    await enterNickname(playerCPage, 'Charlie');
+    await setupPlayer(playerCPage);
     await playerCPage.getByTestId('room-id-input').fill(newRoomId);
     await playerCPage.getByTestId('join-room-btn').click();
     await playerCPage.waitForURL(/\/lobby\//, { timeout: 10000 });
 
     // B and C should see each other
-    await expect(playerBPage.getByTestId('opponent-name')).toHaveText('Charlie', { timeout: 5000 });
-    await expect(playerCPage.getByTestId('opponent-name')).toHaveText('Bob2', { timeout: 5000 });
+    await expect(playerBPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
+    await expect(playerCPage.getByTestId('opponent-name')).toBeVisible({ timeout: 5000 });
 
     await contextC.close();
   });

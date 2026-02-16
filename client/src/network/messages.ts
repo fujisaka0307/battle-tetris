@@ -8,9 +8,7 @@ export {
 } from '@battle-tetris/shared';
 
 export type {
-  CreateRoomPayload,
   JoinRoomPayload,
-  JoinRandomMatchPayload,
   FieldUpdatePayload,
   LinesClearedPayload,
   RoomCreatedPayload,
