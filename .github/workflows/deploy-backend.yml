@@ -58,7 +58,7 @@ jobs:
           package: server-deploy.zip
 
       - name: Configure Grafana OTLP settings
-        if: ${{ secrets.GRAFANA_OTLP_ENDPOINT != '' }}
+        if: vars.GRAFANA_OTLP_ENDPOINT != ''
         uses: azure/appservice-settings@v1
         with:
           app-name: ${{ vars.AZURE_APP_SERVICE_NAME }}
