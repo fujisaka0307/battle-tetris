@@ -22,7 +22,7 @@ jobs:
 
       - name: Restore node_modules cache
         id: cache-nm
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: node_modules
           key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
