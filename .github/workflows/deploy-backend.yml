@@ -51,8 +51,10 @@ jobs:
           cp shared/package.json deploy/node_modules/@battle-tetris/shared/
 
           # Install production dependencies (excluding workspace deps)
+          # Note: --ignore-scripts removed because better-sqlite3 needs
+          # prebuild-install to download its native binary
           cd deploy
-          npm install --omit=dev --ignore-scripts 2>/dev/null || true
+          npm install --omit=dev 2>/dev/null || true
 
           # Create zip
           zip -r ../server-deploy.zip .
