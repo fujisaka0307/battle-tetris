@@ -22,8 +22,6 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       testIgnore: [
-        '**/random-match*.spec.ts',
-        '**/cross-match*.spec.ts',
         '**/disconnect-battle*.spec.ts',
         /production-smoke/,
       ],
@@ -34,21 +32,6 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testMatch: 'disconnect-battle.spec.ts',
     },
-    // ランダムマッチテストはキュー共有のためファイル単位で直列実行
-    ...([
-      'random-match.spec.ts',
-      'random-match-multi.spec.ts',
-      'random-match-lifecycle.spec.ts',
-      'random-match-disconnect.spec.ts',
-      'random-match-edge.spec.ts',
-      'cross-match.spec.ts',
-    ] as const).map((file, i) => ({
-      name: `random-match-${i + 1}`,
-      use: { ...devices['Desktop Chrome'] },
-      testMatch: file,
-      fullyParallel: false,
-      dependencies: [i === 0 ? 'chromium' : `random-match-${i}`],
-    })),
   ],
   webServer: [
     {
