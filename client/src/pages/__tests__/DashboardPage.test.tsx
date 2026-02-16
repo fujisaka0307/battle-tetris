@@ -95,7 +95,7 @@ describe('DashboardPage', () => {
     expect(screen.getByText(/Network error/)).toBeInTheDocument();
   });
 
-  it('HTTP エラー時にエラーが表示されること', async () => {
+  it('HTTP 404 時にデータなし状態が表示されること', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
       status: 404,
@@ -104,10 +104,23 @@ describe('DashboardPage', () => {
     renderDashboard();
 
     await waitFor(() => {
+      expect(screen.getByTestId('dashboard-empty')).toBeInTheDocument();
+    });
+  });
+
+  it('HTTP 500 時にエラーが表示されること', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 500,
+    } as Response);
+
+    renderDashboard();
+
+    await waitFor(() => {
       expect(screen.getByTestId('dashboard-error')).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/HTTP 404/)).toBeInTheDocument();
+    expect(screen.getByText(/HTTP 500/)).toBeInTheDocument();
   });
 
   it('データなし時に空メッセージが表示されること', async () => {

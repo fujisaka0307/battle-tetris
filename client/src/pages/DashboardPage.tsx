@@ -139,10 +139,17 @@ export default function DashboardPage() {
   useEffect(() => {
     fetch(METRICS_URL)
       .then((res) => {
+        if (res.status === 404) {
+          // metrics-history.json がまだ存在しない（CI未実行）
+          setData({ entries: [] });
+          return;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((json: MetricsHistory) => setData(json))
+      .then((json) => {
+        if (json) setData(json as MetricsHistory);
+      })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
