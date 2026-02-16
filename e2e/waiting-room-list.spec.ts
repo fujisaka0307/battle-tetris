@@ -3,7 +3,7 @@ import { test, expect, enterNickname, createRoom } from './fixtures/setup';
 // ルームリストは共有サーバー状態に依存するためシリアル実行
 test.describe.configure({ mode: 'serial' });
 
-test.describe('Waiting Room List — 待機中ルームリスト', () => {
+test.describe('待機中ルームリスト', () => {
   test('G-1: ルーム作成後にトップページのリストに表示される', async ({
     playerAPage,
     playerBPage,

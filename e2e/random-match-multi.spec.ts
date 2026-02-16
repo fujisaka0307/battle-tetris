@@ -1,9 +1,8 @@
 import { test, expect, enterNickname, playToGameOver } from './fixtures/setup';
 
-// ランダムマッチはキュー共有のためシリアル実行
 test.describe.configure({ mode: 'serial' });
 
-test.describe('Random Match Multi — ランダムマッチ複数人', () => {
+test.describe('ランダムマッチ複数人', () => {
   test('B-2: 3人がランダムマッチ → 2人がマッチ、1人が待機', async ({
     playerAPage,
     playerBPage,

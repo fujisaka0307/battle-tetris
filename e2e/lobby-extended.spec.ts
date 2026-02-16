@@ -1,6 +1,6 @@
 import { test, expect, createRoom, joinRoom } from './fixtures/setup';
 
-test.describe('Lobby — 拡張テスト', () => {
+test.describe('ロビー — 拡張テスト', () => {
   test('ルームIDが6桁英数字形式であること', async ({ playerAPage }) => {
     const roomId = await createRoom(playerAPage, 'Alice');
     expect(roomId).toMatch(/^[A-Za-z0-9]{6}$/);

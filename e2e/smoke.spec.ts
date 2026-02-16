@@ -1,11 +1,11 @@
 import { test, expect } from './fixtures/setup';
 
-test('top page displays game title', async ({ page }) => {
+test('トップページにゲームタイトルが表示されること', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('Battle Tetris')).toBeVisible();
 });
 
-test('health check returns ok', async ({ request }) => {
+test('ヘルスチェックがOKを返すこと', async ({ request }) => {
   const response = await request.get('http://localhost:4000/health');
   expect(response.ok()).toBe(true);
   const body = await response.json();

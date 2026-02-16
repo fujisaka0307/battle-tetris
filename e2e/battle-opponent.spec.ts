@@ -1,6 +1,6 @@
 import { test, expect, startBattle } from './fixtures/setup';
 
-test.describe('Battle — 対戦相手表示', () => {
+test.describe('対戦相手表示', () => {
   test('両プレイヤーに相手フィールドCanvasが表示されること', async ({
     playerAPage,
     playerBPage,

@@ -1,6 +1,6 @@
 import { test, expect, startBattle } from './fixtures/setup';
 
-test.describe('Battle — 操作テスト', () => {
+test.describe('対戦 — 操作テスト', () => {
   test('ソフトドロップでスコアが増加すること', async ({ playerAPage, playerBPage }) => {
     await startBattle(playerAPage, playerBPage);
     await playerAPage.waitForTimeout(500);

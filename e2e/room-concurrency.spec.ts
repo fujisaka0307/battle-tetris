@@ -1,6 +1,6 @@
 import { test, expect, createRoom, joinRoom, enterNickname } from './fixtures/setup';
 
-test.describe('Room Concurrency — ルーム競合・同時操作', () => {
+test.describe('ルーム競合・同時操作', () => {
   test('A-2: 同時にルーム参加を試みる2人 → 1人成功、1人エラー', async ({
     playerAPage,
     browser,

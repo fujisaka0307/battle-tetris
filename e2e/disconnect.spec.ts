@@ -1,6 +1,6 @@
 import { test, expect, createRoom, joinRoom } from './fixtures/setup';
 
-test.describe('Disconnect — 切断テスト', () => {
+test.describe('切断テスト', () => {
   test('退出ボタンでトップページへ戻ること', async ({ playerAPage, playerBPage }) => {
     const roomId = await createRoom(playerAPage, 'Alice');
     await joinRoom(playerBPage, 'Bob', roomId);

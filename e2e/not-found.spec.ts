@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures/setup';
 
-test.describe('404 — Not Found', () => {
+test.describe('404 — ページ未検出', () => {
   test('存在しないURLで404が表示されること', async ({ page }) => {
     await page.goto('/this-page-does-not-exist');
     await expect(page.getByText('404')).toBeVisible();

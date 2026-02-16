@@ -1,6 +1,6 @@
 import { test, expect, startBattle, playToGameOver } from './fixtures/setup';
 
-test.describe('Rematch — リマッチフロー完全検証', () => {
+test.describe('リマッチフロー完全検証', () => {
   test('敗者からのリマッチ要求が勝者に通知されること', async ({ playerAPage, playerBPage }) => {
     await startBattle(playerAPage, playerBPage);
 

@@ -6,7 +6,7 @@ import {
   playToGameOver,
 } from './fixtures/setup';
 
-test.describe('Rematch Variations — リマッチバリエーション', () => {
+test.describe('リマッチバリエーション', () => {
   test('F-2: 連続2回リマッチ → 3戦目で状態が正しくリセットされる', async ({
     playerAPage,
     playerBPage,

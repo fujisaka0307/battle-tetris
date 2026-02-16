@@ -1,6 +1,6 @@
 import { test, expect, startBattle, playToGameOver } from './fixtures/setup';
 
-test.describe('Result — 画面遷移', () => {
+test.describe('リザルト — 画面遷移', () => {
   test('トップへ戻るボタンでトップページへ遷移すること', async ({ playerAPage, playerBPage }) => {
     await startBattle(playerAPage, playerBPage);
     await playToGameOver(playerAPage);

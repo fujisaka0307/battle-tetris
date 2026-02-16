@@ -7,7 +7,7 @@ import {
   playToGameOver,
 } from './fixtures/setup';
 
-test.describe('Cross Match — ルーム↔ランダムマッチ横断', () => {
+test.describe('ルーム↔ランダムマッチ横断', () => {
   test('E-1: ルーム対戦後 → ランダムマッチで次の対戦', async ({
     playerAPage,
     playerBPage,

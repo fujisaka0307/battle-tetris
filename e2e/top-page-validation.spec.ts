@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures/setup';
 
-test.describe('TopPage — ニックネームバリデーション', () => {
+test.describe('トップページ — ニックネームバリデーション', () => {
   test('ニックネーム1文字でボタンが有効になること', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('nickname-input').fill('A');
@@ -30,7 +30,7 @@ test.describe('TopPage — ニックネームバリデーション', () => {
   });
 });
 
-test.describe('TopPage — ルームID参加バリデーション', () => {
+test.describe('トップページ — ルームID参加バリデーション', () => {
   test('ルームID未入力で参加ボタンが無効であること', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('nickname-input').fill('Alice');

@@ -1,6 +1,6 @@
 import { test, expect, createRoom, joinRoom } from './fixtures/setup';
 
-test.describe('Disconnect — 切断テスト（拡張）', () => {
+test.describe('切断テスト（拡張）', () => {
   test('対戦中にブラウザを閉じると相手がWINになること', async ({
     playerAPage,
     browser,
@@ -24,7 +24,13 @@ test.describe('Disconnect — 切断テスト（拡張）', () => {
 
     await playerAPage.waitForTimeout(1000);
 
-    // Close playerB's entire browser context — ensures WebSocket close frame is sent
+    // Explicitly stop SignalR connection before closing the browser context.
+    // Direct context.close() does not reliably send WebSocket close frames
+    // through the Vite dev proxy, leaving the server unaware of the disconnect.
+    await playerBPage.evaluate(async () => {
+      const mod = await import('/src/network/SignalRClient');
+      await (mod as any).signalRClient.disconnect();
+    });
     await playerBContext.close();
 
     // Server needs DISCONNECT_TIMEOUT_MS (30s) to detect disconnect and send GameResult

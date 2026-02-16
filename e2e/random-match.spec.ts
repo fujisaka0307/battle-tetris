@@ -1,6 +1,6 @@
 import { test, expect, enterNickname } from './fixtures/setup';
 
-test.describe('Random Match — ランダムマッチ', () => {
+test.describe('ランダムマッチ', () => {
   test('2人がランダムマッチでマッチングされること', async ({ playerAPage, playerBPage }) => {
     // Player A requests random match
     await enterNickname(playerAPage, 'Alice');

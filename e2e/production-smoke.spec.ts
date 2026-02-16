@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
  * 本番環境スモークテスト。
  * デプロイ後の動作確認として最低限のチェックを行う。
  */
-test.describe('Production Smoke Tests', () => {
+test.describe('本番スモークテスト', () => {
   test('フロントエンドが表示されること', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Battle Tetris')).toBeVisible({ timeout: 10000 });

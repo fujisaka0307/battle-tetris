@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures/setup';
 
-test.describe('TopPage', () => {
+test.describe('トップページ', () => {
   test('タイトルが表示されること', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Battle Tetris')).toBeVisible();

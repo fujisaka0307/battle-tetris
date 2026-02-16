@@ -1,6 +1,6 @@
 import { test, expect, createRoom, joinRoom, startBattle } from './fixtures/setup';
 
-test.describe('Disconnect Variations — 切断バリエーション', () => {
+test.describe('切断バリエーション', () => {
   test('D-2: 対戦中にネットワーク切断→30秒以内に復帰→ゲーム継続', async ({
     playerAPage,
     playerBPage,

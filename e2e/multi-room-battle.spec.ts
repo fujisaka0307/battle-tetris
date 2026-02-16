@@ -6,7 +6,7 @@ import {
   playToGameOver,
 } from './fixtures/setup';
 
-test.describe('Multi Room Battle — 複数ルーム同時対戦', () => {
+test.describe('複数ルーム同時対戦', () => {
   test('C-1: 2ルーム同時対戦 → スコア・フィールドが互いに干渉しない', async ({
     playerAPage,
     playerBPage,

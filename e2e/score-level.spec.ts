@@ -1,6 +1,6 @@
 import { test, expect, startBattle } from './fixtures/setup';
 
-test.describe('Score/Level — 初期値検証', () => {
+test.describe('スコア・レベル — 初期値検証', () => {
   test('対戦開始時にスコアが0であること', async ({ playerAPage, playerBPage }) => {
     await startBattle(playerAPage, playerBPage);
 

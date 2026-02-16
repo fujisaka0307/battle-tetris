@@ -1,6 +1,6 @@
 import { test, expect, createRoom, enterNickname } from './fixtures/setup';
 
-test.describe('Lobby UI — ロビーUI詳細', () => {
+test.describe('ロビーUI詳細', () => {
   test('ルームIDの横にCopyボタンが表示されること', async ({ playerAPage }) => {
     await createRoom(playerAPage, 'Alice');
 

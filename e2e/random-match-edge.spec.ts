@@ -6,10 +6,9 @@ import {
   playToGameOver,
 } from './fixtures/setup';
 
-// ランダムマッチはキュー共有のためシリアル実行
 test.describe.configure({ mode: 'serial' });
 
-test.describe('Random Match Edge Cases — ランダムマッチ エッジケース', () => {
+test.describe('ランダムマッチ エッジケース', () => {
   test('BE-1: ランダムマッチ → ロビーで退出 → すぐに再度ランダムマッチ → 正常にマッチ', async ({
     playerAPage,
     playerBPage,

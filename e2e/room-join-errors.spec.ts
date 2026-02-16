@@ -1,6 +1,6 @@
 import { test, expect, createRoom, joinRoom } from './fixtures/setup';
 
-test.describe('Room Join — エラー系', () => {
+test.describe('ルーム参加 — エラー系', () => {
   test('存在しないルームIDでエラーが表示されること', async ({ playerAPage }) => {
     await playerAPage.goto('/');
     await playerAPage.getByTestId('nickname-input').fill('Alice');

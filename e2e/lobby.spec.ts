@@ -1,6 +1,6 @@
 import { test, expect, createRoom, joinRoom } from './fixtures/setup';
 
-test.describe('Lobby — ルーム作成→参加→Ready フロー', () => {
+test.describe('ルーム作成→参加→Readyフロー', () => {
   test('ルーム作成後にルームIDが表示されること', async ({ playerAPage }) => {
     const roomId = await createRoom(playerAPage, 'Alice');
 

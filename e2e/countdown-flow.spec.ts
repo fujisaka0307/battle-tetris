@@ -1,6 +1,6 @@
 import { test, expect, createRoom, joinRoom } from './fixtures/setup';
 
-test.describe('Countdown — カウントダウン詳細', () => {
+test.describe('カウントダウン詳細', () => {
   test('カウントダウンが3から始まること', async ({ playerAPage, playerBPage }) => {
     const roomId = await createRoom(playerAPage, 'Alice');
     await joinRoom(playerBPage, 'Bob', roomId);

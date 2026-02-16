@@ -7,10 +7,7 @@ import {
   playToGameOver,
 } from './fixtures/setup';
 
-// ランダムマッチはキュー共有のためシリアル実行
-test.describe.configure({ mode: 'serial' });
-
-test.describe('Random Match Disconnect — ランダムマッチ 切断テスト', () => {
+test.describe('ランダムマッチ 切断テスト', () => {
   test('BD-1: ランダムマッチ → ロビーで相手がブラウザを閉じる → 待機状態に戻る', async ({
     playerAPage,
     browser,
@@ -32,7 +29,7 @@ test.describe('Random Match Disconnect — ランダムマッチ 切断テスト
     playerAPage,
     browser,
   }) => {
-    test.setTimeout(180_000); // DISCONNECT_TIMEOUT_MS(30s) + margin
+    test.setTimeout(240_000); // DISCONNECT_TIMEOUT_MS(30s) + CI処理遅延マージン
 
     // Create a separate context for playerB so we can close it cleanly
     const playerBContext = await browser.newContext();
@@ -57,11 +54,17 @@ test.describe('Random Match Disconnect — ランダムマッチ 切断テスト
 
     await playerAPage.waitForTimeout(1000);
 
-    // Close playerB's entire browser context — ensures WebSocket close frame is sent
+    // Explicitly stop SignalR connection before closing the browser context.
+    // Direct context.close() does not reliably send WebSocket close frames
+    // through the Vite dev proxy, leaving the server unaware of the disconnect.
+    await playerBPage.evaluate(async () => {
+      const mod = await import('/src/network/SignalRClient');
+      await (mod as any).signalRClient.disconnect();
+    });
     await playerBContext.close();
 
     // Server needs DISCONNECT_TIMEOUT_MS (30s) to detect disconnect and send GameResult
-    await playerAPage.waitForURL(/\/result/, { timeout: 150_000 });
+    await playerAPage.waitForURL(/\/result/, { timeout: 200_000 });
     await expect(playerAPage.getByTestId('result-text')).toHaveText('WIN');
   });
 

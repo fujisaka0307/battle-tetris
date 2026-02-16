@@ -1,6 +1,6 @@
 import { test, expect, startBattle } from './fixtures/setup';
 
-test.describe('Battle — 対戦画面', () => {
+test.describe('対戦画面', () => {
   test('対戦画面にCanvas要素とスコアボードが表示されること', async ({
     playerAPage,
     playerBPage,

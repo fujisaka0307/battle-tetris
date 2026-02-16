@@ -8,7 +8,7 @@ import {
   playToGameOver,
 } from './fixtures/setup';
 
-test.describe('Full Game Cycle — 完全ゲームサイクル', () => {
+test.describe('完全ゲームサイクル', () => {
   test('ルーム作成→対戦→結果→トップ→再ルーム作成の完全フロー', async ({
     playerAPage,
     playerBPage,

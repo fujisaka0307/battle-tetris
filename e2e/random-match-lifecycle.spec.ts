@@ -5,10 +5,9 @@ import {
   playToGameOver,
 } from './fixtures/setup';
 
-// ランダムマッチはキュー共有のためシリアル実行
 test.describe.configure({ mode: 'serial' });
 
-test.describe('Random Match Lifecycle — ランダムマッチ ライフサイクル', () => {
+test.describe('ランダムマッチ ライフサイクル', () => {
   test('BL-1: ランダムマッチ → ロビー → Ready → 対戦 → ゲームオーバー → 結果表示', async ({
     playerAPage,
     playerBPage,

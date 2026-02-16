@@ -1,6 +1,6 @@
 import { test, expect, startBattle } from './fixtures/setup';
 
-test.describe('Opponent Sync — 対戦相手スコア同期', () => {
+test.describe('対戦相手スコア同期', () => {
   test('相手のLines表示が確認できること', async ({ playerAPage, playerBPage }) => {
     await startBattle(playerAPage, playerBPage);
 

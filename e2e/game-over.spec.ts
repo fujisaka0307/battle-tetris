@@ -1,6 +1,6 @@
 import { test, expect, startBattle, playToGameOver } from './fixtures/setup';
 
-test.describe('Game Over — Result画面', () => {
+test.describe('ゲームオーバー — リザルト画面', () => {
   test('ゲームオーバーでResult画面に遷移すること', async ({ playerAPage, playerBPage }) => {
     await startBattle(playerAPage, playerBPage);
     await playToGameOver(playerAPage);
