@@ -17,7 +17,11 @@ if (!AZURE_TENANT_ID || !AZURE_CLIENT_ID) {
 }
 
 // Initialize SQLite database
-getDb();
+try {
+  getDb();
+} catch (err) {
+  logger.error({ err }, 'Failed to initialize SQLite database — ranking/history features disabled');
+}
 
 // Create HTTP server from Express app
 const server = createServer(app);
