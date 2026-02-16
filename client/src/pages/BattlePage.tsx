@@ -7,6 +7,7 @@ import { signalRClient } from '../network/SignalRClient';
 import { usePlayerStore } from '../stores/usePlayerStore';
 import { useGameStore } from '../stores/useGameStore';
 import { useBattleStore } from '../stores/useBattleStore';
+import type { AiThinkingEntry } from '../stores/useBattleStore';
 import { trackFps } from '../lib/gameMetrics';
 
 export default function BattlePage() {
@@ -22,6 +23,7 @@ export default function BattlePage() {
   const opponentLines = useBattleStore((s) => s.opponentLines);
   const opponentLevel = useBattleStore((s) => s.opponentLevel);
   const pendingGarbage = useBattleStore((s) => s.pendingGarbage);
+  const aiThinkingLog = useBattleStore((s) => s.aiThinkingLog);
 
   const fieldCanvasRef = useRef<HTMLCanvasElement>(null);
   const nextCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -35,6 +37,7 @@ export default function BattlePage() {
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
   const frameCountRef = useRef<number>(0);
+  const aiThinkingEndRef = useRef<HTMLDivElement>(null);
 
   // Redirect if no enterpriseId or seed
   useEffect(() => {
@@ -63,6 +66,14 @@ export default function BattlePage() {
       onGameResult: (payload) => {
         useBattleStore.getState().setResult(payload);
         navigate(`/result`);
+      },
+      onAiThinking: (payload) => {
+        useBattleStore.getState().addAiThinking({
+          prompt: payload.prompt,
+          response: payload.response,
+          model: payload.model,
+          timestamp: Date.now(),
+        });
       },
       onOpponentDisconnected: () => {
         // Opponent disconnected during game — wait for server to resolve
@@ -180,6 +191,11 @@ export default function BattlePage() {
     renderer.drawOpponentField({ grid: opponentField });
   }, [opponentField]);
 
+  // Auto-scroll AI thinking panel
+  useEffect(() => {
+    aiThinkingEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [aiThinkingLog]);
+
   if (!enterpriseId) return null;
 
   return (
@@ -255,24 +271,42 @@ export default function BattlePage() {
           </div>
         </div>
 
-        {/* Opponent area */}
-        <div className="opponent-panel">
-          <p className="opponent-name">
-            {usePlayerStore.getState().opponentEnterpriseId ?? 'Opponent'}
-          </p>
-          <div className="opponent-frame">
-            <canvas
-              ref={opponentCanvasRef}
-              width={Renderer.miniFieldWidth}
-              height={Renderer.miniFieldHeight}
-              data-testid="opponent-canvas"
-            />
+        {/* Opponent area + AI thinking */}
+        <div>
+          <div className="opponent-panel">
+            <p className="opponent-name">
+              {usePlayerStore.getState().opponentEnterpriseId ?? 'Opponent'}
+            </p>
+            <div className="opponent-frame">
+              <canvas
+                ref={opponentCanvasRef}
+                width={Renderer.miniFieldWidth}
+                height={Renderer.miniFieldHeight}
+                data-testid="opponent-canvas"
+              />
+            </div>
+            <div className="opponent-stats">
+              <span data-testid="opponent-score">Score: {opponentScore}</span>
+              <span data-testid="opponent-lines">Lines: {opponentLines}</span>
+              <span data-testid="opponent-level">Lv: {opponentLevel}</span>
+            </div>
           </div>
-          <div className="opponent-stats">
-            <span data-testid="opponent-score">Score: {opponentScore}</span>
-            <span data-testid="opponent-lines">Lines: {opponentLines}</span>
-            <span data-testid="opponent-level">Lv: {opponentLevel}</span>
-          </div>
+
+          {aiThinkingLog.length > 0 && (
+            <div className="ai-thinking-panel" data-testid="ai-thinking-panel">
+              {aiThinkingLog.map((entry: AiThinkingEntry) => (
+                <div key={entry.timestamp} className="ai-thinking-entry">
+                  <span className="ai-thinking-model">{entry.model.split('.').pop()}</span>
+                  <details className="ai-thinking-prompt">
+                    <summary>Prompt</summary>
+                    <pre>{entry.prompt}</pre>
+                  </details>
+                  <div className="ai-thinking-response">{entry.response}</div>
+                </div>
+              ))}
+              <div ref={aiThinkingEndRef} />
+            </div>
+          )}
         </div>
       </div>
     </div>

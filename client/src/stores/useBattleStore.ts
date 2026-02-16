@@ -6,6 +6,13 @@ interface GameResultInfo {
   loserReason: LoserReason;
 }
 
+export interface AiThinkingEntry {
+  prompt: string;
+  response: string;
+  model: string;
+  timestamp: number;
+}
+
 interface BattleState {
   opponentField: Field | null;
   opponentScore: number;
@@ -14,12 +21,14 @@ interface BattleState {
   pendingGarbage: number;
   result: GameResultInfo | null;
   opponentRematchRequested: boolean;
+  aiThinkingLog: AiThinkingEntry[];
 
   setOpponentField: (field: Field, score: number, lines: number, level: number) => void;
   addPendingGarbage: (lines: number) => void;
   clearPendingGarbage: () => void;
   setResult: (result: GameResultInfo) => void;
   setOpponentRematchRequested: (requested: boolean) => void;
+  addAiThinking: (entry: AiThinkingEntry) => void;
   reset: () => void;
 }
 
@@ -31,6 +40,7 @@ const initialState = {
   pendingGarbage: 0,
   result: null as GameResultInfo | null,
   opponentRematchRequested: false,
+  aiThinkingLog: [] as AiThinkingEntry[],
 };
 
 export const useBattleStore = create<BattleState>((set) => ({
@@ -43,5 +53,7 @@ export const useBattleStore = create<BattleState>((set) => ({
   clearPendingGarbage: () => set({ pendingGarbage: 0 }),
   setResult: (result) => set({ result }),
   setOpponentRematchRequested: (requested) => set({ opponentRematchRequested: requested }),
+  addAiThinking: (entry) =>
+    set((s) => ({ aiThinkingLog: [...s.aiThinkingLog, entry].slice(-5) })),
   reset: () => set({ ...initialState }),
 }));

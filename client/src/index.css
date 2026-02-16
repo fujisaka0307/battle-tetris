@@ -593,6 +593,79 @@
   margin-top: 2px;
 }
 
+/* --------------------------------------------------------------------------
+   AI 思考パネル — プロンプト・レスポンス表示
+   -------------------------------------------------------------------------- */
+
+.ai-thinking-panel {
+  width: 280px;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 12px;
+  background: rgba(10, 10, 30, 0.85);
+  border: 1px solid rgba(0, 200, 255, 0.25);
+  border-radius: 8px;
+  padding: 8px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  box-shadow:
+    0 0 8px rgba(0, 200, 255, 0.1),
+    inset 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.ai-thinking-entry {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0, 200, 255, 0.1);
+}
+
+.ai-thinking-entry:last-of-type {
+  border-bottom: none;
+}
+
+.ai-thinking-model {
+  display: inline-block;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.12);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+}
+
+.ai-thinking-prompt {
+  margin: 4px 0;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+
+.ai-thinking-prompt summary {
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.55rem;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.ai-thinking-prompt pre {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.55rem;
+}
+
+.ai-thinking-response {
+  color: #ffd740;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: 4px;
+  font-size: 0.6rem;
+}
+
 /* ==========================================================================
    DashboardPage — CI/CD ダッシュボード
    ========================================================================== */
