@@ -214,26 +214,23 @@ jobs:
       - name: Build server
         run: npm run build -w server
 
-      - name: Start server
+      - name: Start server (静的ファイル配信 + API)
         run: node server/dist/index.js &
         env:
           PORT: 4000
           NODE_ENV: production
 
-      - name: Serve client
-        run: npx serve client/dist -l 3000 -s &
-
-      - name: Wait for services
+      - name: Wait for server
         run: |
           for i in $(seq 1 30); do
-            curl -s http://localhost:3000 > /dev/null && curl -s http://localhost:4000/health > /dev/null && break
+            curl -s http://localhost:4000/health > /dev/null && break
             sleep 1
           done
 
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
-          target: 'http://localhost:3000'
+          target: 'http://localhost:4000'
           allow_issue_writing: false
           cmd_options: '-J zap-report.json'
         continue-on-error: true
@@ -293,19 +290,16 @@ jobs:
       - name: Build server
         run: npm run build -w server
 
-      - name: Start server
+      - name: Start server (静的ファイル配信 + API)
         run: node server/dist/index.js &
         env:
           PORT: 4000
           NODE_ENV: production
 
-      - name: Serve client
-        run: npx serve client/dist -l 3000 -s &
-
-      - name: Wait for services
+      - name: Wait for server
         run: |
           for i in $(seq 1 30); do
-            curl -s http://localhost:3000 > /dev/null && break
+            curl -s http://localhost:4000/health > /dev/null && break
             sleep 1
           done
 
@@ -313,7 +307,7 @@ jobs:
         run: npm install -g @lhci/cli
 
       - name: Run Lighthouse CI
-        run: lhci collect --url=http://localhost:3000 --numberOfRuns=3
+        run: lhci collect --url=http://localhost:4000 --numberOfRuns=3
         continue-on-error: true
 
       - name: Convert Lighthouse results to Allure
