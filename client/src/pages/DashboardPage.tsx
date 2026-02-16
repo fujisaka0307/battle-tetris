@@ -4,14 +4,10 @@ import { useNavigate } from 'react-router-dom';
 const METRICS_URL =
   'https://fujisaka0307.github.io/battle-tetris/metrics-history.json';
 
-const SONARCLOUD_PROJECT_KEY =
-  import.meta.env.VITE_SONARCLOUD_PROJECT_KEY || '';
-
 const EXTERNAL_LINKS = {
   allure: 'https://fujisaka0307.github.io/battle-tetris',
-  sonarcloud: SONARCLOUD_PROJECT_KEY
-    ? `https://sonarcloud.io/project/overview?id=${SONARCLOUD_PROJECT_KEY}`
-    : '',
+  sonarcloud:
+    'https://sonarcloud.io/project/overview?id=fujisaka0307_battle-tetris',
   security: 'https://github.com/fujisaka0307/battle-tetris/security',
 };
 
@@ -260,17 +256,15 @@ export default function DashboardPage() {
         >
           Allure Report
         </a>
-        {EXTERNAL_LINKS.sonarcloud && (
-          <a
-            href={EXTERNAL_LINKS.sonarcloud}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="dashboard-ext-link"
-            data-testid="link-sonarcloud"
-          >
-            SonarCloud
-          </a>
-        )}
+        <a
+          href={EXTERNAL_LINKS.sonarcloud}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="dashboard-ext-link"
+          data-testid="link-sonarcloud"
+        >
+          SonarCloud
+        </a>
         <a
           href={EXTERNAL_LINKS.security}
           target="_blank"
