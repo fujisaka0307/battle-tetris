@@ -1,9 +1,20 @@
+import { TetrominoType } from '@battle-tetris/shared';
 import { AiGameEngine } from './AiGameEngine.js';
 import type { AiGameCallbacks } from './AiGameEngine.js';
 import { AiDecisionMaker } from './AiDecisionMaker.js';
 import { BedrockClient, resolveModelId } from './BedrockClient.js';
 import type { ModelTier } from './BedrockClient.js';
 import { createLogger } from '../lib/logger.js';
+
+const PIECE_NAMES: Record<TetrominoType, string> = {
+  [TetrominoType.I]: 'I',
+  [TetrominoType.O]: 'O',
+  [TetrominoType.T]: 'T',
+  [TetrominoType.S]: 'S',
+  [TetrominoType.Z]: 'Z',
+  [TetrominoType.J]: 'J',
+  [TetrominoType.L]: 'L',
+};
 
 const logger = createLogger({ module: 'AiPlayer' });
 
@@ -139,6 +150,14 @@ export class AiPlayer {
     // ヒューリスティックにフォールバック
     if (!placement) {
       placement = this.decisionMaker.findBestPlacement(this.engine.board, currentPiece);
+
+      // ヒューリスティック使用時もボード状態と決定結果を送信
+      const boardText = this.engine.getBoardAsText();
+      const pieceName = PIECE_NAMES[currentPiece] ?? '?';
+      const nextNames = nextPieces.map((t) => PIECE_NAMES[t] ?? '?').join(', ');
+      const prompt = `[Heuristic] Board:\n${boardText}\nCurrent: ${pieceName} | Next: ${nextNames}`;
+      const response = `{"col": ${placement.col}, "rotation": ${placement.rotation}}`;
+      this.engine.callbacks.onAiThinking?.(prompt, response, `heuristic (Lv.${this.level})`);
     }
 
     // 配置実行
