@@ -51,6 +51,18 @@ const LEVEL_CONFIG: Record<number, LevelConfig> = {
   10: { intervalMs: 400,  model: 'claude', temperature: 0 },
 };
 
+/** AIレベルに対応する表示名を返す (例: "Haiku Lv.1", "Sonnet Lv.5", "Opus Lv.10") */
+export function getAiDisplayName(level: number): string {
+  const clamped = Math.max(1, Math.min(10, level));
+  const config = LEVEL_CONFIG[clamped] ?? LEVEL_CONFIG[5];
+  const tierName: Record<ModelTier, string> = {
+    haiku: 'Haiku',
+    sonnet: 'Sonnet',
+    claude: 'Opus',
+  };
+  return `${tierName[config.model]} Lv.${clamped}`;
+}
+
 // =============================================================================
 // AiPlayer
 // =============================================================================

@@ -106,6 +106,7 @@ export default function TopPage() {
 
     signalRClient.setHandlers({
       onRoomCreated: (payload) => {
+        storeEnterpriseId(payload.enterpriseId);
         setRoomId(payload.roomId);
         navigate(`/lobby/${payload.roomId}`);
       },
@@ -117,7 +118,7 @@ export default function TopPage() {
 
     subscribeIfNeeded();
     signalRClient.sendCreateRoom();
-  }, [ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+  }, [ensureConnected, storeEnterpriseId, setRoomId, navigate, subscribeIfNeeded]);
 
   const handleJoinRoom = useCallback(async () => {
     if (!roomIdValid) return;
@@ -126,6 +127,9 @@ export default function TopPage() {
     if (!(await ensureConnected())) return;
 
     signalRClient.setHandlers({
+      onRoomCreated: (payload) => {
+        storeEnterpriseId(payload.enterpriseId);
+      },
       onOpponentJoined: (payload) => {
         setRoomId(roomId.toUpperCase());
         usePlayerStore.getState().setOpponentEnterpriseId(payload.enterpriseId);
@@ -139,7 +143,7 @@ export default function TopPage() {
 
     subscribeIfNeeded();
     signalRClient.sendJoinRoom(roomId.toUpperCase());
-  }, [roomId, roomIdValid, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+  }, [roomId, roomIdValid, ensureConnected, storeEnterpriseId, setRoomId, navigate, subscribeIfNeeded]);
 
   const handleJoinFromList = useCallback(async (targetRoomId: string) => {
     setError('');
@@ -147,6 +151,9 @@ export default function TopPage() {
     if (!(await ensureConnected())) return;
 
     signalRClient.setHandlers({
+      onRoomCreated: (payload) => {
+        storeEnterpriseId(payload.enterpriseId);
+      },
       onOpponentJoined: (payload) => {
         setRoomId(targetRoomId);
         usePlayerStore.getState().setOpponentEnterpriseId(payload.enterpriseId);
@@ -160,7 +167,7 @@ export default function TopPage() {
 
     subscribeIfNeeded();
     signalRClient.sendJoinRoom(targetRoomId);
-  }, [ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+  }, [ensureConnected, storeEnterpriseId, setRoomId, navigate, subscribeIfNeeded]);
 
   const handleCreateAiRoom = useCallback(async () => {
     setError('');
@@ -169,6 +176,7 @@ export default function TopPage() {
 
     signalRClient.setHandlers({
       onRoomCreated: (payload) => {
+        storeEnterpriseId(payload.enterpriseId);
         setRoomId(payload.roomId);
         navigate(`/lobby/${payload.roomId}`);
       },
@@ -187,7 +195,7 @@ export default function TopPage() {
 
     subscribeIfNeeded();
     signalRClient.sendCreateAiRoom(aiLevel);
-  }, [aiLevel, ensureConnected, setRoomId, navigate, subscribeIfNeeded]);
+  }, [aiLevel, ensureConnected, storeEnterpriseId, setRoomId, navigate, subscribeIfNeeded]);
 
   return (
     <div className="top-page">

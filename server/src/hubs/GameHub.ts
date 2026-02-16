@@ -24,7 +24,7 @@ import { createLogger } from '../lib/logger.js';
 import { activeRoomsGauge, rematchTotal } from '../lib/metrics.js';
 import { withSpan } from '../lib/tracing.js';
 import { trace } from '@opentelemetry/api';
-import { AiPlayer } from '../ai/AiPlayer.js';
+import { AiPlayer, getAiDisplayName } from '../ai/AiPlayer.js';
 
 // =============================================================================
 // Types — Hub の send/invoke 抽象化
@@ -131,6 +131,7 @@ export class GameHub {
 
       this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, {
         roomId: room.roomId,
+        enterpriseId,
       });
 
       this.broadcastWaitingRoomList();
@@ -168,7 +169,7 @@ export class GameHub {
 
       // 2. AIプレイヤーでルーム参加
       const aiConnectionId = `ai-${roomId}`;
-      const aiEnterpriseId = `AI Lv.${aiLevel}`;
+      const aiEnterpriseId = getAiDisplayName(aiLevel);
       span.setAttribute('ai.connection_id', aiConnectionId);
       const aiPlayer = new Player(aiConnectionId, aiEnterpriseId);
       this.roomManager.joinRoom(roomId, aiPlayer);
@@ -215,7 +216,7 @@ export class GameHub {
       });
 
       // 7. 人間に通知
-      this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, { roomId });
+      this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, { roomId, enterpriseId });
       this.hub.sendToClient(connectionId, ServerEvents.OpponentJoined, {
         enterpriseId: aiEnterpriseId,
       });
@@ -268,6 +269,12 @@ export class GameHub {
       this.roomManager.joinRoom(payload.roomId, player);
 
       createLogger({ connectionId, roomId: payload.roomId }).info('Player joined room');
+
+      // 参加者にサーバー検証済み enterpriseId を通知
+      this.hub.sendToClient(connectionId, ServerEvents.RoomCreated, {
+        roomId: payload.roomId,
+        enterpriseId,
+      });
 
       const opponent = room.getOpponent(connectionId);
       if (opponent) {
@@ -701,7 +708,7 @@ export class GameHub {
     if (!room) return 5;
     const aiPlayer = room.getPlayer(aiConnectionId);
     if (!aiPlayer) return 5;
-    const match = aiPlayer.enterpriseId.match(/AI Lv\.(\d+)/);
+    const match = aiPlayer.enterpriseId.match(/(?:Haiku|Sonnet|Opus) Lv\.(\d+)/);
     return match ? parseInt(match[1], 10) : 5;
   }
 

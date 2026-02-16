@@ -82,6 +82,7 @@ export interface LinesClearedPayload {
 
 export interface RoomCreatedPayload {
   roomId: string;
+  enterpriseId: string;
 }
 
 export interface OpponentJoinedPayload {
