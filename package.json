@@ -28,12 +28,12 @@
     "@eslint/js": "^10.0.0",
     "@playwright/test": "^1.58.2",
     "@vitest/coverage-v8": "^4.0.18",
-    "allure-playwright": "^3.4.5",
-    "allure-vitest": "^3.4.5",
+    "allure-playwright": "^3.5.0",
+    "allure-vitest": "^3.5.0",
     "concurrently": "^9.1.0",
-    "eslint": "^10.0.0",
+    "eslint": "^10.0.2",
     "prettier": "^3.5.0",
     "typescript": "^5.7.0",
-    "typescript-eslint": "8.55.1-alpha.4"
+    "typescript-eslint": "8.56.1"
   }
 }
