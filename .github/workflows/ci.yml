@@ -111,7 +111,7 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Download shared dist
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: shared-dist
           path: shared/dist/
@@ -189,7 +189,7 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Download shared dist
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: shared-dist
           path: shared/dist/
@@ -237,7 +237,7 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Download shared dist
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: shared-dist
           path: shared/dist/
@@ -285,7 +285,7 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Download shared dist
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: shared-dist
           path: shared/dist/
@@ -324,7 +324,7 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Download shared dist
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: shared-dist
           path: shared/dist/
@@ -390,19 +390,19 @@ jobs:
           node-version: 22
 
       - name: Download coverage (shared)
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: coverage-shared
           path: shared/coverage/
 
       - name: Download coverage (client)
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: coverage-client
           path: client/coverage/
 
       - name: Download coverage (server)
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: coverage-server
           path: server/coverage/
@@ -452,49 +452,49 @@ jobs:
 
     steps:
       - name: Download Allure results (unit-shared)
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: allure-results-unit-shared
           path: allure-results/
 
       - name: Download Allure results (unit-client)
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: allure-results-unit-client
           path: allure-results/
 
       - name: Download Allure results (unit-server)
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: allure-results-unit-server
           path: allure-results/
 
       - name: Download SonarCloud Allure results
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: allure-results-sonarcloud
           path: allure-results/
 
       - name: Download CodeQL Allure results
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: allure-results-codeql
           path: allure-results/
 
       - name: Download npm audit Allure results
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: allure-results-npm-audit
           path: allure-results/
 
       - name: Download Gitleaks Allure results
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: allure-results-gitleaks
