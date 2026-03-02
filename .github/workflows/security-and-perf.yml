@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload ZAP report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: zap-report
           path: report_json.json
@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload Lighthouse results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: lighthouse-report
           path: .lighthouseci/
@@ -117,7 +117,7 @@ jobs:
       # --- Allure upload ---
       - name: Upload Allure results (security-and-perf)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: allure-results-security-and-perf
           path: allure-results/
