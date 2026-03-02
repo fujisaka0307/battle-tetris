@@ -83,7 +83,7 @@ jobs:
         run: npm run build -w shared
 
       - name: Upload shared dist
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: shared-dist
           path: shared/dist/
@@ -151,7 +151,7 @@ jobs:
 
       - name: Upload Allure results (unit-shared)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: allure-results-unit-shared
           path: allure-results/
@@ -160,7 +160,7 @@ jobs:
 
       - name: Upload coverage (shared)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-shared
           path: shared/coverage/lcov.info
@@ -199,7 +199,7 @@ jobs:
 
       - name: Upload Allure results (unit-client)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: allure-results-unit-client
           path: allure-results/
@@ -208,7 +208,7 @@ jobs:
 
       - name: Upload coverage (client)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-client
           path: client/coverage/lcov.info
@@ -247,7 +247,7 @@ jobs:
 
       - name: Upload Allure results (unit-server)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: allure-results-unit-server
           path: allure-results/
@@ -256,7 +256,7 @@ jobs:
 
       - name: Upload coverage (server)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-server
           path: server/coverage/lcov.info
@@ -296,7 +296,7 @@ jobs:
           VITE_SKIP_AUTH: 'true'
 
       - name: Upload client dist
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: client-dist
           path: client/dist/
@@ -333,7 +333,7 @@ jobs:
         run: npm run build -w server
 
       - name: Upload server dist
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: server-dist
           path: server/dist/
@@ -366,7 +366,7 @@ jobs:
 
       - name: Upload Allure results (npm audit)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: allure-results-npm-audit
           path: allure-results/
@@ -426,7 +426,7 @@ jobs:
 
       - name: Upload Allure results (SonarCloud)
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: allure-results-sonarcloud
           path: allure-results/
