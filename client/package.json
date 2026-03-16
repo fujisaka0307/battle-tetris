@@ -13,8 +13,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@azure/msal-browser": "^5.2.0",
-    "@azure/msal-react": "^5.0.4",
+    "@azure/msal-browser": "^5.5.0",
+    "@azure/msal-react": "^5.0.7",
     "@battle-tetris/shared": "*",
     "@fontsource/noto-sans-jp": "^5.2.9",
     "@fontsource/orbitron": "^5.2.8",
@@ -23,11 +23,11 @@
     "@microsoft/signalr": "^10.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.1.0",
-    "zustand": "^5.0.0"
+    "react-router-dom": "^7.13.1",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.0.0",
+    "@tailwindcss/vite": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
