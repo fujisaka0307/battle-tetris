@@ -1881,9 +1881,9 @@
       }
     },
     {
-      "timestamp": "2026-04-01T18:22:45.926Z",
+      "timestamp": "2026-04-02T18:22:25.073Z",
       "commit": "fe05083",
-      "runId": "23863981822",
+      "runId": "23915322319",
       "ci": {
         "unitTests": {
           "total": 0,
@@ -1921,7 +1921,7 @@
         }
       },
       "lighthouse": {
-        "performance": 96,
+        "performance": 90,
         "accessibility": 100,
         "bestPractices": 100,
         "seo": 100
