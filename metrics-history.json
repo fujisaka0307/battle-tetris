@@ -1926,6 +1926,53 @@
         "bestPractices": null,
         "seo": null
       }
+    },
+    {
+      "timestamp": "2026-04-13T20:10:30.852Z",
+      "commit": "13ab2a1",
+      "runId": "24364366894",
+      "ci": {
+        "unitTests": {
+          "total": 550,
+          "passed": 546,
+          "failed": 4
+        },
+        "e2eTests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        }
+      },
+      "quality": {
+        "coverage": null,
+        "bugs": null,
+        "codeSmells": null,
+        "duplication": null,
+        "qualityGate": null
+      },
+      "security": {
+        "vulnerabilities": null,
+        "securityHotspots": null,
+        "zapAlerts": {
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "codeqlFindings": null,
+        "gitleaksFindings": null,
+        "npmAudit": {
+          "critical": 0,
+          "high": 6,
+          "moderate": 0,
+          "low": 0
+        }
+      },
+      "lighthouse": {
+        "performance": null,
+        "accessibility": null,
+        "bestPractices": null,
+        "seo": null
+      }
     }
   ]
 }
