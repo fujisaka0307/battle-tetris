@@ -13,21 +13,21 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@azure/msal-browser": "^5.2.0",
-    "@azure/msal-react": "^5.0.4",
+    "@azure/msal-browser": "^5.9.0",
+    "@azure/msal-react": "^5.3.2",
     "@battle-tetris/shared": "*",
     "@fontsource/noto-sans-jp": "^5.2.9",
     "@fontsource/orbitron": "^5.2.8",
     "@grafana/faro-web-sdk": "^1.19.0",
     "@grafana/faro-web-tracing": "^1.19.0",
     "@microsoft/signalr": "^10.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-router-dom": "^7.1.0",
-    "zustand": "^5.0.0"
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^7.14.2",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.0.0",
+    "@tailwindcss/vite": "^4.2.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
